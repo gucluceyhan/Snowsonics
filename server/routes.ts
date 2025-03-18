@@ -283,18 +283,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
-      // Instagram profil fotoğrafını al
+      // Gravatar URL'ini oluştur
       let avatarUrl = undefined;
-      if (result.data.instagram) {
-        try {
-          const response = await fetch(`https://www.instagram.com/${result.data.instagram}/?__a=1&__d=dis`);
-          if (response.ok) {
-            const data = await response.json();
-            avatarUrl = data.graphql?.user?.profile_pic_url_hd;
-          }
-        } catch (error) {
-          console.error("Instagram profile photo fetch failed:", error);
-        }
+      if (result.data.email) {
+        const md5 = require('crypto').createHash('md5').update(result.data.email.toLowerCase().trim()).digest('hex');
+        avatarUrl = `https://www.gravatar.com/avatar/${md5}?d=mp`;
       }
 
       const updatedUser = await storage.updateUser(req.user!.id, {
