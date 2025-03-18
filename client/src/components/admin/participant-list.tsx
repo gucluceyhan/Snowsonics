@@ -63,26 +63,27 @@ export function ParticipantList({ eventId }: ParticipantListProps) {
   });
 
   const exportToExcel = () => {
-    const csvContent = [
-      ["Ad", "Soyad", "Telefon", "E-posta", "Oda Tipi", "Kişi Sayısı", "Ödeme Durumu", "Katılım Durumu"].join(","),
+    // Excel başlık satırı
+    const xlsContent = [
+      ["Ad", "Soyad", "Telefon", "E-posta", "Oda Tipi", "Kişi Sayısı", "Ödeme Durumu", "Katılım Durumu"].join("\t"),
       ...participants.map(p => [
         p.user.firstName,
         p.user.lastName,
         p.user.phone,
         p.user.email,
-        p.roomType ? `${p.roomType === 'single' ? 'Tek' : p.roomType === 'double' ? 'İki' : p.roomType === 'triple' ? 'Üç' : 'Dört'} Kişilik` : "-",
+        p.roomType ? getRoomTypeLabel(p.roomType) : "-",
         p.roomOccupancy || "-",
         p.paymentStatus === "paid" ? "Ödendi" : "Beklemede",
         p.status === "attending" ? "Katılıyor" : p.status === "maybe" ? "Belki" : "Katılmıyor"
-      ].join(","))
+      ].join("\t"))
     ].join("\n");
 
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const blob = new Blob(["\ufeff" + xlsContent], { type: "application/vnd.ms-excel;charset=utf-8" });
     const link = document.createElement("a");
     if (link.download !== undefined) {
       const url = URL.createObjectURL(blob);
       link.setAttribute("href", url);
-      link.setAttribute("download", "katilimcilar.csv");
+      link.setAttribute("download", "katilimcilar.xls");
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -142,7 +143,7 @@ export function ParticipantList({ eventId }: ParticipantListProps) {
                 </TableCell>
                 <TableCell>
                   <Select
-                    value={participant.paymentStatus}
+                    value={participant.paymentStatus || "pending"}
                     onValueChange={(value) =>
                       updatePaymentStatusMutation.mutate({
                         participantId: participant.id,

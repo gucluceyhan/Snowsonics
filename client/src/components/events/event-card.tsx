@@ -111,11 +111,6 @@ const cardContent = (
               alt={event.title}
               className="object-cover w-full h-full"
             />
-            {event.images.length > 1 && (
-              <div className="absolute bottom-2 right-2 bg-background/80 px-2 py-1 rounded text-xs">
-                +{event.images.length - 1} fotoğraf
-              </div>
-            )}
           </div>
         )}
       </div>
