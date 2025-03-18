@@ -55,11 +55,7 @@ const cardContent = (
             alt={event.title}
             className="object-cover w-full h-full"
           />
-          {event.images.length > 1 && (
-            <div className="absolute bottom-2 right-2 bg-background/80 px-2 py-1 rounded text-xs">
-              +{event.images.length - 1} fotoğraf
-            </div>
-          )}
+          
         </div>
       )}
       <CardTitle>{event.title}</CardTitle>
@@ -93,17 +89,15 @@ const cardContent = (
 
   return variant === "horizontal" ? (
     <Card className="flex flex-col md:flex-row overflow-hidden">
-      <div className="md:w-1/3 max-h-[200px]">
-        {event.images?.length > 0 && (
-          <div className="relative h-full">
-            <img 
-              src={event.images[0]} 
-              alt={event.title}
-              className="object-cover w-full h-full"
-            />
-          </div>
-        )}
-      </div>
+      {event.images?.length > 0 && (
+        <div className="relative md:w-1/3 max-h-[200px]">
+          <img 
+            src={event.images[0]} 
+            alt={event.title}
+            className="object-cover w-full h-full"
+          />
+        </div>
+      )}
       <div className="md:w-2/3 flex flex-col">
         {cardContent}
       </div>

@@ -166,12 +166,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const user = await storage.getUser(p.userId);
           return {
             ...p,
-            user: {
+            user: user ? {
               firstName: user.firstName,
               lastName: user.lastName,
               phone: user.phone,
               email: user.email
-            }
+            } : null
           };
         })
       );

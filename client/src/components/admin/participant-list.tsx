@@ -63,29 +63,51 @@ export function ParticipantList({ eventId }: ParticipantListProps) {
   });
 
   const exportToExcel = () => {
-    // Excel başlık satırı ve içerik hazırlama
-    const rows = [
-      ["Ad", "Soyad", "Telefon", "E-posta", "Oda Tipi", "Kişi Sayısı", "Ödeme Durumu", "Katılım Durumu"],
-      ...participants.map(p => [
-        p.user.firstName,
-        p.user.lastName,
-        p.user.phone,
-        p.user.email,
-        p.roomType ? getRoomTypeLabel(p.roomType) : "-",
-        p.roomOccupancy || "-",
-        p.paymentStatus === "paid" ? "Ödendi" : "Beklemede",
-        p.status === "attending" ? "Katılıyor" : p.status === "maybe" ? "Belki" : "Katılmıyor"
-      ])
-    ];
+    // Create XML content for Excel file
+    let excelContent = `<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+xmlns:o="urn:schemas-microsoft-com:office:office"
+xmlns:x="urn:schemas-microsoft-com:office:excel"
+xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+xmlns:html="http://www.w3.org/TR/REC-html40">
+<Worksheet ss:Name="Katılımcılar">
+<Table>
+<Row>
+<Cell><Data ss:Type="String">Ad</Data></Cell>
+<Cell><Data ss:Type="String">Soyad</Data></Cell>
+<Cell><Data ss:Type="String">Telefon</Data></Cell>
+<Cell><Data ss:Type="String">E-posta</Data></Cell>
+<Cell><Data ss:Type="String">Oda Tipi</Data></Cell>
+<Cell><Data ss:Type="String">Kişi Sayısı</Data></Cell>
+<Cell><Data ss:Type="String">Ödeme Durumu</Data></Cell>
+<Cell><Data ss:Type="String">Katılım Durumu</Data></Cell>
+</Row>`;
 
-    // Her satırı tab ile birleştir ve satırları yeni satır ile ayır
-    const xlsContent = rows.map(row => row.join('\t')).join('\n');
-
-    // Excel için BOM ekle ve dosyayı oluştur
-    const blob = new Blob(["\ufeff" + xlsContent], { 
-      type: "application/vnd.ms-excel;charset=utf-8" 
+    // Add data rows
+    participants.forEach(p => {
+      excelContent += `
+<Row>
+<Cell><Data ss:Type="String">${p.user.firstName}</Data></Cell>
+<Cell><Data ss:Type="String">${p.user.lastName}</Data></Cell>
+<Cell><Data ss:Type="String">${p.user.phone}</Data></Cell>
+<Cell><Data ss:Type="String">${p.user.email}</Data></Cell>
+<Cell><Data ss:Type="String">${p.roomType ? getRoomTypeLabel(p.roomType) : "-"}</Data></Cell>
+<Cell><Data ss:Type="String">${p.roomOccupancy || "-"}</Data></Cell>
+<Cell><Data ss:Type="String">${p.paymentStatus === "paid" ? "Ödendi" : "Beklemede"}</Data></Cell>
+<Cell><Data ss:Type="String">${p.status === "attending" ? "Katılıyor" : p.status === "maybe" ? "Belki" : "Katılmıyor"}</Data></Cell>
+</Row>`;
     });
 
+    excelContent += `
+</Table>
+</Worksheet>
+</Workbook>`;
+
+    // Create and download the file
+    const blob = new Blob([excelContent], { 
+      type: "application/vnd.ms-excel" 
+    });
     const link = document.createElement("a");
     if (link.download !== undefined) {
       const url = URL.createObjectURL(blob);
@@ -172,19 +194,19 @@ export function ParticipantList({ eventId }: ParticipantListProps) {
                   </Select>
                 </TableCell>
                 <TableCell>
-                  <Badge 
+                  <Badge
                     variant={
-                      participant.status === "attending" 
-                        ? "default" 
-                        : participant.status === "maybe" 
-                          ? "outline" 
+                      participant.status === "attending"
+                        ? "default"
+                        : participant.status === "maybe"
+                          ? "outline"
                           : "destructive"
                     }
                   >
-                    {participant.status === "attending" 
-                      ? "Katılıyor" 
-                      : participant.status === "maybe" 
-                        ? "Belki" 
+                    {participant.status === "attending"
+                      ? "Katılıyor"
+                      : participant.status === "maybe"
+                        ? "Belki"
                         : "Katılmıyor"}
                   </Badge>
                 </TableCell>
