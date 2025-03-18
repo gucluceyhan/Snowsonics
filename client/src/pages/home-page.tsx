@@ -40,8 +40,8 @@ export default function HomePage() {
 
   const modifiersStyles = {
     hasEvent: {
-      color: "white",
       backgroundColor: "hsl(var(--primary))",
+      color: "white",
       borderRadius: "9999px"
     }
   };
@@ -53,16 +53,14 @@ export default function HomePage() {
       <main className="container mx-auto px-4 py-8">
         <div className="space-y-8">
           <div className="text-center max-w-2xl mx-auto">
-            <div className="w-40 h-40 mx-auto mb-6 bg-gradient-to-br from-[#914199] to-[#F7E15C] rounded-full p-1">
-              <div className="w-full h-full bg-background rounded-full flex items-center justify-center">
-                <img 
-                  src="/logo.jpeg" 
-                  alt="Logo" 
-                  className="h-32 w-auto"
-                />
-              </div>
+            <div className="w-40 h-40 mx-auto mb-6 bg-background rounded-full">
+              <img 
+                src="/logo.jpeg" 
+                alt="Logo" 
+                className="h-40 w-40 rounded-full"
+              />
             </div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-[#914199] to-[#F7E15C] bg-clip-text text-transparent">
+            <h1 className="text-4xl font-bold text-[#914199]">
               Hoş geldin, {user?.firstName}!
             </h1>
             <p className="text-muted-foreground mt-2">

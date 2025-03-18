@@ -12,7 +12,7 @@ import { Loader2 } from "lucide-react";
 
 export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
-  
+
   const loginForm = useForm({
     defaultValues: {
       username: "",
@@ -40,26 +40,33 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted p-4 md:p-8">
+    <div className="min-h-screen bg-background p-4 md:p-8">
       <div className="container mx-auto grid gap-8 lg:grid-cols-2 lg:gap-12 items-center">
         <div className="space-y-6">
-          <h1 className="text-4xl font-bold tracking-tighter">
-            Welcome to Snowsonics
+          <div className="flex flex-col items-center mb-8">
+            <img 
+              src="/logo.jpeg" 
+              alt="Logo" 
+              className="h-40 w-40 rounded-full"
+            />
+          </div>
+          <h1 className="text-4xl font-bold text-[#914199]">
+            Snowsonics'e Hoş Geldiniz
           </h1>
           <p className="text-muted-foreground text-lg">
-            Join our community to participate in exciting events and connect with other enthusiasts.
+            Topluluğumuza katılın ve heyecan verici etkinliklere katılın.
           </p>
         </div>
 
         <Card className="w-full">
           <CardHeader>
-            <CardTitle>Account Access</CardTitle>
+            <CardTitle>Hesap İşlemleri</CardTitle>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="login">
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="login">Login</TabsTrigger>
-                <TabsTrigger value="register">Register</TabsTrigger>
+                <TabsTrigger value="login">Giriş</TabsTrigger>
+                <TabsTrigger value="register">Kayıt</TabsTrigger>
               </TabsList>
 
               <TabsContent value="login">
@@ -70,7 +77,7 @@ export default function AuthPage() {
                       name="username"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Username</FormLabel>
+                          <FormLabel>Kullanıcı Adı</FormLabel>
                           <FormControl>
                             <Input {...field} />
                           </FormControl>
@@ -83,7 +90,7 @@ export default function AuthPage() {
                       name="password"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Password</FormLabel>
+                          <FormLabel>Şifre</FormLabel>
                           <FormControl>
                             <Input type="password" {...field} />
                           </FormControl>
@@ -93,7 +100,7 @@ export default function AuthPage() {
                     />
                     <Button type="submit" className="w-full" disabled={loginMutation.isPending}>
                       {loginMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      Login
+                      Giriş Yap
                     </Button>
                   </form>
                 </Form>
@@ -108,7 +115,7 @@ export default function AuthPage() {
                         name="firstName"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>First Name</FormLabel>
+                            <FormLabel>Ad</FormLabel>
                             <FormControl>
                               <Input {...field} />
                             </FormControl>
@@ -121,7 +128,7 @@ export default function AuthPage() {
                         name="lastName"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Last Name</FormLabel>
+                            <FormLabel>Soyad</FormLabel>
                             <FormControl>
                               <Input {...field} />
                             </FormControl>
@@ -135,7 +142,7 @@ export default function AuthPage() {
                       name="username"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Username</FormLabel>
+                          <FormLabel>Kullanıcı Adı</FormLabel>
                           <FormControl>
                             <Input {...field} />
                           </FormControl>
@@ -148,7 +155,7 @@ export default function AuthPage() {
                       name="password"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Password</FormLabel>
+                          <FormLabel>Şifre</FormLabel>
                           <FormControl>
                             <Input type="password" {...field} />
                           </FormControl>
@@ -161,7 +168,7 @@ export default function AuthPage() {
                       name="email"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Email</FormLabel>
+                          <FormLabel>E-posta</FormLabel>
                           <FormControl>
                             <Input type="email" {...field} />
                           </FormControl>
@@ -174,7 +181,7 @@ export default function AuthPage() {
                       name="phone"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Phone</FormLabel>
+                          <FormLabel>Telefon</FormLabel>
                           <FormControl>
                             <Input {...field} />
                           </FormControl>
@@ -187,7 +194,7 @@ export default function AuthPage() {
                       name="city"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>City</FormLabel>
+                          <FormLabel>Şehir</FormLabel>
                           <FormControl>
                             <Input {...field} />
                           </FormControl>
@@ -200,7 +207,7 @@ export default function AuthPage() {
                       name="occupation"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Occupation</FormLabel>
+                          <FormLabel>Meslek</FormLabel>
                           <FormControl>
                             <Input {...field} />
                           </FormControl>
@@ -213,7 +220,7 @@ export default function AuthPage() {
                       name="instagram"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Instagram (Optional)</FormLabel>
+                          <FormLabel>Instagram (Opsiyonel)</FormLabel>
                           <FormControl>
                             <Input {...field} />
                           </FormControl>
@@ -223,7 +230,7 @@ export default function AuthPage() {
                     />
                     <Button type="submit" className="w-full" disabled={registerMutation.isPending}>
                       {registerMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      Register
+                      Kayıt Ol
                     </Button>
                   </form>
                 </Form>
