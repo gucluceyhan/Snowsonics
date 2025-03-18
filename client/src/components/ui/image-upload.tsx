@@ -8,13 +8,15 @@ interface ImageUploadProps {
   onDelete?: () => void;
   preview?: string | null;
   acceptedTypes?: string;
+  maxFiles?: number;
 }
 
 export function ImageUpload({ 
   onChange,
   onDelete,
   preview,
-  acceptedTypes = "image/*"
+  acceptedTypes = "image/*",
+  maxFiles = 1
 }: ImageUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
 
@@ -32,18 +34,24 @@ export function ImageUpload({
     e.preventDefault();
     setIsDragging(false);
 
-    const file = e.dataTransfer.files[0];
-    if (file) {
-      onChange(file);
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > maxFiles) {
+      alert(`En fazla ${maxFiles} dosya yükleyebilirsiniz`);
+      return;
     }
-  }, [onChange]);
+
+    onChange(maxFiles === 1 ? files[0] : null);
+  }, [onChange, maxFiles]);
 
   const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      onChange(file);
+    const files = Array.from(e.target.files || []);
+    if (files.length > maxFiles) {
+      alert(`En fazla ${maxFiles} dosya yükleyebilirsiniz`);
+      return;
     }
-  }, [onChange]);
+
+    onChange(maxFiles === 1 ? files[0] : null);
+  }, [onChange, maxFiles]);
 
   return (
     <div className="space-y-4">
@@ -79,18 +87,20 @@ export function ImageUpload({
         <div className="relative w-fit mx-auto">
           <img
             src={preview}
-            alt="Logo Preview"
+            alt="Preview"
             className="h-20 w-auto"
           />
-          <Button
-            variant="destructive"
-            size="icon"
-            className="absolute -top-2 -right-2"
-            onClick={onDelete}
-            type="button"
-          >
-            <X className="h-4 w-4" />
-          </Button>
+          {onDelete && (
+            <Button
+              variant="destructive"
+              size="icon"
+              className="absolute -top-2 -right-2"
+              onClick={onDelete}
+              type="button"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
         </div>
       )}
     </div>

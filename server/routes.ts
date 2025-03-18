@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
-import { insertEventSchema, insertSiteSettingsSchema, insertUserSchema } from "@shared/schema";
+import { insertEventSchema, insertSiteSettingsSchema } from "@shared/schema";
 import { z } from "zod";
 import { createHash, randomBytes } from "crypto";
 import axios from "axios";
@@ -42,44 +42,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/admin/site-settings", requireAdmin, upload.single('logo'), async (req, res) => {
     try {
-      console.log('Received settings update:', {
-        body: req.body,
-        file: req.file
-      });
-
       const updateData = {
         primaryColor: req.body.primaryColor,
         secondaryColor: req.body.secondaryColor,
       };
 
-      // Handle logo deletion
-      if (req.body.deleteLogo === 'true') {
-        const currentSettings = await storage.getSiteSettings();
-        if (currentSettings?.logoUrl) {
-          try {
-            const oldLogoPath = path.join(process.cwd(), 'public', currentSettings.logoUrl);
-            await fs.unlink(oldLogoPath);
-          } catch (error) {
-            console.error('Error deleting old logo:', error);
-          }
-        }
-        updateData.logoUrl = null;
-      }
-      // Handle new logo upload
-      else if (req.file) {
-        // Delete old logo if exists
-        const currentSettings = await storage.getSiteSettings();
-        if (currentSettings?.logoUrl) {
-          try {
-            const oldLogoPath = path.join(process.cwd(), 'public', currentSettings.logoUrl);
-            await fs.unlink(oldLogoPath);
-          } catch (error) {
-            console.error('Error deleting old logo:', error);
-          }
-        }
-
-        // Set new logo URL
-        updateData.logoUrl = `/uploads/${req.file.filename}`;
+      if (req.file) {
+        const logoUrl = `/uploads/${req.file.filename}`;
+        updateData.logoUrl = logoUrl;
       }
 
       const settings = await storage.updateSiteSettings(updateData);

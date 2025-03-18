@@ -21,7 +21,7 @@ import { queryClient } from "@/lib/queryClient";
 export default function SiteSettingsPage() {
   const { toast } = useToast();
   const [selectedLogo, setSelectedLogo] = useState<File | null>(null);
-  const [deleteLogo, setDeleteLogo] = useState(false);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
 
   const { data: settings } = useQuery<SiteSettings>({
     queryKey: ["/api/admin/site-settings"],
@@ -55,7 +55,7 @@ export default function SiteSettingsPage() {
         description: "Site ayarları başarıyla güncellendi",
       });
       setSelectedLogo(null);
-      setDeleteLogo(false);
+      setLogoPreview(null);
     },
     onError: (error: Error) => {
       toast({
@@ -71,9 +71,7 @@ export default function SiteSettingsPage() {
     formData.append('primaryColor', values.primaryColor);
     formData.append('secondaryColor', values.secondaryColor);
 
-    if (deleteLogo) {
-      formData.append('deleteLogo', 'true');
-    } else if (selectedLogo) {
+    if (selectedLogo) {
       formData.append('logo', selectedLogo);
     }
 
@@ -82,12 +80,15 @@ export default function SiteSettingsPage() {
 
   const handleLogoChange = (file: File | null) => {
     setSelectedLogo(file);
-    setDeleteLogo(false);
+    if (file) {
+      setLogoPreview(URL.createObjectURL(file));
+    }
   };
 
   const handleLogoDelete = () => {
     setSelectedLogo(null);
-    setDeleteLogo(true);
+    setLogoPreview(null);
+    mutation.mutate(new FormData());
   };
 
   return (
@@ -109,7 +110,7 @@ export default function SiteSettingsPage() {
                 <FormLabel>Logo</FormLabel>
                 <ImageUpload
                   onChange={handleLogoChange}
-                  preview={selectedLogo ? URL.createObjectURL(selectedLogo) : (deleteLogo ? null : settings?.logoUrl)}
+                  preview={logoPreview || settings?.logoUrl}
                   acceptedTypes="image/jpeg,image/png"
                   onDelete={handleLogoDelete}
                 />
@@ -155,18 +156,11 @@ export default function SiteSettingsPage() {
                 <h3 className="text-lg font-semibold">Önizleme</h3>
                 <div className="p-6 border rounded-lg space-y-4">
                   <div className="flex items-center justify-center">
-                    {!deleteLogo && (selectedLogo ? 
-                      <img
-                        src={URL.createObjectURL(selectedLogo)}
-                        alt="Logo Preview"
-                        className="h-20 w-auto"
-                      /> : settings?.logoUrl && (
-                      <img
-                        src={settings.logoUrl}
-                        alt="Logo Preview"
-                        className="h-20 w-auto"
-                      />
-                    ))}
+                    <img
+                      src={logoPreview || settings?.logoUrl}
+                      alt="Logo Preview"
+                      className="h-20 w-auto"
+                    />
                   </div>
                   <div
                     className="h-20 rounded-lg"
