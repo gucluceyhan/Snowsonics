@@ -10,9 +10,13 @@ import multer from "multer";
 import { Client } from "@replit/object-storage";
 
 const upload = multer({ storage: multer.memoryStorage() });
-const storage = new Client({
-  bucketName: "uploads"
-});
+// Only initialize object storage if needed later
+let objectStorage: Client | null = null;
+try {
+  objectStorage = new Client();
+} catch (error) {
+  console.log("Object storage not configured yet");
+}
 
 function requireAuth(req: Express.Request, res: Express.Response, next: Express.NextFunction) {
   if (!req.isAuthenticated()) {
