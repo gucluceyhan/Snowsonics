@@ -5,7 +5,7 @@ import { IStorage } from "./types";
 import { User, Event, EventParticipant, SiteSettings, InsertUser, InsertEvent, InsertEventParticipant, InsertSiteSettings } from "@shared/schema";
 import createMemoryStore from "memorystore";
 import session from "express-session";
-import { scrypt, randomBytes } from "crypto";
+import { scrypt, randomBytes, createHash } from "crypto";
 import { promisify } from "util";
 
 const MemoryStore = createMemoryStore(session);
