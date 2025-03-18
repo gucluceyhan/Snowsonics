@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import express, { type Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
@@ -34,6 +34,9 @@ const upload = multer({
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
 
+  // Serve static files from public directory
+  app.use('/uploads', express.static(path.join(process.cwd(), 'public', 'uploads')));
+
   // Site settings routes
   app.get("/api/admin/site-settings", requireAdmin, async (req, res) => {
     const settings = await storage.getSiteSettings();
@@ -48,8 +51,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
 
       if (req.file) {
-        const logoUrl = `/uploads/${req.file.filename}`;
-        updateData.logoUrl = logoUrl;
+        // Delete old logo if exists
+        const currentSettings = await storage.getSiteSettings();
+        if (currentSettings?.logoUrl) {
+          try {
+            const oldLogoPath = path.join(process.cwd(), 'public', currentSettings.logoUrl.replace(/^\/uploads\//, ''));
+            await fs.unlink(oldLogoPath);
+          } catch (error) {
+            console.error('Error deleting old logo:', error);
+          }
+        }
+
+        updateData.logoUrl = `/uploads/${req.file.filename}`;
       }
 
       const settings = await storage.updateSiteSettings(updateData);
