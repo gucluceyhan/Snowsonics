@@ -55,7 +55,7 @@ export default function HomePage() {
           <div className="text-center max-w-2xl mx-auto">
             <div className="w-40 h-40 mx-auto mb-6 bg-background rounded-full">
               <img 
-                src="/assets/logo.jpeg" 
+                src="/assets/new_whatsapp_image.jpg"
                 alt="Logo" 
                 className="h-40 w-40 rounded-full"
               />
