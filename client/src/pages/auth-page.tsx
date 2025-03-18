@@ -45,7 +45,7 @@ export default function AuthPage() {
         <div className="space-y-6">
           <div className="flex flex-col items-center mb-8">
             <img 
-              src="/logo.jpeg" 
+              src="/assets/logo.jpeg" 
               alt="Logo" 
               className="h-40 w-40 rounded-full"
             />

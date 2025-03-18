@@ -18,7 +18,7 @@ export function Navbar() {
         <Link href="/">
           <a className="flex items-center">
             <img 
-              src="/logo.jpeg" 
+              src="/assets/logo.jpeg" 
               alt="Logo" 
               className="h-10 w-auto"
             />
