@@ -171,7 +171,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
               lastName: user.lastName,
               phone: user.phone,
               email: user.email
-            } : null
+            } : null,
+            roomType: p.roomType,
+            roomOccupancy: p.roomOccupancy,
+            paymentStatus: p.paymentStatus || "pending"
           };
         })
       );

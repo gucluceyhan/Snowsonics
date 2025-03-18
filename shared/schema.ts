@@ -81,7 +81,7 @@ export const insertEventSchema = createInsertSchema(events).extend({
 // Event participant schema'yı güncelliyorum
 export const insertEventParticipantSchema = createInsertSchema(eventParticipants)
   .extend({
-    status: z.enum(["attending", "maybe", "declined"]),
+    status: z.enum(["attending", "declined"]),
     roomType: z.enum(["single", "double", "triple", "quad"]).optional(),
     roomOccupancy: z.number().min(1).max(4).optional(),
     paymentStatus: z.enum(["pending", "paid"]).optional()

@@ -62,8 +62,17 @@ export function ParticipantList({ eventId }: ParticipantListProps) {
     },
   });
 
+  const getRoomTypeLabel = (type: string) => {
+    switch (type) {
+      case 'single': return 'Tek Kişilik';
+      case 'double': return 'İki Kişilik';
+      case 'triple': return 'Üç Kişilik';
+      case 'quad': return 'Dört Kişilik';
+      default: return '-';
+    }
+  };
+
   const exportToExcel = () => {
-    // Create XML content for Excel file
     let excelContent = `<?xml version="1.0"?>
 <?mso-application progid="Excel.Sheet"?>
 <Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
@@ -84,7 +93,6 @@ xmlns:html="http://www.w3.org/TR/REC-html40">
 <Cell><Data ss:Type="String">Katılım Durumu</Data></Cell>
 </Row>`;
 
-    // Add data rows
     participants.forEach(p => {
       excelContent += `
 <Row>
@@ -95,7 +103,7 @@ xmlns:html="http://www.w3.org/TR/REC-html40">
 <Cell><Data ss:Type="String">${p.roomType ? getRoomTypeLabel(p.roomType) : "-"}</Data></Cell>
 <Cell><Data ss:Type="String">${p.roomOccupancy || "-"}</Data></Cell>
 <Cell><Data ss:Type="String">${p.paymentStatus === "paid" ? "Ödendi" : "Beklemede"}</Data></Cell>
-<Cell><Data ss:Type="String">${p.status === "attending" ? "Katılıyor" : p.status === "maybe" ? "Belki" : "Katılmıyor"}</Data></Cell>
+<Cell><Data ss:Type="String">${p.status === "attending" ? "Katılıyor" : "Katılmıyor"}</Data></Cell>
 </Row>`;
     });
 
@@ -104,7 +112,6 @@ xmlns:html="http://www.w3.org/TR/REC-html40">
 </Worksheet>
 </Workbook>`;
 
-    // Create and download the file
     const blob = new Blob([excelContent], { 
       type: "application/vnd.ms-excel" 
     });
@@ -116,16 +123,6 @@ xmlns:html="http://www.w3.org/TR/REC-html40">
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-    }
-  };
-
-  const getRoomTypeLabel = (type: string) => {
-    switch (type) {
-      case 'single': return 'Tek Kişilik';
-      case 'double': return 'İki Kişilik';
-      case 'triple': return 'Üç Kişilik';
-      case 'quad': return 'Dört Kişilik';
-      default: return '-';
     }
   };
 
@@ -194,20 +191,8 @@ xmlns:html="http://www.w3.org/TR/REC-html40">
                   </Select>
                 </TableCell>
                 <TableCell>
-                  <Badge
-                    variant={
-                      participant.status === "attending"
-                        ? "default"
-                        : participant.status === "maybe"
-                          ? "outline"
-                          : "destructive"
-                    }
-                  >
-                    {participant.status === "attending"
-                      ? "Katılıyor"
-                      : participant.status === "maybe"
-                        ? "Belki"
-                        : "Katılmıyor"}
+                  <Badge variant={participant.status === "attending" ? "default" : "destructive"}>
+                    {participant.status === "attending" ? "Katılıyor" : "Katılmıyor"}
                   </Badge>
                 </TableCell>
                 <TableCell>
