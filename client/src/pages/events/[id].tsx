@@ -130,31 +130,17 @@ export default function EventDetailPage() {
                 </Select>
               </div>
 
-              <div className="flex gap-2">
-                <Button
-                  className="flex-1"
-                  onClick={() => participateMutation.mutate({
-                    status: "attending",
-                    roomType,
-                    roomOccupancy
-                  })}
-                  disabled={participateMutation.isPending || !roomType || !roomOccupancy}
-                >
-                  Katılıyorum
-                </Button>
-                <Button
-                  className="flex-1"
-                  variant="outline"
-                  onClick={() => participateMutation.mutate({
-                    status: "maybe",
-                    roomType,
-                    roomOccupancy
-                  })}
-                  disabled={participateMutation.isPending || !roomType || !roomOccupancy}
-                >
-                  Belki
-                </Button>
-              </div>
+              <Button
+                className="w-full"
+                onClick={() => participateMutation.mutate({
+                  status: "attending",
+                  roomType,
+                  roomOccupancy
+                })}
+                disabled={participateMutation.isPending || !roomType || !roomOccupancy}
+              >
+                Katılıyorum
+              </Button>
             </div>
           )}
         </div>
