@@ -1,3 +1,7 @@
+// Ensure Google Cloud Storage is disabled before any imports
+// This needs to be set before any imports that might use storage
+process.env.DISABLE_CLOUD_STORAGE = "true";
+
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
@@ -56,10 +60,6 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // Ensure Google Cloud Storage is disabled for development
-  // This needs to be set before any imports that might use storage
-  process.env.DISABLE_CLOUD_STORAGE = "true";
-  
   // ALWAYS serve the app on port 5000
   // this serves both the API and the client
   const port = 5000;
