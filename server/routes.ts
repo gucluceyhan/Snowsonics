@@ -6,6 +6,11 @@ import { insertEventSchema, insertSiteSettingsSchema, insertUserSchema } from "@
 import { z } from "zod";
 import { createHash, randomBytes } from "crypto";
 import axios from "axios";
+import multer from "multer";
+import { Client } from "@replit/object-storage";
+
+const upload = multer({ storage: multer.memoryStorage() });
+const storage = new Client();
 
 function requireAuth(req: Express.Request, res: Express.Response, next: Express.NextFunction) {
   if (!req.isAuthenticated()) {
@@ -451,5 +456,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
+  // Upload endpoint
+  app.post('/api/upload', requireAuth, upload.array('files'), async (req, res) => {
+    try {
+      const files = req.files as Express.Multer.File[];
+      const urls = await Promise.all(files.map(async (file) => {
+        const fileName = `uploads/${Date.now()}-${file.originalname}`;
+        await storage.put(fileName, file.buffer);
+        return `/api/files/${fileName}`;
+      }));
+      res.json({ urls });
+    } catch (error) {
+      console.error('Upload error:', error);
+      res.status(500).json({ message: 'Upload failed' });
+    }
+  });
+
+  // Serve uploaded files
+  app.get('/api/files/:path(*)', async (req, res) => {
+    try {
+      const file = await storage.get(req.params.path);
+      res.send(file);
+    } catch (error) {
+      res.status(404).send('File not found');
+    }
+  });
+
   return httpServer;
 }

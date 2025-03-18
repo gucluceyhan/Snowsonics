@@ -46,10 +46,27 @@ export function ImageUpload({ value = [], onChange, maxFiles = 5 }: ImageUploadP
   }, [value, maxFiles]);
 
   const handleFiles = async (files: File[]) => {
-    // For now, we'll just create object URLs
-    // In a real app, you'd upload these to a server
-    const urls = files.map(file => URL.createObjectURL(file));
-    onChange([...value, ...urls]);
+    try {
+      const formData = new FormData();
+      files.forEach(file => {
+        formData.append('files', file);
+      });
+      
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData
+      });
+      
+      if (!response.ok) {
+        throw new Error('Upload failed');
+      }
+      
+      const uploadedFiles = await response.json();
+      onChange([...value, ...uploadedFiles.urls]);
+    } catch (error) {
+      console.error('Upload error:', error);
+      alert('Dosya yükleme başarısız oldu');
+    }
   };
 
   const removeImage = (index: number) => {
