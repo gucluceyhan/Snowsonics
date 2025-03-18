@@ -56,7 +56,8 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // Disable Google Cloud Storage for development
+  // Ensure Google Cloud Storage is disabled for development
+  // This needs to be set before any imports that might use storage
   process.env.DISABLE_CLOUD_STORAGE = "true";
   
   // ALWAYS serve the app on port 5000

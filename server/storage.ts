@@ -122,6 +122,7 @@ export class FileStorage implements IStorage {
   }
 
   async saveFile(file: Express.Multer.File): Promise<string> {
+    // Local file storage implementation
     const publicDir = path.join(process.cwd(), "public");
     const assetsDir = path.join(publicDir, "assets");
     
