@@ -78,7 +78,7 @@ const cardContent = (
       </div>
     </CardContent>
 
-    <CardFooter className="gap-2">
+    <CardFooter>
       <Button
         className="flex-1"
         variant="outline"
@@ -87,16 +87,6 @@ const cardContent = (
         <Info className="w-4 h-4 mr-2" />
         Detaylar
       </Button>
-
-      {user?.isApproved && (
-        <Button 
-          variant="default"
-          onClick={() => participateMutation.mutate("attending")}
-          disabled={participateMutation.isPending}
-        >
-          Katıl
-        </Button>
-      )}
     </CardFooter>
   </>
 );

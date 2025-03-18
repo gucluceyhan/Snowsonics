@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Check, Download, Euro } from "lucide-react";
+import { Check, Download } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -63,9 +63,9 @@ export function ParticipantList({ eventId }: ParticipantListProps) {
   });
 
   const exportToExcel = () => {
-    // Excel başlık satırı
-    const xlsContent = [
-      ["Ad", "Soyad", "Telefon", "E-posta", "Oda Tipi", "Kişi Sayısı", "Ödeme Durumu", "Katılım Durumu"].join("\t"),
+    // Excel başlık satırı ve içerik hazırlama
+    const rows = [
+      ["Ad", "Soyad", "Telefon", "E-posta", "Oda Tipi", "Kişi Sayısı", "Ödeme Durumu", "Katılım Durumu"],
       ...participants.map(p => [
         p.user.firstName,
         p.user.lastName,
@@ -75,10 +75,17 @@ export function ParticipantList({ eventId }: ParticipantListProps) {
         p.roomOccupancy || "-",
         p.paymentStatus === "paid" ? "Ödendi" : "Beklemede",
         p.status === "attending" ? "Katılıyor" : p.status === "maybe" ? "Belki" : "Katılmıyor"
-      ].join("\t"))
-    ].join("\n");
+      ])
+    ];
 
-    const blob = new Blob(["\ufeff" + xlsContent], { type: "application/vnd.ms-excel;charset=utf-8" });
+    // Her satırı tab ile birleştir ve satırları yeni satır ile ayır
+    const xlsContent = rows.map(row => row.join('\t')).join('\n');
+
+    // Excel için BOM ekle ve dosyayı oluştur
+    const blob = new Blob(["\ufeff" + xlsContent], { 
+      type: "application/vnd.ms-excel;charset=utf-8" 
+    });
+
     const link = document.createElement("a");
     if (link.download !== undefined) {
       const url = URL.createObjectURL(blob);
