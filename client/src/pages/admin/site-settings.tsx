@@ -14,19 +14,22 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { ImageUpload } from "@/components/ui/image-upload";
-import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import { useState } from "react";
+import { queryClient } from "@/lib/queryClient";
+
 
 export default function SiteSettingsPage() {
   const { toast } = useToast();
+  const [selectedLogo, setSelectedLogo] = useState<File | null>(null);
+
   const { data: settings } = useQuery<SiteSettings>({
     queryKey: ["/api/admin/site-settings"],
   });
 
   const form = useForm({
     defaultValues: {
-      logoUrl: settings?.logoUrl || "",
       primaryColor: settings?.primaryColor || "#914199",
       secondaryColor: settings?.secondaryColor || "#F7E15C",
     },
@@ -38,10 +41,13 @@ export default function SiteSettingsPage() {
         method: 'PUT',
         body: data,
       });
+
       if (!response.ok) {
-        throw new Error('Ayarlar güncellenirken bir hata oluştu');
+        const error = await response.json();
+        throw new Error(error.message || "Ayarlar güncellenirken bir hata oluştu");
       }
-      return response.json();
+
+      return await response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/site-settings"] });
@@ -56,18 +62,16 @@ export default function SiteSettingsPage() {
         description: error.message,
         variant: "destructive",
       });
-    }
+    },
   });
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = (values: any) => {
     const formData = new FormData();
-    formData.append('primaryColor', data.primaryColor);
-    formData.append('secondaryColor', data.secondaryColor);
+    formData.append('primaryColor', values.primaryColor);
+    formData.append('secondaryColor', values.secondaryColor);
 
-    // Get the actual file from the input element
-    const fileInput = document.getElementById('image-upload') as HTMLInputElement;
-    if (fileInput?.files?.length) {
-      formData.append('logo', fileInput.files[0]);
+    if (selectedLogo) {
+      formData.append('logo', selectedLogo);
     }
 
     mutation.mutate(formData);
@@ -88,25 +92,14 @@ export default function SiteSettingsPage() {
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField
-                control={form.control}
-                name="logoUrl"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Logo</FormLabel>
-                    <FormControl>
-                      <ImageUpload
-                        id="image-upload" // Added ID for file access
-                        value={field.value ? [field.value] : []}
-                        onChange={(urls) => field.onChange(urls[0])}
-                        maxFiles={1}
-                        acceptedTypes="image/jpeg,image/png"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="space-y-4">
+                <FormLabel>Logo</FormLabel>
+                <ImageUpload
+                  onChange={setSelectedLogo}
+                  preview={settings?.logoUrl}
+                  acceptedTypes="image/jpeg,image/png"
+                />
+              </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <FormField
@@ -149,24 +142,24 @@ export default function SiteSettingsPage() {
                 <div className="p-6 border rounded-lg space-y-4">
                   <div className="flex items-center justify-center">
                     {settings?.logoUrl && (
-                      <img 
+                      <img
                         src={settings.logoUrl}
                         alt="Logo Preview"
                         className="h-20 w-auto"
                       />
                     )}
                   </div>
-                  <div 
-                    className="h-20 rounded-lg" 
+                  <div
+                    className="h-20 rounded-lg"
                     style={{
-                      background: `linear-gradient(to right, ${form.watch("primaryColor")}, ${form.watch("secondaryColor")})`
+                      background: `linear-gradient(to right, ${form.watch("primaryColor")}, ${form.watch("secondaryColor")})`,
                     }}
                   />
                 </div>
               </div>
 
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 className="w-full"
                 disabled={mutation.isPending}
               >

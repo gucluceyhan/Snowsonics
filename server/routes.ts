@@ -6,40 +6,33 @@ import { insertEventSchema, insertSiteSettingsSchema, insertUserSchema } from "@
 import { z } from "zod";
 import { createHash, randomBytes } from "crypto";
 import axios from "axios";
-import multer from 'multer'; // Assuming multer is used for file uploads.  Add this import.
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs/promises';
 
-// Assuming SiteSettings type is defined elsewhere and imported correctly.
-type SiteSettings = {
-  primaryColor: string;
-  secondaryColor: string;
-  logoUrl?: string;
-  // ... other settings
-};
-
-const upload = multer(); // Configure Multer instance as needed.
-
-
-function requireAuth(req: Express.Request, res: Express.Response, next: Express.NextFunction) {
-  if (!req.isAuthenticated()) {
-    return res.status(401).json({ message: "Unauthorized" });
+// Configure multer for file uploads
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: function (req, file, cb) {
+      const uploadDir = path.join(process.cwd(), 'public', 'uploads');
+      fs.mkdir(uploadDir, { recursive: true })
+        .then(() => cb(null, uploadDir))
+        .catch(err => cb(err, uploadDir));
+    },
+    filename: function (req, file, cb) {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      cb(null, 'logo-' + uniqueSuffix + path.extname(file.originalname));
+    }
+  }),
+  fileFilter: function (req, file, cb) {
+    const allowedTypes = ['image/jpeg', 'image/png'];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Only JPEG and PNG are allowed.'));
+    }
   }
-  next();
-}
-
-function requireAdmin(req: Express.Request, res: Express.Response, next: Express.NextFunction) {
-  if (!req.isAuthenticated() || req.user.role !== "admin") {
-    return res.status(403).json({ message: "Forbidden" });
-  }
-  next();
-}
-
-// Assume hashPassword function exists elsewhere and is imported correctly.
-async function hashPassword(password: string): Promise<string> {
-  //Implementation of password hashing.  This is a placeholder.  Replace with your actual implementation.
-  const hash = createHash('sha256').update(password).digest('hex');
-  return hash;
-}
-
+});
 
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
@@ -52,24 +45,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/admin/site-settings", requireAdmin, upload.single('logo'), async (req, res) => {
     try {
-      // Start with existing settings
-      const currentSettings = await storage.getSiteSettings();
-      const updateData: Partial<SiteSettings> = {
+      const updateData = {
         primaryColor: req.body.primaryColor,
         secondaryColor: req.body.secondaryColor,
       };
 
-      // Handle logo upload if present
+      // If a new logo was uploaded, update the logo URL
       if (req.file) {
-        const logoUrl = await storage.saveFile(req.file);
+        const logoUrl = `/uploads/${req.file.filename}`;
         updateData.logoUrl = logoUrl;
+
+        // Get current settings to check if we need to delete old logo
+        const currentSettings = await storage.getSiteSettings();
+        if (currentSettings?.logoUrl) {
+          try {
+            const oldLogoPath = path.join(process.cwd(), 'public', currentSettings.logoUrl);
+            await fs.unlink(oldLogoPath);
+          } catch (error) {
+            console.error('Error deleting old logo:', error);
+          }
+        }
       }
 
       const settings = await storage.updateSiteSettings(updateData);
       res.json(settings);
     } catch (error) {
       console.error("Error updating site settings:", error);
-      res.status(500).json({ message: "Site ayarları güncellenirken bir hata oluştu" });
+      res.status(500).json({ 
+        message: error.message || "Site ayarları güncellenirken bir hata oluştu" 
+      });
     }
   });
 
@@ -475,6 +479,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+
+  function requireAuth(req: Express.Request, res: Express.Response, next: Express.NextFunction) {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    next();
+  }
+
+  function requireAdmin(req: Express.Request, res: Express.Response, next: Express.NextFunction) {
+    if (!req.isAuthenticated() || req.user.role !== "admin") {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+    next();
+  }
+
+  async function hashPassword(password: string): Promise<string> {
+    //Implementation of password hashing.  This is a placeholder.  Replace with your actual implementation.
+    const hash = createHash('sha256').update(password).digest('hex');
+    return hash;
+  }
 
   const httpServer = createServer(app);
   return httpServer;
