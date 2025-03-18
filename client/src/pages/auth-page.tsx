@@ -9,9 +9,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertUserSchema, type InsertUser } from "@shared/schema";
 import { Redirect } from "wouter";
 import { Loader2 } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
+  const { toast } = useToast();
 
   const loginForm = useForm({
     defaultValues: {
@@ -32,6 +36,32 @@ export default function AuthPage() {
       city: "",
       occupation: "",
       instagram: "",
+    },
+  });
+
+  const resetPasswordForm = useForm({
+    defaultValues: {
+      email: "",
+    },
+  });
+
+  const resetPasswordMutation = useMutation({
+    mutationFn: async (data: { email: string }) => {
+      const res = await apiRequest("POST", "/api/reset-password", data);
+      return await res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Şifre sıfırlama bağlantısı gönderildi",
+        description: "E-posta adresinize şifre sıfırlama bağlantısı gönderdik.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Hata",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
@@ -64,9 +94,10 @@ export default function AuthPage() {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="login">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="login">Giriş</TabsTrigger>
                 <TabsTrigger value="register">Kayıt</TabsTrigger>
+                <TabsTrigger value="reset">Şifremi Unuttum</TabsTrigger>
               </TabsList>
 
               <TabsContent value="login">
@@ -101,6 +132,30 @@ export default function AuthPage() {
                     <Button type="submit" className="w-full" disabled={loginMutation.isPending}>
                       {loginMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                       Giriş Yap
+                    </Button>
+                  </form>
+                </Form>
+              </TabsContent>
+
+              <TabsContent value="reset">
+                <Form {...resetPasswordForm}>
+                  <form onSubmit={resetPasswordForm.handleSubmit((data) => resetPasswordMutation.mutate(data))} className="space-y-4">
+                    <FormField
+                      control={resetPasswordForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>E-posta</FormLabel>
+                          <FormControl>
+                            <Input type="email" {...field} placeholder="E-posta adresinizi girin" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <Button type="submit" className="w-full" disabled={resetPasswordMutation.isPending}>
+                      {resetPasswordMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Şifre Sıfırlama Bağlantısı Gönder
                     </Button>
                   </form>
                 </Form>

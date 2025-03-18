@@ -26,6 +26,8 @@ export const users = pgTable("users", {
   avatarUrl: text("avatar_url"),
   role: text("role").notNull().default("user"),
   isApproved: boolean("is_approved").notNull().default(false),
+  resetToken: text("reset_token"),
+  resetTokenExpiry: timestamp("reset_token_expiry")
 });
 
 // Events table
@@ -71,7 +73,7 @@ export const insertUserSchema = createInsertSchema(users).extend({
   password: z.string().min(6, "Password must be at least 6 characters"),
   email: z.string().email("Invalid email address"),
   phone: z.string().min(10, "Invalid phone number"),
-}).omit({ id: true, role: true, isApproved: true });
+}).omit({ id: true, role: true, isApproved: true, resetToken: true, resetTokenExpiry: true });
 
 export const insertEventSchema = createInsertSchema(events).extend({
   date: z.string().refine((date) => !isNaN(Date.parse(date)), "Geçerli bir başlangıç tarihi giriniz"),

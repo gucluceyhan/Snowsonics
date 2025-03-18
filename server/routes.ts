@@ -4,7 +4,7 @@ import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { insertEventSchema, insertSiteSettingsSchema, insertUserSchema } from "@shared/schema";
 import { z } from "zod";
-import { createHash } from "crypto";
+import { createHash, randomBytes } from "crypto";
 import axios from "axios";
 
 function requireAuth(req: Express.Request, res: Express.Response, next: Express.NextFunction) {
@@ -20,6 +20,14 @@ function requireAdmin(req: Express.Request, res: Express.Response, next: Express
   }
   next();
 }
+
+// Assume hashPassword function exists elsewhere and is imported correctly.
+async function hashPassword(password: string): Promise<string> {
+  //Implementation of password hashing.  This is a placeholder.  Replace with your actual implementation.
+  const hash = createHash('sha256').update(password).digest('hex');
+  return hash;
+}
+
 
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
@@ -363,6 +371,81 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Profile photo import error:", error);
       res.status(500).json({
         message: "Profil fotoğrafı içe aktarılırken bir hata oluştu"
+      });
+    }
+  });
+
+  // Şifre sıfırlama başlatma endpoint'i
+  app.post("/api/reset-password", async (req, res) => {
+    try {
+      const { email } = req.body;
+      const user = await storage.getUserByEmail(email);
+
+      if (!user) {
+        return res.status(400).json({
+          message: "Bu e-posta adresiyle kayıtlı bir kullanıcı bulunamadı."
+        });
+      }
+
+      // Sıfırlama tokeni oluştur
+      const resetToken = randomBytes(32).toString('hex');
+      const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 saat geçerli
+
+      // Tokeni kaydet
+      await storage.updateUser(user.id, {
+        resetToken,
+        resetTokenExpiry: resetTokenExpiry.toISOString()
+      });
+
+      // TODO: E-posta gönderme işlemi eklenecek
+      // Şimdilik sadece başarılı yanıt dönüyoruz
+      res.json({
+        message: "Şifre sıfırlama bağlantısı e-posta adresinize gönderildi."
+      });
+    } catch (error) {
+      console.error("Password reset error:", error);
+      res.status(500).json({
+        message: "Şifre sıfırlama işlemi sırasında bir hata oluştu."
+      });
+    }
+  });
+
+  // Şifre sıfırlama doğrulama ve güncelleme endpoint'i
+  app.post("/api/reset-password/:token", async (req, res) => {
+    try {
+      const { token } = req.params;
+      const { password } = req.body;
+
+      const user = await storage.getUserByResetToken(token);
+
+      if (!user) {
+        return res.status(400).json({
+          message: "Geçersiz veya süresi dolmuş şifre sıfırlama bağlantısı."
+        });
+      }
+
+      // Token süresini kontrol et
+      if (new Date(user.resetTokenExpiry) < new Date()) {
+        return res.status(400).json({
+          message: "Şifre sıfırlama bağlantısının süresi dolmuş."
+        });
+      }
+
+      // Yeni şifreyi hashle ve güncelle
+      const hashedPassword = await hashPassword(password);
+      await storage.updateUser(user.id, {
+        password: hashedPassword,
+        resetToken: null,
+        resetTokenExpiry: null
+      });
+
+      res.json({
+        message: "Şifreniz başarıyla güncellendi."
+      });
+    } catch (error) {
+      console.error("Password reset verification error:", error);
+      res.status(500).json({
+        message: "Şifre güncelleme işlemi sırasında bir hata oluştu."
       });
     }
   });

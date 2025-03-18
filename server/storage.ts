@@ -50,7 +50,9 @@ export class MemStorage implements IStorage {
       instagram: null,
       avatarUrl: null,
       role: "admin",
-      isApproved: true
+      isApproved: true,
+      resetToken: null,
+      resetTokenExpiry: null
     };
     this.users.set(adminUser.id, adminUser);
 
@@ -67,7 +69,9 @@ export class MemStorage implements IStorage {
       instagram: null,
       avatarUrl: null,
       role: "user",
-      isApproved: true
+      isApproved: true,
+      resetToken: null,
+      resetTokenExpiry: null
     };
     this.users.set(testUser.id, testUser);
   }
@@ -93,8 +97,8 @@ export class MemStorage implements IStorage {
 <li>Üç kişilik odalar</li>
 <li>Dört kişilik odalar</li>
 </ul>`,
-      date: new Date("2025-04-15").toISOString(),
-      endDate: new Date("2025-04-19").toISOString(),
+      date: new Date("2025-04-15"),
+      endDate: new Date("2025-04-19"),
       location: "Kars, Sarıkamış",
       images: [
         "/assets/new_whatsapp_image.jpg"
@@ -136,7 +140,9 @@ export class MemStorage implements IStorage {
       role: isFirstUser ? "admin" : "user", 
       isApproved: isFirstUser,
       instagram: insertUser.instagram || null,
-      avatarUrl: null
+      avatarUrl: null,
+      resetToken: null,
+      resetTokenExpiry: null
     };
     this.users.set(id, user);
     return user;
@@ -154,12 +160,27 @@ export class MemStorage implements IStorage {
     return Array.from(this.users.values());
   }
 
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(
+      (user) => user.email === email,
+    );
+  }
+
+  async getUserByResetToken(token: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(
+      (user) => user.resetToken === token && user.resetTokenExpiry && new Date(user.resetTokenExpiry) > new Date(),
+    );
+  }
+
+
   // Event methods
   async createEvent(event: InsertEvent & { createdById: number }): Promise<Event> {
     const id = this.currentId.events++;
     const newEvent: Event = { 
       ...event, 
       id,
+      date: new Date(event.date),
+      endDate: new Date(event.endDate),
       images: event.images || []
     };
     this.events.set(id, newEvent);
