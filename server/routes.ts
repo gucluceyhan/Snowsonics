@@ -4,6 +4,7 @@ import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { insertEventSchema, insertSiteSettingsSchema, insertUserSchema } from "@shared/schema";
 import { z } from "zod";
+import { createHash } from "crypto";
 
 function requireAuth(req: Express.Request, res: Express.Response, next: Express.NextFunction) {
   if (!req.isAuthenticated()) {
@@ -286,7 +287,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Gravatar URL'ini oluştur
       let avatarUrl = undefined;
       if (result.data.email) {
-        const md5 = require('crypto').createHash('md5').update(result.data.email.toLowerCase().trim()).digest('hex');
+        const md5 = createHash('md5').update(result.data.email.toLowerCase().trim()).digest('hex');
         avatarUrl = `https://www.gravatar.com/avatar/${md5}?d=mp`;
       }
 
