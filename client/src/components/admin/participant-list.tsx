@@ -21,7 +21,7 @@ type ParticipantWithUser = EventParticipant & {
     lastName: string;
     phone: string;
     email: string;
-  };
+  } | null;
 };
 
 interface ParticipantListProps {
@@ -94,7 +94,8 @@ xmlns:html="http://www.w3.org/TR/REC-html40">
 </Row>`;
 
     participants.forEach(p => {
-      excelContent += `
+      if (p.user) {
+        excelContent += `
 <Row>
 <Cell><Data ss:Type="String">${p.user.firstName}</Data></Cell>
 <Cell><Data ss:Type="String">${p.user.lastName}</Data></Cell>
@@ -105,6 +106,7 @@ xmlns:html="http://www.w3.org/TR/REC-html40">
 <Cell><Data ss:Type="String">${p.paymentStatus === "paid" ? "Ödendi" : "Beklemede"}</Data></Cell>
 <Cell><Data ss:Type="String">${p.status === "attending" ? "Katılıyor" : "Katılmıyor"}</Data></Cell>
 </Row>`;
+      }
     });
 
     excelContent += `
@@ -153,13 +155,15 @@ xmlns:html="http://www.w3.org/TR/REC-html40">
             {participants.map((participant) => (
               <TableRow key={participant.id}>
                 <TableCell>
-                  {participant.user.firstName} {participant.user.lastName}
+                  {participant.user ? `${participant.user.firstName} ${participant.user.lastName}` : "-"}
                 </TableCell>
                 <TableCell>
-                  <div className="text-sm">
-                    <div>{participant.user.phone}</div>
-                    <div className="text-muted-foreground">{participant.user.email}</div>
-                  </div>
+                  {participant.user && (
+                    <div className="text-sm">
+                      <div>{participant.user.phone}</div>
+                      <div className="text-muted-foreground">{participant.user.email}</div>
+                    </div>
+                  )}
                 </TableCell>
                 <TableCell>
                   {participant.roomType ? getRoomTypeLabel(participant.roomType) : "-"}
