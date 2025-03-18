@@ -28,6 +28,9 @@ export function Navbar() {
         <div className="flex items-center gap-4">
           {user?.role === "admin" && (
             <div className="flex gap-2">
+              <Link href="/admin/site-settings">
+                <Button variant="outline">Site Ayarları</Button>
+              </Link>
               <Link href="/admin/users">
                 <Button variant="outline">Kullanıcı Yönetimi</Button>
               </Link>

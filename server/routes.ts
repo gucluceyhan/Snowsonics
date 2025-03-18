@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
-import { insertEventSchema } from "@shared/schema";
+import { insertEventSchema, insertSiteSettingsSchema } from "@shared/schema";
 import { z } from "zod";
 
 function requireAuth(req: Express.Request, res: Express.Response, next: Express.NextFunction) {
@@ -21,6 +21,21 @@ function requireAdmin(req: Express.Request, res: Express.Response, next: Express
 
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
+
+  // Site settings routes
+  app.get("/api/admin/site-settings", requireAdmin, async (req, res) => {
+    const settings = await storage.getSiteSettings();
+    res.json(settings);
+  });
+
+  app.put("/api/admin/site-settings", requireAdmin, async (req, res) => {
+    const result = insertSiteSettingsSchema.partial().safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({ message: "Invalid settings data" });
+    }
+    const settings = await storage.updateSiteSettings(result.data);
+    res.json(settings);
+  });
 
   // Admin routes
   app.get("/api/admin/users", requireAdmin, async (req, res) => {
@@ -47,8 +62,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin participant approval route
   app.post("/api/admin/events/:eventId/participants/:participantId/approve", requireAdmin, async (req, res) => {
     const { eventId, participantId } = req.params;
-    const participant = await storage.updateEventParticipant(parseInt(participantId), { 
-      isApproved: true 
+    const participant = await storage.updateEventParticipant(parseInt(participantId), {
+      isApproved: true
     });
     res.json(participant);
   });
@@ -99,7 +114,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Event participation routes
   app.post("/api/events/:id/participate", requireAuth, async (req, res) => {
     const { id } = req.params;
-    const result = z.object({ 
+    const result = z.object({
       status: z.enum(["attending", "maybe", "declined"]),
       roomPreference: z.number().min(1).max(4).optional(),
       paymentStatus: z.enum(["pending", "paid"]).optional()

@@ -11,6 +11,7 @@ import AdminUsersPage from "@/pages/admin/users";
 import AdminEventsPage from "@/pages/admin/events";
 import EventDetailPage from "@/pages/events/[id]";
 import ParticipationsPage from "@/pages/participations";
+import AdminSiteSettingsPage from "@/pages/admin/site-settings";
 
 function Router() {
   return (
@@ -20,6 +21,7 @@ function Router() {
       <ProtectedRoute path="/participations" component={ParticipationsPage} />
       <ProtectedRoute path="/admin/users" component={AdminUsersPage} requireAdmin />
       <ProtectedRoute path="/admin/events" component={AdminEventsPage} requireAdmin />
+      <ProtectedRoute path="/admin/site-settings" component={AdminSiteSettingsPage} requireAdmin />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>

@@ -2,7 +2,16 @@ import { pgTable, text, serial, integer, boolean, json, timestamp } from "drizzl
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// User table with extended profile fields
+// Site settings table
+export const siteSettings = pgTable("site_settings", {
+  id: serial("id").primaryKey(),
+  logoUrl: text("logo_url"),
+  primaryColor: text("primary_color").notNull(),
+  secondaryColor: text("secondary_color").notNull(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Users table
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
@@ -37,11 +46,19 @@ export const eventParticipants = pgTable("event_participants", {
   id: serial("id").primaryKey(),
   eventId: integer("event_id").notNull(),
   userId: integer("user_id").notNull(),
-  status: text("status").notNull(), // attending, maybe, declined
-  isApproved: boolean("is_approved").notNull().default(false), // Admin onayı
-  roomPreference: integer("room_preference"), // 1-4 kişilik oda tercihi
-  paymentStatus: text("payment_status").default("pending"), // pending, paid
+  status: text("status").notNull(),
+  isApproved: boolean("is_approved").notNull().default(false),
+  roomPreference: integer("room_preference"),
+  paymentStatus: text("payment_status").default("pending"),
 });
+
+// Site settings schema
+export const insertSiteSettingsSchema = createInsertSchema(siteSettings)
+  .extend({
+    primaryColor: z.string().regex(/^#[0-9A-F]{6}$/i, "Geçerli bir HEX renk kodu giriniz"),
+    secondaryColor: z.string().regex(/^#[0-9A-F]{6}$/i, "Geçerli bir HEX renk kodu giriniz"),
+  })
+  .omit({ id: true, updatedAt: true });
 
 // Schemas
 export const insertUserSchema = createInsertSchema(users).extend({
@@ -60,7 +77,6 @@ export const insertEventSchema = createInsertSchema(events).extend({
   createdById: true
 });
 
-// Event participant tipi
 export const insertEventParticipantSchema = createInsertSchema(eventParticipants)
   .extend({
     status: z.enum(["attending", "maybe", "declined"]),
@@ -79,3 +95,5 @@ export type Event = typeof events.$inferSelect;
 export type InsertEvent = z.infer<typeof insertEventSchema>;
 export type EventParticipant = typeof eventParticipants.$inferSelect;
 export type InsertEventParticipant = z.infer<typeof insertEventParticipantSchema>;
+export type SiteSettings = typeof siteSettings.$inferSelect;
+export type InsertSiteSettings = z.infer<typeof insertSiteSettingsSchema>;

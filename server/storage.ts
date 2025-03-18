@@ -1,5 +1,5 @@
 import { IStorage } from "./types";
-import { User, Event, EventParticipant, InsertUser, InsertEvent, InsertEventParticipant } from "@shared/schema";
+import { User, Event, EventParticipant, SiteSettings, InsertUser, InsertEvent, InsertEventParticipant, InsertSiteSettings } from "@shared/schema";
 import createMemoryStore from "memorystore";
 import session from "express-session";
 import { scrypt, randomBytes } from "crypto";
@@ -18,6 +18,7 @@ export class MemStorage implements IStorage {
   private users: Map<number, User>;
   private events: Map<number, Event>;
   private eventParticipants: Map<number, EventParticipant>;
+  private siteSettings: SiteSettings | null;
   sessionStore: session.Store;
   private currentId: { [key: string]: number };
 
@@ -25,11 +26,13 @@ export class MemStorage implements IStorage {
     this.users = new Map();
     this.events = new Map();
     this.eventParticipants = new Map();
+    this.siteSettings = null;
     this.currentId = { users: 3, events: 1, eventParticipants: 1 };
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000,
     });
     this.initDevUsers();
+    this.initDefaultSettings();
   }
 
   private async initDevUsers() {
@@ -66,6 +69,18 @@ export class MemStorage implements IStorage {
       isApproved: true
     };
     this.users.set(testUser.id, testUser);
+  }
+
+  private async initDefaultSettings() {
+    if (!this.siteSettings) {
+      this.siteSettings = {
+        id: 1,
+        logoUrl: "/logo.jpeg",
+        primaryColor: "#914199",
+        secondaryColor: "#F7E15C",
+        updatedAt: new Date(),
+      };
+    }
   }
 
   // User methods
@@ -173,6 +188,20 @@ export class MemStorage implements IStorage {
   async getUserEventParticipation(userId: number, eventId: number): Promise<EventParticipant | undefined> {
     return Array.from(this.eventParticipants.values())
       .find(p => p.userId === userId && p.eventId === eventId);
+  }
+
+  // Site settings methods
+  async getSiteSettings(): Promise<SiteSettings | null> {
+    return this.siteSettings;
+  }
+
+  async updateSiteSettings(settings: Partial<InsertSiteSettings>): Promise<SiteSettings> {
+    this.siteSettings = {
+      ...this.siteSettings!,
+      ...settings,
+      updatedAt: new Date(),
+    };
+    return this.siteSettings;
   }
 }
 
