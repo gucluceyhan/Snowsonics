@@ -1,3 +1,6 @@
+
+import path from "path";
+import fs from "fs/promises";
 import { IStorage } from "./types";
 import { User, Event, EventParticipant, SiteSettings, InsertUser, InsertEvent, InsertEventParticipant, InsertSiteSettings } from "@shared/schema";
 import createMemoryStore from "memorystore";
@@ -14,7 +17,7 @@ async function hashDevPassword(password: string) {
   return `${buf.toString("hex")}.${salt}`;
 }
 
-export class MemStorage implements IStorage {
+export class FileStorage implements IStorage {
   private users: Map<number, User>;
   private events: Map<number, Event>;
   private eventParticipants: Map<number, EventParticipant>;
@@ -100,9 +103,7 @@ export class MemStorage implements IStorage {
       date: new Date("2025-04-15"),
       endDate: new Date("2025-04-19"),
       location: "Kars, Sarıkamış",
-      images: [
-        "/assets/new_whatsapp_image.jpg"
-      ],
+      images: ["/assets/test-image.jpg"],
       createdById: 1
     };
     this.events.set(testEvent.id, testEvent);
@@ -112,11 +113,27 @@ export class MemStorage implements IStorage {
     if (!this.siteSettings) {
       this.siteSettings = {
         id: 1,
-        logoUrl: "/assets/new_whatsapp_image.jpg",
+        logoUrl: "/assets/logo.jpg",
         primaryColor: "#914199",
         secondaryColor: "#F7E15C",
         updatedAt: new Date(),
       };
+    }
+  }
+
+  async saveFile(file: Express.Multer.File): Promise<string> {
+    const publicDir = path.join(process.cwd(), "public");
+    const assetsDir = path.join(publicDir, "assets");
+    
+    try {
+      await fs.mkdir(assetsDir, { recursive: true });
+      const fileName = `${Date.now()}-${file.originalname}`;
+      const filePath = path.join(assetsDir, fileName);
+      await fs.writeFile(filePath, file.buffer);
+      return `/assets/${fileName}`;
+    } catch (error) {
+      console.error("Error saving file:", error);
+      throw error;
     }
   }
 
@@ -171,7 +188,6 @@ export class MemStorage implements IStorage {
       (user) => user.resetToken === token && user.resetTokenExpiry && new Date(user.resetTokenExpiry) > new Date(),
     );
   }
-
 
   // Event methods
   async createEvent(event: InsertEvent & { createdById: number }): Promise<Event> {
@@ -260,4 +276,4 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new FileStorage();
