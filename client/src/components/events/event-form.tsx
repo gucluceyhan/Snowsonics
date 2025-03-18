@@ -55,14 +55,17 @@ export default function EventForm({ event, onSuccess }: EventFormProps) {
   const mutation = useMutation({
     mutationFn: async (data: InsertEvent) => {
       const formData = new FormData();
-
-      // Append text fields
-      formData.append('title', data.title);
-      formData.append('description', data.description);
-      formData.append('content', data.content);
-      formData.append('date', data.date);
-      formData.append('endDate', data.endDate);
-      formData.append('location', data.location);
+      
+      // Convert event data to JSON and append as a single field
+      const eventData = {
+        title: data.title,
+        description: data.description,
+        content: data.content,
+        date: data.date,
+        endDate: data.endDate,
+        location: data.location,
+      };
+      formData.append('data', JSON.stringify(eventData));
 
       // Handle file uploads
       const images = data.images || [];
@@ -70,8 +73,6 @@ export default function EventForm({ event, onSuccess }: EventFormProps) {
         images.forEach((image) => {
           if (image instanceof File) {
             formData.append('images', image);
-          } else if (typeof image === 'string') {
-            formData.append('existingImages', image);
           }
         });
       }

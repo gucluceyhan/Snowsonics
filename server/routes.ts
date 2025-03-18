@@ -140,7 +140,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/events", requireAuth, upload.array('images', 5), async (req, res) => {
     try {
-      const eventData = req.body;
+      const eventData = JSON.parse(req.body.data);
       const result = insertEventSchema.safeParse({
         ...eventData,
         images: req.files ? (req.files as Express.Multer.File[]).map(file => `/uploads/${file.filename}`) : []
@@ -165,7 +165,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/events/:id", requireAuth, upload.array('images', 5), async (req, res) => {
     try {
       const { id } = req.params;
-      const eventData = req.body;
+      const eventData = JSON.parse(req.body.data);
 
       let updateData = { ...eventData };
       if (req.files && (req.files as Express.Multer.File[]).length > 0) {
