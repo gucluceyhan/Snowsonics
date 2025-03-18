@@ -17,6 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { queryClient } from "@/lib/queryClient";
+import { ImageLogo } from "@/components/ui/image-logo";
 
 export default function SiteSettingsPage() {
   const { toast } = useToast();
@@ -156,7 +157,7 @@ export default function SiteSettingsPage() {
                 <h3 className="text-lg font-semibold">Önizleme</h3>
                 <div className="p-6 border rounded-lg space-y-4">
                   <div className="flex items-center justify-center">
-                    <img
+                    <ImageLogo
                       src={logoPreview || settings?.logoUrl}
                       alt="Logo Preview"
                       className="h-20 w-auto"
