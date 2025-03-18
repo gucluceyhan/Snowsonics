@@ -66,7 +66,7 @@ export default function EventForm({ event, onSuccess }: EventFormProps) {
 
       // Handle file uploads
       if (data.images && Array.isArray(data.images)) {
-        data.images.forEach((image, index) => {
+        data.images.forEach((image) => {
           if (image instanceof File) {
             formData.append('images', image);
           }
@@ -261,6 +261,7 @@ export default function EventForm({ event, onSuccess }: EventFormProps) {
                 <ImageUpload
                   onChange={(files) => field.onChange(files)}
                   maxFiles={5}
+                  preview={field.value as string[]}
                 />
               </FormControl>
               <FormMessage />
