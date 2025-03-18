@@ -14,22 +14,20 @@ import fs from 'fs/promises';
 const upload = multer({
   storage: multer.diskStorage({
     destination: async function (req, file, cb) {
+      // Create uploads directory if it doesn't exist
       const uploadDir = path.join(process.cwd(), 'public', 'uploads');
       await fs.mkdir(uploadDir, { recursive: true });
       cb(null, uploadDir);
     },
     filename: function (req, file, cb) {
+      // Generate unique filename
       const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-      cb(null, 'logo-' + uniqueSuffix + path.extname(file.originalname));
+      const ext = path.extname(file.originalname);
+      cb(null, `logo-${uniqueSuffix}${ext}`);
     }
   }),
-  fileFilter: function (req, file, cb) {
-    const allowedTypes = ['image/jpeg', 'image/png'];
-    if (allowedTypes.includes(file.mimetype)) {
-      cb(null, true);
-    } else {
-      cb(new Error('Invalid file type. Only JPEG and PNG are allowed.'));
-    }
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit
   }
 });
 
@@ -44,6 +42,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/admin/site-settings", requireAdmin, upload.single('logo'), async (req, res) => {
     try {
+      console.log('Received settings update:', {
+        body: req.body,
+        file: req.file
+      });
+
       const updateData = {
         primaryColor: req.body.primaryColor,
         secondaryColor: req.body.secondaryColor,
@@ -53,8 +56,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (req.body.deleteLogo === 'true') {
         const currentSettings = await storage.getSiteSettings();
         if (currentSettings?.logoUrl) {
-          const oldLogoPath = path.join(process.cwd(), 'public', currentSettings.logoUrl);
           try {
+            const oldLogoPath = path.join(process.cwd(), 'public', currentSettings.logoUrl);
             await fs.unlink(oldLogoPath);
           } catch (error) {
             console.error('Error deleting old logo:', error);
@@ -64,15 +67,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       // Handle new logo upload
       else if (req.file) {
+        // Delete old logo if exists
         const currentSettings = await storage.getSiteSettings();
         if (currentSettings?.logoUrl) {
-          const oldLogoPath = path.join(process.cwd(), 'public', currentSettings.logoUrl);
           try {
+            const oldLogoPath = path.join(process.cwd(), 'public', currentSettings.logoUrl);
             await fs.unlink(oldLogoPath);
           } catch (error) {
             console.error('Error deleting old logo:', error);
           }
         }
+
+        // Set new logo URL
         updateData.logoUrl = `/uploads/${req.file.filename}`;
       }
 
