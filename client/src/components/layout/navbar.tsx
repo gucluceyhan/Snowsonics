@@ -21,9 +21,14 @@ export function Navbar() {
 
         <div className="flex items-center gap-4">
           {user?.role === "admin" && (
-            <Link href="/admin/users">
-              <Button variant="outline">Admin Panel</Button>
-            </Link>
+            <div className="flex gap-2">
+              <Link href="/admin/users">
+                <Button variant="outline">Kullanıcı Yönetimi</Button>
+              </Link>
+              <Link href="/admin/events">
+                <Button variant="outline">Etkinlik Yönetimi</Button>
+              </Link>
+            </div>
           )}
 
           <DropdownMenu>
@@ -35,7 +40,7 @@ export function Navbar() {
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => logoutMutation.mutate()}>
                 <LogOut className="mr-2 h-4 w-4" />
-                Logout
+                Çıkış Yap
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
