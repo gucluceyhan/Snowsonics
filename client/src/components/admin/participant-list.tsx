@@ -10,9 +10,10 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Check, Download } from "lucide-react";
+import { Check, Download, Euro } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type ParticipantWithUser = EventParticipant & {
   user: {
@@ -40,21 +41,37 @@ export function ParticipantList({ eventId }: ParticipantListProps) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/events/${eventId}/participants`] });
       toast({
-        title: "Participant approved",
-        description: "The participant has been approved successfully",
+        title: "Katılımcı onaylandı",
+        description: "Katılımcı başarıyla onaylandı",
+      });
+    },
+  });
+
+  const updatePaymentStatusMutation = useMutation({
+    mutationFn: async ({ participantId, status }: { participantId: number; status: string }) => {
+      await apiRequest("PUT", `/api/admin/events/${eventId}/participants/${participantId}/payment`, {
+        status,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/events/${eventId}/participants`] });
+      toast({
+        title: "Ödeme durumu güncellendi",
+        description: "Katılımcının ödeme durumu başarıyla güncellendi",
       });
     },
   });
 
   const exportToExcel = () => {
     const csvContent = [
-      ["Ad", "Soyad", "Telefon", "E-posta", "Oda Tercihi", "Ödeme Durumu", "Katılım Durumu"].join(","),
+      ["Ad", "Soyad", "Telefon", "E-posta", "Oda Tipi", "Kişi Sayısı", "Ödeme Durumu", "Katılım Durumu"].join(","),
       ...participants.map(p => [
         p.user.firstName,
         p.user.lastName,
         p.user.phone,
         p.user.email,
-        p.roomPreference || "-",
+        p.roomType ? `${p.roomType === 'single' ? 'Tek' : p.roomType === 'double' ? 'İki' : p.roomType === 'triple' ? 'Üç' : 'Dört'} Kişilik` : "-",
+        p.roomOccupancy || "-",
         p.paymentStatus === "paid" ? "Ödendi" : "Beklemede",
         p.status === "attending" ? "Katılıyor" : p.status === "maybe" ? "Belki" : "Katılmıyor"
       ].join(","))
@@ -69,6 +86,16 @@ export function ParticipantList({ eventId }: ParticipantListProps) {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+    }
+  };
+
+  const getRoomTypeLabel = (type: string) => {
+    switch (type) {
+      case 'single': return 'Tek Kişilik';
+      case 'double': return 'İki Kişilik';
+      case 'triple': return 'Üç Kişilik';
+      case 'quad': return 'Dört Kişilik';
+      default: return '-';
     }
   };
 
@@ -87,9 +114,9 @@ export function ParticipantList({ eventId }: ParticipantListProps) {
           <TableHeader>
             <TableRow>
               <TableHead>Ad Soyad</TableHead>
-              <TableHead>Telefon</TableHead>
-              <TableHead>E-posta</TableHead>
-              <TableHead>Oda Tercihi</TableHead>
+              <TableHead>İletişim</TableHead>
+              <TableHead>Oda Tipi</TableHead>
+              <TableHead>Kişi Sayısı</TableHead>
               <TableHead>Ödeme Durumu</TableHead>
               <TableHead>Katılım Durumu</TableHead>
               <TableHead>İşlemler</TableHead>
@@ -101,15 +128,40 @@ export function ParticipantList({ eventId }: ParticipantListProps) {
                 <TableCell>
                   {participant.user.firstName} {participant.user.lastName}
                 </TableCell>
-                <TableCell>{participant.user.phone}</TableCell>
-                <TableCell>{participant.user.email}</TableCell>
                 <TableCell>
-                  {participant.roomPreference ? `${participant.roomPreference} Kişilik` : "-"}
+                  <div className="text-sm">
+                    <div>{participant.user.phone}</div>
+                    <div className="text-muted-foreground">{participant.user.email}</div>
+                  </div>
                 </TableCell>
                 <TableCell>
-                  <Badge variant={participant.paymentStatus === "paid" ? "default" : "secondary"}>
-                    {participant.paymentStatus === "paid" ? "Ödendi" : "Beklemede"}
-                  </Badge>
+                  {participant.roomType ? getRoomTypeLabel(participant.roomType) : "-"}
+                </TableCell>
+                <TableCell>
+                  {participant.roomOccupancy || "-"}
+                </TableCell>
+                <TableCell>
+                  <Select
+                    value={participant.paymentStatus}
+                    onValueChange={(value) =>
+                      updatePaymentStatusMutation.mutate({
+                        participantId: participant.id,
+                        status: value,
+                      })
+                    }
+                  >
+                    <SelectTrigger className="w-[130px]">
+                      <SelectValue>
+                        <Badge variant={participant.paymentStatus === "paid" ? "default" : "secondary"}>
+                          {participant.paymentStatus === "paid" ? "Ödendi" : "Beklemede"}
+                        </Badge>
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pending">Beklemede</SelectItem>
+                      <SelectItem value="paid">Ödendi</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </TableCell>
                 <TableCell>
                   <Badge 

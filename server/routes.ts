@@ -68,6 +68,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(participant);
   });
 
+  //New Route for payment update
+  app.put("/api/admin/events/:eventId/participants/:participantId/payment", requireAdmin, async (req, res) => {
+    const { eventId, participantId } = req.params;
+    const { status } = req.body;
+
+    if (!["pending", "paid"].includes(status)) {
+      return res.status(400).json({ message: "Invalid payment status" });
+    }
+
+    const participant = await storage.updateEventParticipant(parseInt(participantId), {
+      paymentStatus: status
+    });
+    res.json(participant);
+  });
+
+
   // Event routes
   app.get("/api/events", requireAuth, async (req, res) => {
     const events = await storage.getAllEvents();

@@ -75,15 +75,15 @@ export class MemStorage implements IStorage {
   private async initTestEvents() {
     const testEvent: Event = {
       id: 1,
-      title: "20-24 Şubat 2025 Kars Sarıkamış",
+      title: "15-19 Nisan 2025 Kars Sarıkamış",
       description: "Kars Sarıkamış'ta muhteşem bir snowboard deneyimi",
       content: `<h2>Etkinlik Detayları</h2>
-<p>20-24 Şubat 2025 tarihleri arasında Kars Sarıkamış'ta düzenlenecek olan snowboard etkinliğimize davetlisiniz!</p>
+<p>15-19 Nisan 2025 tarihleri arasında Kars Sarıkamış'ta düzenlenecek olan snowboard etkinliğimize davetlisiniz!</p>
 <h3>Program</h3>
 <ul>
-<li>20 Şubat: Karşılama ve otele yerleşme</li>
-<li>21-23 Şubat: Snowboard aktiviteleri</li>
-<li>24 Şubat: Kapanış ve dönüş</li>
+<li>15 Nisan: Karşılama ve otele yerleşme</li>
+<li>16-18 Nisan: Snowboard aktiviteleri</li>
+<li>19 Nisan: Kapanış ve dönüş</li>
 </ul>
 <h3>Konaklama</h3>
 <p>Katılımcılar için farklı oda seçenekleri mevcuttur:</p>
@@ -93,8 +93,8 @@ export class MemStorage implements IStorage {
 <li>Üç kişilik odalar</li>
 <li>Dört kişilik odalar</li>
 </ul>`,
-      date: new Date("2025-02-20").toISOString(),
-      endDate: new Date("2025-02-24").toISOString(),
+      date: new Date("2025-04-15").toISOString(),
+      endDate: new Date("2025-04-19").toISOString(),
       location: "Kars, Sarıkamış",
       images: [
         "/assets/new_whatsapp_image.jpg"
