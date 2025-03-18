@@ -42,67 +42,72 @@ export default function EventCard({ event, variant = "default" }: EventCardProps
     },
   });
 
-  const cardContent = (
-    <>
-      <CardHeader>
-        {event.imageUrl && (
-          <div className={cn(
-            "relative aspect-square mb-4 overflow-hidden rounded-lg bg-muted",
-            variant === "horizontal" && "aspect-video"
-          )}>
-            <img 
-              src={event.imageUrl} 
-              alt={event.title}
-              className="object-cover w-full h-full"
-            />
-          </div>
-        )}
-        <CardTitle>{event.title}</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <p className="text-muted-foreground line-clamp-2">{event.description}</p>
-
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Calendar className="h-4 w-4" />
-          {format(new Date(event.date), "PPP")}
+const cardContent = (
+  <>
+    <CardHeader>
+      {event.images?.length > 0 && (
+        <div className={cn(
+          "relative aspect-square mb-4 overflow-hidden rounded-lg bg-muted",
+          variant === "horizontal" && "aspect-video"
+        )}>
+          <img 
+            src={event.images[0]} 
+            alt={event.title}
+            className="object-cover w-full h-full"
+          />
+          {event.images.length > 1 && (
+            <div className="absolute bottom-2 right-2 bg-background/80 px-2 py-1 rounded text-xs">
+              +{event.images.length - 1} fotoğraf
+            </div>
+          )}
         </div>
+      )}
+      <CardTitle>{event.title}</CardTitle>
+    </CardHeader>
+    <CardContent className="space-y-4">
+      <p className="text-muted-foreground line-clamp-2">{event.description}</p>
 
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <MapPin className="h-4 w-4" />
-          {event.location}
-        </div>
-      </CardContent>
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <Calendar className="h-4 w-4" />
+        {format(new Date(event.date), "PPP")}
+      </div>
 
-      <CardFooter className="gap-2">
-        <Button
-          className="flex-1"
-          variant="outline"
-          onClick={() => setLocation(`/events/${event.id}`)}
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <MapPin className="h-4 w-4" />
+        {event.location}
+      </div>
+    </CardContent>
+
+    <CardFooter className="gap-2">
+      <Button
+        className="flex-1"
+        variant="outline"
+        onClick={() => setLocation(`/events/${event.id}`)}
+      >
+        <Info className="w-4 h-4 mr-2" />
+        Detaylar
+      </Button>
+
+      {user?.isApproved && (
+        <Button 
+          variant="default"
+          onClick={() => participateMutation.mutate("attending")}
+          disabled={participateMutation.isPending}
         >
-          <Info className="w-4 h-4 mr-2" />
-          Detaylar
+          Katıl
         </Button>
-
-        {user?.isApproved && (
-          <Button 
-            variant="default"
-            onClick={() => participateMutation.mutate("attending")}
-            disabled={participateMutation.isPending}
-          >
-            Katıl
-          </Button>
-        )}
-      </CardFooter>
-    </>
-  );
+      )}
+    </CardFooter>
+  </>
+);
 
   return variant === "horizontal" ? (
     <Card className="flex flex-col md:flex-row overflow-hidden">
       <div className="md:w-1/3">
-        {event.imageUrl && (
+        {event.images?.length > 0 && (
           <div className="relative aspect-video md:h-full">
             <img 
-              src={event.imageUrl} 
+              src={event.images[0]} 
               alt={event.title}
               className="object-cover w-full h-full"
             />

@@ -29,13 +29,10 @@ export class MemStorage implements IStorage {
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000,
     });
-
-    // Geliştirme için varsayılan kullanıcıları oluştur
     this.initDevUsers();
   }
 
   private async initDevUsers() {
-    // Admin kullanıcısı
     const adminUser: User = {
       id: 1,
       username: "admin",
@@ -53,7 +50,6 @@ export class MemStorage implements IStorage {
     };
     this.users.set(adminUser.id, adminUser);
 
-    // Test kullanıcısı
     const testUser: User = {
       id: 2,
       username: "testuser",
@@ -116,7 +112,7 @@ export class MemStorage implements IStorage {
     const newEvent: Event = { 
       ...event, 
       id,
-      imageUrl: event.imageUrl || null
+      images: event.images || []
     };
     this.events.set(id, newEvent);
     return newEvent;
@@ -174,7 +170,6 @@ export class MemStorage implements IStorage {
       .filter(p => p.userId === userId);
   }
 
-  // Yeni eklenen fonksiyon
   async getUserEventParticipation(userId: number, eventId: number): Promise<EventParticipant | undefined> {
     return Array.from(this.eventParticipants.values())
       .find(p => p.userId === userId && p.eventId === eventId);

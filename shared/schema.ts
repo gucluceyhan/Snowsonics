@@ -24,15 +24,15 @@ export const events = pgTable("events", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
   description: text("description").notNull(),
-  content: json("content").notNull(),
+  content: text("content").notNull(),
   date: timestamp("date").notNull(),
   endDate: timestamp("end_date").notNull(),
   location: text("location").notNull(),
-  imageUrl: text("image_url"),
+  images: json("images").$type<string[]>().default([]).notNull(),
   createdById: integer("created_by_id").notNull(),
 });
 
-// Event participants table güncelleniyor
+// Event participants table
 export const eventParticipants = pgTable("event_participants", {
   id: serial("id").primaryKey(),
   eventId: integer("event_id").notNull(),
@@ -53,12 +53,14 @@ export const insertUserSchema = createInsertSchema(users).extend({
 export const insertEventSchema = createInsertSchema(events).extend({
   date: z.string().refine((date) => !isNaN(Date.parse(date)), "Geçerli bir başlangıç tarihi giriniz"),
   endDate: z.string().refine((date) => !isNaN(Date.parse(date)), "Geçerli bir bitiş tarihi giriniz"),
+  content: z.string(),
+  images: z.array(z.string()).default([]),
 }).omit({
   id: true,
   createdById: true
 });
 
-// Event participant tipi güncelleniyor
+// Event participant tipi
 export const insertEventParticipantSchema = createInsertSchema(eventParticipants)
   .extend({
     status: z.enum(["attending", "maybe", "declined"]),

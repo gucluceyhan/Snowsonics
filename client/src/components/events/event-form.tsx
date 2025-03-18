@@ -14,6 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
+import { ImageUpload } from "@/components/ui/image-upload";
 import {
   Popover,
   PopoverContent,
@@ -44,7 +45,7 @@ export default function EventForm({ event, onSuccess }: EventFormProps) {
     date: new Date().toISOString(),
     endDate: new Date().toISOString(),
     location: "",
-    imageUrl: "",
+    images: [],
   };
 
   const form = useForm<InsertEvent>({
@@ -221,12 +222,16 @@ export default function EventForm({ event, onSuccess }: EventFormProps) {
 
         <FormField
           control={form.control}
-          name="imageUrl"
+          name="images"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Görsel URL'i (Opsiyonel)</FormLabel>
+              <FormLabel>Fotoğraflar</FormLabel>
               <FormControl>
-                <Input {...field} value={field.value || ""} />
+                <ImageUpload
+                  value={field.value}
+                  onChange={field.onChange}
+                  maxFiles={5}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

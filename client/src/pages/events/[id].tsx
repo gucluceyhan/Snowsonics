@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import cn from 'classnames';
 
 export default function EventDetailPage() {
   const { id } = useParams();
@@ -51,13 +52,23 @@ export default function EventDetailPage() {
 
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto space-y-8">
-          {event.imageUrl && (
-            <div className="aspect-video w-full overflow-hidden rounded-lg bg-muted">
-              <img 
-                src={event.imageUrl} 
-                alt={event.title}
-                className="object-cover w-full h-full"
-              />
+          {event.images?.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {event.images.map((image, index) => (
+                <div 
+                  key={index}
+                  className={cn(
+                    "aspect-video overflow-hidden rounded-lg bg-muted",
+                    index === 0 && "md:col-span-2 lg:col-span-3"
+                  )}
+                >
+                  <img 
+                    src={image}
+                    alt={`${event.title} - ${index + 1}`}
+                    className="object-cover w-full h-full"
+                  />
+                </div>
+              ))}
             </div>
           )}
 
