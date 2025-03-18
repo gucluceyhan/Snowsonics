@@ -26,6 +26,8 @@ export default function EventCard({ event, variant = "default" }: EventCardProps
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/events"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/events/${event.id}/participants`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user/participations"] });
       toast({
         title: "Katılım talebi gönderildi",
         description: "Admin onayından sonra katılımınız onaylanacaktır.",

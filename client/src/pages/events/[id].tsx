@@ -8,10 +8,12 @@ import { format } from "date-fns";
 import { useAuth } from "@/hooks/use-auth";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export default function EventDetailPage() {
   const { id } = useParams();
   const { user } = useAuth();
+  const { toast } = useToast();
 
   const { data: event } = useQuery<Event>({ 
     queryKey: [`/api/events/${id}`]
@@ -27,6 +29,17 @@ export default function EventDetailPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/events/${id}/participants`] });
+      toast({
+        title: "Katılım talebi gönderildi",
+        description: "Admin onayından sonra katılımınız onaylanacaktır.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Hata",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
