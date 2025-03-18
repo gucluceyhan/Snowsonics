@@ -20,6 +20,24 @@ export default function HomePage() {
     .filter(event => new Date(event.date) > new Date())
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
+  // Create a Set of event dates for highlighting
+  const eventDates = new Set(
+    events.map(event => format(new Date(event.date), "yyyy-MM-dd"))
+  );
+
+  // Custom styling for days with events
+  const modifiers = {
+    hasEvent: (date: Date) => eventDates.has(format(date, "yyyy-MM-dd"))
+  };
+
+  const modifiersStyles = {
+    hasEvent: {
+      color: "white",
+      backgroundColor: "hsl(var(--primary))",
+      borderRadius: "9999px"
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -57,6 +75,8 @@ export default function HomePage() {
                     selected={selectedDate}
                     onSelect={setSelectedDate}
                     className="rounded-md border"
+                    modifiers={modifiers}
+                    modifiersStyles={modifiersStyles}
                   />
                 </div>
                 <div className="lg:w-1/2">

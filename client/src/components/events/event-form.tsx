@@ -33,17 +33,23 @@ interface EventFormProps {
 
 export default function EventForm({ event, onSuccess }: EventFormProps) {
   const { toast } = useToast();
+  const defaultValues = event ? {
+    ...event,
+    date: event.date.toString(),
+    endDate: event.endDate.toString(),
+  } : {
+    title: "",
+    description: "",
+    content: "",
+    date: new Date().toISOString(),
+    endDate: new Date().toISOString(),
+    location: "",
+    imageUrl: "",
+  };
+
   const form = useForm<InsertEvent>({
     resolver: zodResolver(insertEventSchema),
-    defaultValues: event || {
-      title: "",
-      description: "",
-      content: "",
-      date: new Date().toISOString(),
-      endDate: new Date().toISOString(),
-      location: "",
-      imageUrl: "",
-    },
+    defaultValues,
   });
 
   const mutation = useMutation({
@@ -105,7 +111,7 @@ export default function EventForm({ event, onSuccess }: EventFormProps) {
               <FormLabel>İçerik</FormLabel>
               <FormControl>
                 <RichTextEditor
-                  value={field.value as string}
+                  value={field.value}
                   onChange={field.onChange}
                   placeholder="Etkinlik içeriğini giriniz..."
                 />
@@ -220,7 +226,7 @@ export default function EventForm({ event, onSuccess }: EventFormProps) {
             <FormItem>
               <FormLabel>Görsel URL'i (Opsiyonel)</FormLabel>
               <FormControl>
-                <Input {...field} />
+                <Input {...field} value={field.value || ""} />
               </FormControl>
               <FormMessage />
             </FormItem>

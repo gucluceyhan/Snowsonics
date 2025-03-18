@@ -32,8 +32,9 @@ import {
 export default function EventsPage() {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   const { toast } = useToast();
-  
+
   const { data: events = [] } = useQuery<Event[]>({ 
     queryKey: ["/api/events"]
   });
@@ -60,7 +61,7 @@ export default function EventsPage() {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      
+
       <main className="container mx-auto px-4 py-8">
         <div className="space-y-8">
           <div className="flex items-center justify-between">
@@ -71,20 +72,23 @@ export default function EventsPage() {
               </p>
             </div>
 
-            <Dialog>
+            <Dialog open={isOpen} onOpenChange={setIsOpen}>
               <DialogTrigger asChild>
                 <Button>
                   <Plus className="mr-2 h-4 w-4" />
                   Add Event
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[600px]">
+              <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Create New Event</DialogTitle>
                 </DialogHeader>
-                <EventForm onSuccess={() => {
-                  queryClient.invalidateQueries({ queryKey: ["/api/events"] });
-                }} />
+                <EventForm 
+                  onSuccess={() => {
+                    queryClient.invalidateQueries({ queryKey: ["/api/events"] });
+                    setIsOpen(false);
+                  }} 
+                />
               </DialogContent>
             </Dialog>
           </div>
@@ -107,17 +111,20 @@ export default function EventsPage() {
                     <TableCell>{event.location}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Dialog>
+                        <Dialog open={isOpen} onOpenChange={setIsOpen}>
                           <DialogTrigger asChild>
                             <Button 
                               variant="ghost" 
                               size="icon"
-                              onClick={() => setSelectedEvent(event)}
+                              onClick={() => {
+                                setSelectedEvent(event);
+                                setIsOpen(true);
+                              }}
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
                           </DialogTrigger>
-                          <DialogContent className="sm:max-w-[600px]">
+                          <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
                             <DialogHeader>
                               <DialogTitle>Edit Event</DialogTitle>
                             </DialogHeader>
@@ -125,6 +132,7 @@ export default function EventsPage() {
                               event={event}
                               onSuccess={() => {
                                 queryClient.invalidateQueries({ queryKey: ["/api/events"] });
+                                setIsOpen(false);
                               }} 
                             />
                           </DialogContent>

@@ -10,12 +10,14 @@ import NotFound from "@/pages/not-found";
 import AdminUsersPage from "@/pages/admin/users";
 import AdminEventsPage from "@/pages/admin/events";
 import EventDetailPage from "@/pages/events/[id]";
+import ParticipationsPage from "@/pages/participations";
 
 function Router() {
   return (
     <Switch>
       <ProtectedRoute path="/" component={HomePage} />
       <ProtectedRoute path="/events/:id" component={EventDetailPage} />
+      <ProtectedRoute path="/participations" component={ParticipationsPage} />
       <ProtectedRoute path="/admin/users" component={AdminUsersPage} requireAdmin />
       <ProtectedRoute path="/admin/events" component={AdminEventsPage} requireAdmin />
       <Route path="/auth" component={AuthPage} />

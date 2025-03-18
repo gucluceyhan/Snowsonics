@@ -31,6 +31,10 @@ export function Navbar() {
             </div>
           )}
 
+          <Link href="/participations">
+            <Button variant="outline">Katılımlarım</Button>
+          </Link>
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon">

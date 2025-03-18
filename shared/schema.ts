@@ -32,12 +32,14 @@ export const events = pgTable("events", {
   createdById: integer("created_by_id").notNull(),
 });
 
-// Event participants table
+// Event participants table güncelleniyor
 export const eventParticipants = pgTable("event_participants", {
   id: serial("id").primaryKey(),
   eventId: integer("event_id").notNull(),
   userId: integer("user_id").notNull(),
   status: text("status").notNull(), // attending, maybe, declined
+  roomPreference: integer("room_preference"), // 1-4 kişilik oda tercihi
+  paymentStatus: text("payment_status").default("pending"), // pending, paid
 });
 
 // Schemas
@@ -50,14 +52,21 @@ export const insertUserSchema = createInsertSchema(users).extend({
 export const insertEventSchema = createInsertSchema(events).extend({
   date: z.string().refine((date) => !isNaN(Date.parse(date)), "Geçerli bir başlangıç tarihi giriniz"),
   endDate: z.string().refine((date) => !isNaN(Date.parse(date)), "Geçerli bir bitiş tarihi giriniz"),
-}).omit({ 
+}).omit({
   id: true,
-  createdById: true 
+  createdById: true
 });
 
-export const insertEventParticipantSchema = createInsertSchema(eventParticipants).omit({
-  id: true
-});
+// Event participant tipi güncelleniyor
+export const insertEventParticipantSchema = createInsertSchema(eventParticipants)
+  .extend({
+    status: z.enum(["attending", "maybe", "declined"]),
+    roomPreference: z.number().min(1).max(4).optional(),
+    paymentStatus: z.enum(["pending", "paid"]).optional()
+  })
+  .omit({
+    id: true
+  });
 
 // Types
 export type User = typeof users.$inferSelect;

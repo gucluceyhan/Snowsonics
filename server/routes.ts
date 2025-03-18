@@ -50,6 +50,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(events);
   });
 
+  app.get("/api/events/:id", requireAuth, async (req, res) => {
+    const { id } = req.params;
+    const event = await storage.getEvent(parseInt(id));
+    if (!event) {
+      return res.status(404).json({ message: "Event not found" });
+    }
+    res.json(event);
+  });
+
   app.post("/api/events", requireAuth, async (req, res) => {
     const result = insertEventSchema.safeParse(req.body);
     if (!result.success) {
@@ -81,14 +90,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Event participation routes
   app.post("/api/events/:id/participate", requireAuth, async (req, res) => {
     const { id } = req.params;
-    const result = z.object({ status: z.enum(["attending", "maybe", "declined"]) }).safeParse(req.body);
+    const result = z.object({ 
+      status: z.enum(["attending", "maybe", "declined"]),
+      roomPreference: z.number().min(1).max(4).optional(),
+      paymentStatus: z.enum(["pending", "paid"]).optional()
+    }).safeParse(req.body);
+
     if (!result.success) {
-      return res.status(400).json({ message: "Invalid status" });
+      return res.status(400).json({ message: "Invalid participation data" });
     }
+
     const participant = await storage.addEventParticipant({
       eventId: parseInt(id),
       userId: req.user.id,
-      status: result.data.status,
+      ...result.data
     });
     res.status(201).json(participant);
   });
@@ -96,7 +111,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/events/:id/participants", requireAuth, async (req, res) => {
     const { id } = req.params;
     const participants = await storage.getEventParticipants(parseInt(id));
-    res.json(participants);
+
+    if (req.user.role === "admin") {
+      // For admin, include user details
+      const participantsWithDetails = await Promise.all(
+        participants.map(async (p) => {
+          const user = await storage.getUser(p.userId);
+          return {
+            ...p,
+            user: {
+              firstName: user.firstName,
+              lastName: user.lastName,
+              phone: user.phone,
+              email: user.email
+            }
+          };
+        })
+      );
+      res.json(participantsWithDetails);
+    } else {
+      res.json(participants);
+    }
+  });
+
+  // User participation history
+  app.get("/api/user/participations", requireAuth, async (req, res) => {
+    const participants = await storage.getUserParticipations(req.user.id);
+    const participationsWithEvents = await Promise.all(
+      participants.map(async (p) => {
+        const event = await storage.getEvent(p.eventId);
+        return { ...p, event };
+      })
+    );
+    res.json(participationsWithEvents);
   });
 
   const httpServer = createServer(app);

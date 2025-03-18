@@ -145,7 +145,12 @@ export class MemStorage implements IStorage {
   // Event participant methods
   async addEventParticipant(participant: InsertEventParticipant): Promise<EventParticipant> {
     const id = this.currentId.eventParticipants++;
-    const newParticipant: EventParticipant = { ...participant, id };
+    const newParticipant: EventParticipant = { 
+      ...participant, 
+      id,
+      roomPreference: participant.roomPreference || null,
+      paymentStatus: participant.paymentStatus || "pending"
+    };
     this.eventParticipants.set(id, newParticipant);
     return newParticipant;
   }
@@ -161,6 +166,11 @@ export class MemStorage implements IStorage {
     const updatedParticipant = { ...participant, ...updates };
     this.eventParticipants.set(id, updatedParticipant);
     return updatedParticipant;
+  }
+
+  async getUserParticipations(userId: number): Promise<EventParticipant[]> {
+    return Array.from(this.eventParticipants.values())
+      .filter(p => p.userId === userId);
   }
 }
 
