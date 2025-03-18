@@ -10,7 +10,8 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { User } from "lucide-react";
+import { User, Instagram } from "lucide-react";
+import { importInstagramProfilePicture } from "@/lib/instagram";
 
 export default function ProfilePage() {
   const { user } = useAuth();
@@ -55,8 +56,25 @@ export default function ProfilePage() {
     },
   });
 
+  const importInstagramPhotoMutation = useMutation({
+    mutationFn: importInstagramProfilePicture,
+    onSuccess: (updatedUser) => {
+      queryClient.setQueryData(["/api/user"], updatedUser);
+      toast({
+        title: "Başarılı",
+        description: "Instagram profil fotoğrafınız başarıyla içe aktarıldı.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Hata",
+        description: "Instagram profil fotoğrafı alınamadı. Lütfen Instagram kullanıcı adınızı kontrol edin.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const onSubmit = (data: InsertUser) => {
-    // Boş string değerleri null'a çevir
     const formData = Object.fromEntries(
       Object.entries(data).map(([key, value]) => [key, value === "" ? null : value])
     );
@@ -70,15 +88,29 @@ export default function ProfilePage() {
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto space-y-8">
           <div className="flex items-center gap-6">
-            <Avatar className="h-24 w-24">
-              {user?.avatarUrl ? (
-                <AvatarImage src={user.avatarUrl} alt={user.username} />
-              ) : (
-                <AvatarFallback>
-                  <User className="h-12 w-12" />
-                </AvatarFallback>
+            <div className="relative">
+              <Avatar className="h-24 w-24">
+                {user?.avatarUrl ? (
+                  <AvatarImage src={user.avatarUrl} alt={user.username} />
+                ) : (
+                  <AvatarFallback>
+                    <User className="h-12 w-12" />
+                  </AvatarFallback>
+                )}
+              </Avatar>
+              {user?.instagram && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="absolute -bottom-2 -right-2"
+                  onClick={() => importInstagramPhotoMutation.mutate()}
+                  disabled={importInstagramPhotoMutation.isPending}
+                >
+                  <Instagram className="h-4 w-4 mr-1" />
+                  {importInstagramPhotoMutation.isPending ? "İçe Aktarılıyor..." : "Instagram'dan İçe Aktar"}
+                </Button>
               )}
-            </Avatar>
+            </div>
 
             <div>
               <h1 className="text-2xl font-bold">Profil Bilgilerim</h1>

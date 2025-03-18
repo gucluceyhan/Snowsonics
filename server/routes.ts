@@ -5,6 +5,7 @@ import { storage } from "./storage";
 import { insertEventSchema, insertSiteSettingsSchema, insertUserSchema } from "@shared/schema";
 import { z } from "zod";
 import { createHash } from "crypto";
+import axios from "axios";
 
 function requireAuth(req: Express.Request, res: Express.Response, next: Express.NextFunction) {
   if (!req.isAuthenticated()) {
@@ -301,6 +302,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Profile update error:", error);
       res.status(500).json({
         message: "Profil güncellenirken bir hata oluştu"
+      });
+    }
+  });
+
+  // Instagram profil fotoğrafı import endpoint'i
+  app.post("/api/user/import-instagram-photo", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.getUser(req.user!.id);
+
+      if (!user.instagram) {
+        return res.status(400).json({ 
+          message: "Instagram kullanıcı adı bulunamadı" 
+        });
+      }
+
+      // Instagram Basic Display API kullanarak profil fotoğrafını al
+      try {
+        const instagramUsername = user.instagram.replace('@', '');
+        const response = await axios.get(`https://graph.instagram.com/me/media`, {
+          params: {
+            fields: 'id,caption,media_type,media_url,permalink,thumbnail_url,timestamp,username',
+            access_token: process.env.INSTAGRAM_CLIENT_ID
+          }
+        });
+
+        if (response.data && response.data.profile_picture_url) {
+          const updatedUser = await storage.updateUser(user.id, {
+            avatarUrl: response.data.profile_picture_url
+          });
+          return res.json(updatedUser);
+        }
+      } catch (instagramError) {
+        console.error("Instagram API error:", instagramError);
+      }
+
+      // Instagram'dan alınamazsa Gravatar'ı dene
+      if (user.email) {
+        const md5 = createHash('md5').update(user.email.toLowerCase().trim()).digest('hex');
+        const gravatarUrl = `https://www.gravatar.com/avatar/${md5}?d=mp`;
+
+        const updatedUser = await storage.updateUser(user.id, {
+          avatarUrl: gravatarUrl
+        });
+
+        return res.json(updatedUser);
+      }
+
+      // Hiçbir şey çalışmazsa varsayılan avatar URL'sini kullan
+      const updatedUser = await storage.updateUser(user.id, {
+        avatarUrl: null // UI'da varsayılan avatar gösterilecek
+      });
+
+      return res.json(updatedUser);
+
+    } catch (error) {
+      console.error("Profile photo import error:", error);
+      res.status(500).json({
+        message: "Profil fotoğrafı içe aktarılırken bir hata oluştu"
       });
     }
   });
