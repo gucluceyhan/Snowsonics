@@ -5,14 +5,18 @@ import { format } from "date-fns";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
-import { Calendar, MapPin } from "lucide-react";
+import { Calendar, MapPin, Info } from "lucide-react";
+import { useLocation } from "wouter";
+import { cn } from "@/lib/utils";
 
 type EventCardProps = {
   event: Event;
+  variant?: "default" | "horizontal";
 };
 
-export default function EventCard({ event }: EventCardProps) {
+export default function EventCard({ event, variant = "default" }: EventCardProps) {
   const { user } = useAuth();
+  const [, setLocation] = useLocation();
 
   const participateMutation = useMutation({
     mutationFn: async (status: string) => {
@@ -23,43 +27,80 @@ export default function EventCard({ event }: EventCardProps) {
     },
   });
 
-  return (
-    <Card>
+  const cardContent = (
+    <>
       <CardHeader>
+        {event.imageUrl && (
+          <div className={cn(
+            "relative aspect-square mb-4 overflow-hidden rounded-lg bg-muted",
+            variant === "horizontal" && "aspect-video"
+          )}>
+            <img 
+              src={event.imageUrl} 
+              alt={event.title}
+              className="object-cover w-full h-full"
+            />
+          </div>
+        )}
         <CardTitle>{event.title}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <p className="text-muted-foreground">{event.description}</p>
-        
+        <p className="text-muted-foreground line-clamp-2">{event.description}</p>
+
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Calendar className="h-4 w-4" />
           {format(new Date(event.date), "PPP")}
         </div>
-        
+
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <MapPin className="h-4 w-4" />
           {event.location}
         </div>
       </CardContent>
-      
-      {user?.isApproved && (
-        <CardFooter className="gap-2">
+
+      <CardFooter className="gap-2">
+        <Button
+          className="flex-1"
+          variant="outline"
+          onClick={() => setLocation(`/events/${event.id}`)}
+        >
+          <Info className="w-4 h-4 mr-2" />
+          Detaylar
+        </Button>
+
+        {user?.isApproved && (
           <Button 
             variant="default"
             onClick={() => participateMutation.mutate("attending")}
             disabled={participateMutation.isPending}
           >
-            Attend
+            Katıl
           </Button>
-          <Button
-            variant="outline"
-            onClick={() => participateMutation.mutate("maybe")}
-            disabled={participateMutation.isPending}
-          >
-            Maybe
-          </Button>
-        </CardFooter>
-      )}
+        )}
+      </CardFooter>
+    </>
+  );
+
+  return variant === "horizontal" ? (
+    <Card className="flex flex-col md:flex-row overflow-hidden">
+      <div className="md:w-1/3">
+        {event.imageUrl && (
+          <div className="relative aspect-video md:h-full">
+            <img 
+              src={event.imageUrl} 
+              alt={event.title}
+              className="object-cover w-full h-full"
+            />
+          </div>
+        )}
+      </div>
+      <div className="md:w-2/3 flex flex-col">
+        {cardContent}
+      </div>
+    </Card>
+  ) : (
+    <Card className="flex flex-col h-full">
+      {cardContent}
     </Card>
   );
 }

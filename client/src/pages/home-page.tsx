@@ -3,33 +3,82 @@ import { Event } from "@shared/schema";
 import EventCard from "@/components/events/event-card";
 import { useAuth } from "@/hooks/use-auth";
 import { Navbar } from "@/components/layout/navbar";
+import { Calendar } from "@/components/ui/calendar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { format } from "date-fns";
+import { useState } from "react";
 
 export default function HomePage() {
   const { user } = useAuth();
+  const [selectedDate, setSelectedDate] = useState<Date>();
   const { data: events = [] } = useQuery<Event[]>({ 
     queryKey: ["/api/events"]
   });
 
+  // Filter future events and sort by date
+  const futureEvents = events
+    .filter(event => new Date(event.date) > new Date())
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      
+
       <main className="container mx-auto px-4 py-8">
         <div className="space-y-8">
           <div>
-            <h1 className="text-4xl font-bold">Welcome, {user?.firstName}!</h1>
+            <h1 className="text-4xl font-bold">Hoş geldin, {user?.firstName}!</h1>
             <p className="text-muted-foreground mt-2">
               {!user?.isApproved 
-                ? "Your account is pending approval. You'll be able to participate in events once approved."
-                : "Check out our upcoming events and join the ones you're interested in!"}
+                ? "Hesabın onay bekliyor. Onaylandıktan sonra etkinliklere katılabilirsin."
+                : "Yaklaşan etkinlikleri incele ve ilgilendiğin etkinliklere katıl!"}
             </p>
           </div>
 
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {events.map((event) => (
-              <EventCard key={event.id} event={event} />
-            ))}
-          </div>
+          <Tabs defaultValue="list" className="space-y-4">
+            <TabsList>
+              <TabsTrigger value="list">Liste Görünümü</TabsTrigger>
+              <TabsTrigger value="calendar">Takvim Görünümü</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="list">
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {futureEvents.map((event) => (
+                  <EventCard key={event.id} event={event} />
+                ))}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="calendar">
+              <div className="flex flex-col lg:flex-row gap-8">
+                <div className="lg:w-1/2">
+                  <Calendar
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={setSelectedDate}
+                    className="rounded-md border"
+                  />
+                </div>
+                <div className="lg:w-1/2">
+                  <h2 className="text-xl font-semibold mb-4">
+                    {selectedDate ? format(selectedDate, "PPP") : "Seçili tarihte"} etkinlikler
+                  </h2>
+                  <div className="space-y-4">
+                    {futureEvents
+                      .filter(event => 
+                        selectedDate ? 
+                          format(new Date(event.date), "yyyy-MM-dd") === format(selectedDate, "yyyy-MM-dd") 
+                          : true
+                      )
+                      .map((event) => (
+                        <EventCard key={event.id} event={event} variant="horizontal" />
+                      ))
+                    }
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
         </div>
       </main>
     </div>
