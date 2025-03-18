@@ -317,19 +317,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Instagram Basic Display API kullanarak profil fotoğrafını al
+      // Instagram API'den fotoğrafı almayı dene
       try {
-        const instagramUsername = user.instagram.replace('@', '');
-        const response = await axios.get(`https://graph.instagram.com/me/media`, {
+        // Instagram Graph API kullanarak önce token al
+        const tokenResponse = await axios.get('https://graph.instagram.com/access_token', {
           params: {
-            fields: 'id,caption,media_type,media_url,permalink,thumbnail_url,timestamp,username',
-            access_token: process.env.INSTAGRAM_CLIENT_ID
+            client_id: process.env.INSTAGRAM_CLIENT_ID,
+            client_secret: process.env.INSTAGRAM_CLIENT_SECRET,
+            grant_type: 'authorization_code',
+            code: req.body.code // Assuming the authorization code is sent in the request body
           }
         });
 
-        if (response.data && response.data.profile_picture_url) {
+        // Token ile profil bilgilerini al
+        const mediaResponse = await axios.get('https://graph.instagram.com/me', {
+          params: {
+            fields: 'id,username,profile_picture',
+            access_token: tokenResponse.data.access_token
+          }
+        });
+
+        if (mediaResponse.data && mediaResponse.data.profile_picture) {
           const updatedUser = await storage.updateUser(user.id, {
-            avatarUrl: response.data.profile_picture_url
+            avatarUrl: mediaResponse.data.profile_picture
           });
           return res.json(updatedUser);
         }
