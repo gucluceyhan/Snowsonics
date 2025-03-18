@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
-import { insertEventSchema, insertEventParticipantSchema } from "@shared/schema";
+import { insertEventSchema } from "@shared/schema";
 import { z } from "zod";
 
 function requireAuth(req: Express.Request, res: Express.Response, next: Express.NextFunction) {
@@ -42,6 +42,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     const user = await storage.updateUser(parseInt(id), { role });
     res.json(user);
+  });
+
+  // Admin participant approval route
+  app.post("/api/admin/events/:eventId/participants/:participantId/approve", requireAdmin, async (req, res) => {
+    const { eventId, participantId } = req.params;
+    const participant = await storage.updateEventParticipant(parseInt(participantId), { 
+      isApproved: true 
+    });
+    res.json(participant);
   });
 
   // Event routes
@@ -100,10 +109,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(400).json({ message: "Invalid participation data" });
     }
 
+    // Check if user already has a participation request
+    const existingParticipation = await storage.getUserEventParticipation(req.user.id, parseInt(id));
+    if (existingParticipation) {
+      return res.status(400).json({ message: "Katılım talebiniz zaten bulunmakta" });
+    }
+
     const participant = await storage.addEventParticipant({
       eventId: parseInt(id),
       userId: req.user.id,
-      ...result.data
+      ...result.data,
+      isApproved: false // Yeni katılımlar varsayılan olarak onaysız
     });
     res.status(201).json(participant);
   });
@@ -130,7 +146,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
       res.json(participantsWithDetails);
     } else {
-      res.json(participants);
+      // For regular users, only show approved participants
+      const approvedParticipants = participants.filter(p => p.isApproved);
+      res.json(approvedParticipants);
     }
   });
 

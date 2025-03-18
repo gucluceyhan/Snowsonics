@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Navbar } from "@/components/layout/navbar";
 import { Calendar } from "@/components/ui/calendar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { format } from "date-fns";
+import { format, isWithinInterval } from "date-fns";
 import { useState } from "react";
 
 export default function HomePage() {
@@ -17,13 +17,21 @@ export default function HomePage() {
 
   // Filter future events and sort by date
   const futureEvents = events
-    .filter(event => new Date(event.date) > new Date())
+    .filter(event => new Date(event.endDate) > new Date())
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-  // Create a Set of event dates for highlighting
-  const eventDates = new Set(
-    events.map(event => format(new Date(event.date), "yyyy-MM-dd"))
-  );
+  // Create a Map of event dates for highlighting
+  const eventDates = new Map<string, boolean>();
+  events.forEach(event => {
+    const startDate = new Date(event.date);
+    const endDate = new Date(event.endDate);
+    let currentDate = startDate;
+
+    while (currentDate <= endDate) {
+      eventDates.set(format(currentDate, "yyyy-MM-dd"), true);
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+  });
 
   // Custom styling for days with events
   const modifiers = {
@@ -87,7 +95,10 @@ export default function HomePage() {
                     {futureEvents
                       .filter(event => 
                         selectedDate ? 
-                          format(new Date(event.date), "yyyy-MM-dd") === format(selectedDate, "yyyy-MM-dd") 
+                          isWithinInterval(selectedDate, {
+                            start: new Date(event.date),
+                            end: new Date(event.endDate)
+                          })
                           : true
                       )
                       .map((event) => (

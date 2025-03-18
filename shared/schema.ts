@@ -26,7 +26,7 @@ export const events = pgTable("events", {
   description: text("description").notNull(),
   content: json("content").notNull(),
   date: timestamp("date").notNull(),
-  endDate: timestamp("end_date").notNull(), // Bitiş tarihi eklendi
+  endDate: timestamp("end_date").notNull(),
   location: text("location").notNull(),
   imageUrl: text("image_url"),
   createdById: integer("created_by_id").notNull(),
@@ -38,6 +38,7 @@ export const eventParticipants = pgTable("event_participants", {
   eventId: integer("event_id").notNull(),
   userId: integer("user_id").notNull(),
   status: text("status").notNull(), // attending, maybe, declined
+  isApproved: boolean("is_approved").notNull().default(false), // Admin onayı
   roomPreference: integer("room_preference"), // 1-4 kişilik oda tercihi
   paymentStatus: text("payment_status").default("pending"), // pending, paid
 });
@@ -65,7 +66,8 @@ export const insertEventParticipantSchema = createInsertSchema(eventParticipants
     paymentStatus: z.enum(["pending", "paid"]).optional()
   })
   .omit({
-    id: true
+    id: true,
+    isApproved: true
   });
 
 // Types
