@@ -165,16 +165,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         participants.map(async (p) => {
           const user = await storage.getUser(p.userId);
           return {
-            ...p,
+            id: p.id,
+            eventId: p.eventId,
+            userId: p.userId,
+            status: p.status,
+            isApproved: p.isApproved,
+            roomType: p.roomType,
+            roomOccupancy: p.roomOccupancy,
+            paymentStatus: p.paymentStatus || "pending",
             user: user ? {
               firstName: user.firstName,
               lastName: user.lastName,
               phone: user.phone,
               email: user.email
-            } : null,
-            roomType: p.roomType,
-            roomOccupancy: p.roomOccupancy,
-            paymentStatus: p.paymentStatus || "pending"
+            } : null
           };
         })
       );
