@@ -13,7 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { format } from "date-fns";
-import { Plus, Edit, Trash } from "lucide-react";
+import { Plus, Edit, Trash, Users } from "lucide-react";
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -28,11 +28,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { ParticipantList } from "@/components/admin/participant-list";
 
 export default function EventsPage() {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [showParticipants, setShowParticipants] = useState(false);
   const { toast } = useToast();
 
   const { data: events = [] } = useQuery<Event[]>({ 
@@ -100,7 +102,7 @@ export default function EventsPage() {
                   <TableHead>Title</TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead>Location</TableHead>
-                  <TableHead className="w-[100px]">Actions</TableHead>
+                  <TableHead className="w-[150px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -111,6 +113,17 @@ export default function EventsPage() {
                     <TableCell>{event.location}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            setSelectedEvent(event);
+                            setShowParticipants(true);
+                          }}
+                        >
+                          <Users className="h-4 w-4" />
+                        </Button>
+
                         <Dialog open={isOpen} onOpenChange={setIsOpen}>
                           <DialogTrigger asChild>
                             <Button 
@@ -153,31 +166,40 @@ export default function EventsPage() {
             </Table>
           </div>
         </div>
-      </main>
 
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the event
-              and remove it from our servers.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                if (selectedEvent) {
-                  deleteMutation.mutate(selectedEvent.id);
-                }
-              }}
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        <Dialog open={showParticipants} onOpenChange={setShowParticipants}>
+          <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Participants - {selectedEvent?.title}</DialogTitle>
+            </DialogHeader>
+            {selectedEvent && <ParticipantList eventId={selectedEvent.id} />}
+          </DialogContent>
+        </Dialog>
+
+        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete the event
+                and remove it from our servers.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  if (selectedEvent) {
+                    deleteMutation.mutate(selectedEvent.id);
+                  }
+                }}
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </main>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { EventParticipant } from "@shared/schema";
 import {
   Table,
@@ -10,7 +10,9 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
+import { Check, Download } from "lucide-react";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 type ParticipantWithUser = EventParticipant & {
   user: {
@@ -26,8 +28,22 @@ interface ParticipantListProps {
 }
 
 export function ParticipantList({ eventId }: ParticipantListProps) {
+  const { toast } = useToast();
   const { data: participants = [] } = useQuery<ParticipantWithUser[]>({
     queryKey: [`/api/events/${eventId}/participants`],
+  });
+
+  const approveMutation = useMutation({
+    mutationFn: async (participantId: number) => {
+      await apiRequest("POST", `/api/admin/events/${eventId}/participants/${participantId}/approve`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/events/${eventId}/participants`] });
+      toast({
+        title: "Participant approved",
+        description: "The participant has been approved successfully",
+      });
+    },
   });
 
   const exportToExcel = () => {
@@ -76,6 +92,7 @@ export function ParticipantList({ eventId }: ParticipantListProps) {
               <TableHead>Oda Tercihi</TableHead>
               <TableHead>Ödeme Durumu</TableHead>
               <TableHead>Katılım Durumu</TableHead>
+              <TableHead>İşlemler</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -110,6 +127,19 @@ export function ParticipantList({ eventId }: ParticipantListProps) {
                         ? "Belki" 
                         : "Katılmıyor"}
                   </Badge>
+                </TableCell>
+                <TableCell>
+                  {!participant.isApproved && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => approveMutation.mutate(participant.id)}
+                      disabled={approveMutation.isPending}
+                    >
+                      <Check className="w-4 h-4 mr-2" />
+                      Onayla
+                    </Button>
+                  )}
                 </TableCell>
               </TableRow>
             ))}
