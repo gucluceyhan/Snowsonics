@@ -7,30 +7,10 @@ import { z } from "zod";
 import { createHash, randomBytes } from "crypto";
 import axios from "axios";
 import multer from "multer";
-import { Client } from "@replit/object-storage";
+import passport from 'passport'; // Added passport import
+
 
 const upload = multer({ storage: multer.memoryStorage() });
-// Only initialize object storage if needed later
-let objectStorage: Client | null = null;
-try {
-  objectStorage = new Client();
-} catch (error) {
-  console.log("Object storage not configured yet");
-}
-
-function requireAuth(req: Express.Request, res: Express.Response, next: Express.NextFunction) {
-  if (!req.isAuthenticated()) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
-  next();
-}
-
-function requireAdmin(req: Express.Request, res: Express.Response, next: Express.NextFunction) {
-  if (!req.isAuthenticated() || req.user.role !== "admin") {
-    return res.status(403).json({ message: "Forbidden" });
-  }
-  next();
-}
 
 // Assume hashPassword function exists elsewhere and is imported correctly.
 async function hashPassword(password: string): Promise<string> {
@@ -42,6 +22,47 @@ async function hashPassword(password: string): Promise<string> {
 
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
+
+  // Auth routes
+  app.post("/api/register", async (req, res, next) => {
+    try {
+      const existingUser = await storage.getUserByUsername(req.body.username);
+      if (existingUser) {
+        return res.status(400).json({ message: "Bu kullanıcı adı zaten kullanılıyor" });
+      }
+
+      const hashedPassword = await hashPassword(req.body.password);
+      const user = await storage.createUser({
+        ...req.body,
+        password: hashedPassword,
+      });
+
+      req.login(user, (err) => {
+        if (err) return next(err);
+        res.status(201).json(user);
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.post("/api/login", passport.authenticate("local"), (req, res) => {
+    res.json(req.user);
+  });
+
+  app.post("/api/logout", (req, res, next) => {
+    req.logout((err) => {
+      if (err) return next(err);
+      res.sendStatus(200);
+    });
+  });
+
+  app.get("/api/user", (req, res) => {
+    if (!req.user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    res.json(req.user);
+  });
 
   // Site settings routes
   app.get("/api/admin/site-settings", requireAdmin, async (req, res) => {
@@ -487,6 +508,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(404).send('File not found');
     }
   });
+
+  function requireAuth(req: Express.Request, res: Express.Response, next: Express.NextFunction) {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    next();
+  }
+
+  function requireAdmin(req: Express.Request, res: Express.Response, next: Express.NextFunction) {
+    if (!req.isAuthenticated() || req.user.role !== "admin") {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+    next();
+  }
 
   return httpServer;
 }
