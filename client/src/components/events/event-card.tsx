@@ -5,6 +5,8 @@ import { format } from "date-fns";
 import { Calendar, MapPin, Info } from "lucide-react";
 import { useLocation } from "wouter";
 import { cn } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
+import { Badge } from "@/components/ui/badge";
 
 type EventCardProps = {
   event: Event;
@@ -13,6 +15,18 @@ type EventCardProps = {
 
 export default function EventCard({ event, variant = "default" }: EventCardProps) {
   const [, setLocation] = useLocation();
+
+  const { data: myParticipation } = useQuery({
+    queryKey: [`/api/events/${event.id}/my-participation`],
+  });
+
+  const getParticipationStatus = () => {
+    if (!myParticipation) return null;
+    if (myParticipation.isApproved) return "Onaylandı";
+    return "Admin Onayı Bekliyor";
+  };
+
+  const participationStatus = getParticipationStatus();
 
   const cardContent = (
     <>
@@ -41,6 +55,14 @@ export default function EventCard({ event, variant = "default" }: EventCardProps
           <MapPin className="h-4 w-4" />
           {event.location}
         </div>
+
+        {participationStatus && (
+          <div className="flex items-center gap-2">
+            <Badge variant={myParticipation?.isApproved ? "default" : "secondary"}>
+              {participationStatus}
+            </Badge>
+          </div>
+        )}
       </CardContent>
 
       <CardFooter>

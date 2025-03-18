@@ -3,7 +3,7 @@ import { Event, EventParticipant } from "@shared/schema";
 import { useParams } from "wouter";
 import { Navbar } from "@/components/layout/navbar";
 import { Button } from "@/components/ui/button";
-import { Calendar, MapPin, Users, Edit2 } from "lucide-react";
+import { Calendar, MapPin, Users, Edit2, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
 import { useAuth } from "@/hooks/use-auth";
 import { useMutation } from "@tanstack/react-query";
@@ -116,6 +116,18 @@ export default function EventDetailPage() {
                 <MapPin className="h-5 w-5" />
                 {event.location || "Konum belirtilmemiş"}
               </div>
+
+              {myParticipation && (
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="h-5 w-5" />
+                  <span>
+                    Durum:{" "}
+                    <Badge variant={myParticipation.isApproved ? "default" : "secondary"}>
+                      {myParticipation.isApproved ? "Onaylandı" : "Admin Onayı Bekliyor"}
+                    </Badge>
+                  </span>
+                </div>
+              )}
             </div>
 
             <div 
@@ -143,9 +155,9 @@ export default function EventDetailPage() {
                     <div>
                       <span className="text-sm text-muted-foreground">Oda Tipi</span>
                       <p>{myParticipation.roomType === 'single' ? 'Tek Kişilik' : 
-                         myParticipation.roomType === 'double' ? 'İki Kişilik' : 
-                         myParticipation.roomType === 'triple' ? 'Üç Kişilik' : 
-                         'Dört Kişilik'} Oda</p>
+                        myParticipation.roomType === 'double' ? 'İki Kişilik' : 
+                        myParticipation.roomType === 'triple' ? 'Üç Kişilik' : 
+                        'Dört Kişilik'} Oda</p>
                     </div>
                     <div>
                       <span className="text-sm text-muted-foreground">Kişi Sayısı</span>

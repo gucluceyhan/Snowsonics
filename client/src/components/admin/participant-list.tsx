@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Check, Download } from "lucide-react";
+import { Check, Download, X } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -58,6 +58,19 @@ export function ParticipantList({ eventId }: ParticipantListProps) {
       toast({
         title: "Ödeme durumu güncellendi",
         description: "Katılımcının ödeme durumu başarıyla güncellendi",
+      });
+    },
+  });
+
+  const rejectMutation = useMutation({
+    mutationFn: async (participantId: number) => {
+      await apiRequest("POST", `/api/admin/events/${eventId}/participants/${participantId}/reject`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/events/${eventId}/participants`] });
+      toast({
+        title: "Değişiklik reddedildi",
+        description: "Katılımcının değişiklik talebi reddedildi ve eski değerlere geri dönüldü",
       });
     },
   });
@@ -201,15 +214,26 @@ xmlns:html="http://www.w3.org/TR/REC-html40">
                 </TableCell>
                 <TableCell>
                   {!participant.isApproved && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => approveMutation.mutate(participant.id)}
-                      disabled={approveMutation.isPending}
-                    >
-                      <Check className="w-4 h-4 mr-2" />
-                      Onayla
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => approveMutation.mutate(participant.id)}
+                        disabled={approveMutation.isPending}
+                      >
+                        <Check className="w-4 h-4 mr-2" />
+                        Onayla
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => rejectMutation.mutate(participant.id)}
+                        disabled={rejectMutation.isPending}
+                      >
+                        <X className="w-4 h-4 mr-2" />
+                        Reddet
+                      </Button>
+                    </div>
                   )}
                 </TableCell>
               </TableRow>
