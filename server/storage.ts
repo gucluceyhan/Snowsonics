@@ -2,8 +2,17 @@ import { IStorage } from "./types";
 import { User, Event, EventParticipant, InsertUser, InsertEvent, InsertEventParticipant } from "@shared/schema";
 import createMemoryStore from "memorystore";
 import session from "express-session";
+import { scrypt, randomBytes } from "crypto";
+import { promisify } from "util";
 
 const MemoryStore = createMemoryStore(session);
+const scryptAsync = promisify(scrypt);
+
+async function hashDevPassword(password: string) {
+  const salt = "devsalt";
+  const buf = (await scryptAsync(password, salt, 64)) as Buffer;
+  return `${buf.toString("hex")}.${salt}`;
+}
 
 export class MemStorage implements IStorage {
   private users: Map<number, User>;
@@ -16,10 +25,51 @@ export class MemStorage implements IStorage {
     this.users = new Map();
     this.events = new Map();
     this.eventParticipants = new Map();
-    this.currentId = { users: 1, events: 1, eventParticipants: 1 };
+    this.currentId = { users: 3, events: 1, eventParticipants: 1 };
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000,
     });
+
+    // Geliştirme için varsayılan kullanıcıları oluştur
+    this.initDevUsers();
+  }
+
+  private async initDevUsers() {
+    // Admin kullanıcısı
+    const adminUser: User = {
+      id: 1,
+      username: "admin",
+      password: await hashDevPassword("admin123"),
+      firstName: "Admin",
+      lastName: "User",
+      email: "admin@example.com",
+      phone: "5551234567",
+      city: "Istanbul",
+      occupation: "Administrator",
+      instagram: null,
+      avatarUrl: null,
+      role: "admin",
+      isApproved: true
+    };
+    this.users.set(adminUser.id, adminUser);
+
+    // Test kullanıcısı
+    const testUser: User = {
+      id: 2,
+      username: "testuser",
+      password: await hashDevPassword("test123"),
+      firstName: "Test",
+      lastName: "User",
+      email: "test@example.com",
+      phone: "5559876543",
+      city: "Ankara",
+      occupation: "Test User",
+      instagram: null,
+      avatarUrl: null,
+      role: "user",
+      isApproved: true
+    };
+    this.users.set(testUser.id, testUser);
   }
 
   // User methods
@@ -40,7 +90,9 @@ export class MemStorage implements IStorage {
       ...insertUser, 
       id, 
       role: isFirstUser ? "admin" : "user", 
-      isApproved: isFirstUser 
+      isApproved: isFirstUser,
+      instagram: insertUser.instagram || null,
+      avatarUrl: null
     };
     this.users.set(id, user);
     return user;
@@ -61,7 +113,11 @@ export class MemStorage implements IStorage {
   // Event methods
   async createEvent(event: InsertEvent & { createdById: number }): Promise<Event> {
     const id = this.currentId.events++;
-    const newEvent: Event = { ...event, id };
+    const newEvent: Event = { 
+      ...event, 
+      id,
+      imageUrl: event.imageUrl || null
+    };
     this.events.set(id, newEvent);
     return newEvent;
   }
