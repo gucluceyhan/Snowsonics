@@ -75,7 +75,7 @@ export class MemStorage implements IStorage {
     if (!this.siteSettings) {
       this.siteSettings = {
         id: 1,
-        logoUrl: "/assets/logo.jpeg",
+        logoUrl: "/assets/new_whatsapp_image.jpg", // Assuming this is the new path
         primaryColor: "#914199",
         secondaryColor: "#F7E15C",
         updatedAt: new Date(),
