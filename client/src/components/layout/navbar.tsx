@@ -17,9 +17,9 @@ export function Navbar() {
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <Link href="/">
           <a className="flex items-center">
-            <img 
+            <img
               src="/assets/new_whatsapp_image.jpg"
-              alt="Logo" 
+              alt="Logo"
               className="h-10 w-auto"
             />
           </a>
