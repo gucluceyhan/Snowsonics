@@ -6,16 +6,21 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertUserSchema, type InsertUser } from "@shared/schema";
+import { insertUserSchema, type InsertUser, type SiteSettings } from "@shared/schema";
 import { Redirect } from "wouter";
 import { Loader2 } from "lucide-react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { ImageLogo } from "@/components/ui/image-logo";
 
 export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
   const { toast } = useToast();
+
+  const { data: settings } = useQuery<SiteSettings>({
+    queryKey: ["/api/admin/site-settings"],
+  });
 
   const loginForm = useForm({
     defaultValues: {
@@ -74,8 +79,8 @@ export default function AuthPage() {
       <div className="container mx-auto grid gap-8 lg:grid-cols-2 lg:gap-12 items-center">
         <div className="space-y-6">
           <div className="flex flex-col items-center mb-8">
-            <img 
-              src="/assets/new_whatsapp_image.jpg"
+            <ImageLogo 
+              src={settings?.logoUrl}
               alt="Logo" 
               className="h-40 w-40 rounded-full"
             />
