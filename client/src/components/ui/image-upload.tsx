@@ -5,12 +5,14 @@ import { cn } from "@/lib/utils";
 
 interface ImageUploadProps {
   onChange: (file: File | null) => void;
-  preview?: string;
+  onDelete?: () => void;
+  preview?: string | null;
   acceptedTypes?: string;
 }
 
 export function ImageUpload({ 
   onChange,
+  onDelete,
   preview,
   acceptedTypes = "image/*"
 }: ImageUploadProps) {
@@ -41,10 +43,6 @@ export function ImageUpload({
     if (file) {
       onChange(file);
     }
-  }, [onChange]);
-
-  const handleRemove = useCallback(() => {
-    onChange(null);
   }, [onChange]);
 
   return (
@@ -88,7 +86,8 @@ export function ImageUpload({
             variant="destructive"
             size="icon"
             className="absolute -top-2 -right-2"
-            onClick={handleRemove}
+            onClick={onDelete}
+            type="button"
           >
             <X className="h-4 w-4" />
           </Button>

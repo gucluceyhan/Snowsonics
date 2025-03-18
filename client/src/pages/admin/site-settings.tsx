@@ -2,7 +2,6 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { SiteSettings } from "@shared/schema";
 import { Navbar } from "@/components/layout/navbar";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -19,10 +18,10 @@ import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { queryClient } from "@/lib/queryClient";
 
-
 export default function SiteSettingsPage() {
   const { toast } = useToast();
   const [selectedLogo, setSelectedLogo] = useState<File | null>(null);
+  const [deleteLogo, setDeleteLogo] = useState(false);
 
   const { data: settings } = useQuery<SiteSettings>({
     queryKey: ["/api/admin/site-settings"],
@@ -55,6 +54,8 @@ export default function SiteSettingsPage() {
         title: "Ayarlar güncellendi",
         description: "Site ayarları başarıyla güncellendi",
       });
+      setSelectedLogo(null);
+      setDeleteLogo(false);
     },
     onError: (error: Error) => {
       toast({
@@ -70,11 +71,23 @@ export default function SiteSettingsPage() {
     formData.append('primaryColor', values.primaryColor);
     formData.append('secondaryColor', values.secondaryColor);
 
-    if (selectedLogo) {
+    if (deleteLogo) {
+      formData.append('deleteLogo', 'true');
+    } else if (selectedLogo) {
       formData.append('logo', selectedLogo);
     }
 
     mutation.mutate(formData);
+  };
+
+  const handleLogoChange = (file: File | null) => {
+    setSelectedLogo(file);
+    setDeleteLogo(false);
+  };
+
+  const handleLogoDelete = () => {
+    setSelectedLogo(null);
+    setDeleteLogo(true);
   };
 
   return (
@@ -84,7 +97,7 @@ export default function SiteSettingsPage() {
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto space-y-8">
           <div>
-            <h1 className="text-4xl font-bold">Site Ayarları</h1>
+            <h1 className="text-2xl font-bold">Site Ayarları</h1>
             <p className="text-muted-foreground mt-2">
               Site görünümünü ve renklerini buradan yönetebilirsiniz
             </p>
@@ -95,9 +108,10 @@ export default function SiteSettingsPage() {
               <div className="space-y-4">
                 <FormLabel>Logo</FormLabel>
                 <ImageUpload
-                  onChange={setSelectedLogo}
-                  preview={settings?.logoUrl}
+                  onChange={handleLogoChange}
+                  preview={selectedLogo ? URL.createObjectURL(selectedLogo) : (deleteLogo ? null : settings?.logoUrl)}
                   acceptedTypes="image/jpeg,image/png"
+                  onDelete={handleLogoDelete}
                 />
               </div>
 
@@ -141,13 +155,18 @@ export default function SiteSettingsPage() {
                 <h3 className="text-lg font-semibold">Önizleme</h3>
                 <div className="p-6 border rounded-lg space-y-4">
                   <div className="flex items-center justify-center">
-                    {settings?.logoUrl && (
+                    {!deleteLogo && (selectedLogo ? 
+                      <img
+                        src={URL.createObjectURL(selectedLogo)}
+                        alt="Logo Preview"
+                        className="h-20 w-auto"
+                      /> : settings?.logoUrl && (
                       <img
                         src={settings.logoUrl}
                         alt="Logo Preview"
                         className="h-20 w-auto"
                       />
-                    )}
+                    ))}
                   </div>
                   <div
                     className="h-20 rounded-lg"

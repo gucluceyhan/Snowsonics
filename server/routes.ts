@@ -13,11 +13,10 @@ import fs from 'fs/promises';
 // Configure multer for file uploads
 const upload = multer({
   storage: multer.diskStorage({
-    destination: function (req, file, cb) {
+    destination: async function (req, file, cb) {
       const uploadDir = path.join(process.cwd(), 'public', 'uploads');
-      fs.mkdir(uploadDir, { recursive: true })
-        .then(() => cb(null, uploadDir))
-        .catch(err => cb(err, uploadDir));
+      await fs.mkdir(uploadDir, { recursive: true });
+      cb(null, uploadDir);
     },
     filename: function (req, file, cb) {
       const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -50,21 +49,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
         secondaryColor: req.body.secondaryColor,
       };
 
-      // If a new logo was uploaded, update the logo URL
-      if (req.file) {
-        const logoUrl = `/uploads/${req.file.filename}`;
-        updateData.logoUrl = logoUrl;
-
-        // Get current settings to check if we need to delete old logo
+      // Handle logo deletion
+      if (req.body.deleteLogo === 'true') {
         const currentSettings = await storage.getSiteSettings();
         if (currentSettings?.logoUrl) {
+          const oldLogoPath = path.join(process.cwd(), 'public', currentSettings.logoUrl);
           try {
-            const oldLogoPath = path.join(process.cwd(), 'public', currentSettings.logoUrl);
             await fs.unlink(oldLogoPath);
           } catch (error) {
             console.error('Error deleting old logo:', error);
           }
         }
+        updateData.logoUrl = null;
+      }
+      // Handle new logo upload
+      else if (req.file) {
+        const currentSettings = await storage.getSiteSettings();
+        if (currentSettings?.logoUrl) {
+          const oldLogoPath = path.join(process.cwd(), 'public', currentSettings.logoUrl);
+          try {
+            await fs.unlink(oldLogoPath);
+          } catch (error) {
+            console.error('Error deleting old logo:', error);
+          }
+        }
+        updateData.logoUrl = `/uploads/${req.file.filename}`;
       }
 
       const settings = await storage.updateSiteSettings(updateData);
