@@ -41,14 +41,15 @@ export const events = pgTable("events", {
   createdById: integer("created_by_id").notNull(),
 });
 
-// Event participants table
+// Event participants table'a oda tipi alanını ekliyorum
 export const eventParticipants = pgTable("event_participants", {
   id: serial("id").primaryKey(),
   eventId: integer("event_id").notNull(),
   userId: integer("user_id").notNull(),
   status: text("status").notNull(),
   isApproved: boolean("is_approved").notNull().default(false),
-  roomPreference: integer("room_preference"),
+  roomType: text("room_type"),
+  roomOccupancy: integer("room_occupancy"),
   paymentStatus: text("payment_status").default("pending"),
 });
 
@@ -77,10 +78,12 @@ export const insertEventSchema = createInsertSchema(events).extend({
   createdById: true
 });
 
+// Event participant schema'yı güncelliyorum
 export const insertEventParticipantSchema = createInsertSchema(eventParticipants)
   .extend({
     status: z.enum(["attending", "maybe", "declined"]),
-    roomPreference: z.number().min(1).max(4).optional(),
+    roomType: z.enum(["single", "double", "triple", "quad"]).optional(),
+    roomOccupancy: z.number().min(1).max(4).optional(),
     paymentStatus: z.enum(["pending", "paid"]).optional()
   })
   .omit({

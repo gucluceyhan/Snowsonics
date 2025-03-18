@@ -10,11 +10,15 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import cn from 'classnames';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useState } from "react";
 
 export default function EventDetailPage() {
   const { id } = useParams();
   const { user } = useAuth();
   const { toast } = useToast();
+  const [roomType, setRoomType] = useState<string | null>(null);
+  const [roomOccupancy, setRoomOccupancy] = useState<number | null>(null);
 
   const { data: event } = useQuery<Event>({ 
     queryKey: [`/api/events/${id}`]
@@ -25,8 +29,8 @@ export default function EventDetailPage() {
   });
 
   const participateMutation = useMutation({
-    mutationFn: async (status: string) => {
-      await apiRequest("POST", `/api/events/${id}/participate`, { status });
+    mutationFn: async (data: {status: string, roomType?: string, roomOccupancy?: number}) => {
+      await apiRequest("POST", `/api/events/${id}/participate`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/events/${id}/participants`] });
@@ -83,7 +87,7 @@ export default function EventDetailPage() {
 
               <div className="flex items-center gap-2">
                 <MapPin className="h-5 w-5" />
-                {event.location}
+                {event.location || "Konum belirtilmemiş"}
               </div>
 
               <div className="flex items-center gap-2">
@@ -99,22 +103,58 @@ export default function EventDetailPage() {
           </div>
 
           {user?.isApproved && (
-            <div className="flex gap-2 pt-8 border-t">
-              <Button
-                className="flex-1"
-                onClick={() => participateMutation.mutate("attending")}
-                disabled={participateMutation.isPending}
-              >
-                Katılıyorum
-              </Button>
-              <Button
-                className="flex-1"
-                variant="outline"
-                onClick={() => participateMutation.mutate("maybe")}
-                disabled={participateMutation.isPending}
-              >
-                Belki
-              </Button>
+            <div className="flex flex-col gap-4 pt-8 border-t">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Select onValueChange={(value) => setRoomType(value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Oda tipi seçin" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="single">Tek Kişilik Oda</SelectItem>
+                    <SelectItem value="double">İki Kişilik Oda</SelectItem>
+                    <SelectItem value="triple">Üç Kişilik Oda</SelectItem>
+                    <SelectItem value="quad">Dört Kişilik Oda</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Select onValueChange={(value) => setRoomOccupancy(parseInt(value))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Kişi sayısı seçin" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">1 Kişi</SelectItem>
+                    <SelectItem value="2">2 Kişi</SelectItem>
+                    <SelectItem value="3">3 Kişi</SelectItem>
+                    <SelectItem value="4">4 Kişi</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  className="flex-1"
+                  onClick={() => participateMutation.mutate({
+                    status: "attending",
+                    roomType,
+                    roomOccupancy
+                  })}
+                  disabled={participateMutation.isPending || !roomType || !roomOccupancy}
+                >
+                  Katılıyorum
+                </Button>
+                <Button
+                  className="flex-1"
+                  variant="outline"
+                  onClick={() => participateMutation.mutate({
+                    status: "maybe",
+                    roomType,
+                    roomOccupancy
+                  })}
+                  disabled={participateMutation.isPending || !roomType || !roomOccupancy}
+                >
+                  Belki
+                </Button>
+              </div>
             </div>
           )}
         </div>
