@@ -41,7 +41,7 @@ export const events = pgTable("events", {
   createdById: integer("created_by_id").notNull(),
 });
 
-// Event participants table'a oda tipi alanını ekliyorum
+// Event participants table
 export const eventParticipants = pgTable("event_participants", {
   id: serial("id").primaryKey(),
   eventId: integer("event_id").notNull(),
@@ -51,6 +51,11 @@ export const eventParticipants = pgTable("event_participants", {
   roomType: text("room_type"),
   roomOccupancy: integer("room_occupancy"),
   paymentStatus: text("payment_status").default("pending"),
+  oldValues: json("old_values").$type<{
+    roomType: string | null,
+    roomOccupancy: number | null,
+    isApproved: boolean
+  } | null>().default(null)
 });
 
 // Site settings schema
@@ -84,7 +89,12 @@ export const insertEventParticipantSchema = createInsertSchema(eventParticipants
     status: z.enum(["attending", "declined"]),
     roomType: z.enum(["single", "double", "triple", "quad"]).optional(),
     roomOccupancy: z.number().min(1).max(4).optional(),
-    paymentStatus: z.enum(["pending", "paid"]).optional()
+    paymentStatus: z.enum(["pending", "paid"]).optional(),
+    oldValues: z.object({
+      roomType: z.string().nullable(),
+      roomOccupancy: z.number().nullable(),
+      isApproved: z.boolean()
+    }).nullable().default(null)
   })
   .omit({
     id: true,

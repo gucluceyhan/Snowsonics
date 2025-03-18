@@ -128,11 +128,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Event participation routes
+  app.get("/api/events/:id/my-participation", requireAuth, async (req, res) => {
+    const { id } = req.params;
+    const participation = await storage.getUserEventParticipation(req.user!.id, parseInt(id));
+    res.json(participation);
+  });
+
   app.post("/api/events/:id/participate", requireAuth, async (req, res) => {
     const { id } = req.params;
     const result = z.object({
-      status: z.enum(["attending", "maybe", "declined"]),
-      roomPreference: z.number().min(1).max(4).optional(),
+      status: z.enum(["attending", "declined"]),
+      roomType: z.enum(["single", "double", "triple", "quad"]).optional(),
+      roomOccupancy: z.number().min(1).max(4).optional(),
       paymentStatus: z.enum(["pending", "paid"]).optional()
     }).safeParse(req.body);
 
@@ -141,18 +148,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     // Check if user already has a participation request
-    const existingParticipation = await storage.getUserEventParticipation(req.user.id, parseInt(id));
+    const existingParticipation = await storage.getUserEventParticipation(req.user!.id, parseInt(id));
     if (existingParticipation) {
       return res.status(400).json({ message: "Katılım talebiniz zaten bulunmakta" });
     }
 
     const participant = await storage.addEventParticipant({
       eventId: parseInt(id),
-      userId: req.user.id,
+      userId: req.user!.id,
       ...result.data,
-      isApproved: false // Yeni katılımlar varsayılan olarak onaysız
+      isApproved: false
     });
     res.status(201).json(participant);
+  });
+
+  app.put("/api/events/:id/participate", requireAuth, async (req, res) => {
+    const { id } = req.params;
+    const result = z.object({
+      roomType: z.enum(["single", "double", "triple", "quad"]),
+      roomOccupancy: z.number().min(1).max(4)
+    }).safeParse(req.body);
+
+    if (!result.success) {
+      return res.status(400).json({ message: "Invalid update data" });
+    }
+
+    const existingParticipation = await storage.getUserEventParticipation(req.user!.id, parseInt(id));
+    if (!existingParticipation) {
+      return res.status(404).json({ message: "Katılım bulunamadı" });
+    }
+
+    // Save old approved values
+    const oldValues = {
+      roomType: existingParticipation.roomType,
+      roomOccupancy: existingParticipation.roomOccupancy,
+      isApproved: existingParticipation.isApproved
+    };
+
+    // Update with new values, set isApproved to false
+    const participant = await storage.updateEventParticipant(existingParticipation.id, {
+      ...result.data,
+      isApproved: false,
+      oldValues: oldValues // Save old values for potential rollback
+    });
+
+    res.json(participant);
+  });
+
+  // Admin routes for handling participation updates
+  app.post("/api/admin/events/:eventId/participants/:participantId/approve", requireAdmin, async (req, res) => {
+    const { participantId } = req.params;
+    const participant = await storage.updateEventParticipant(parseInt(participantId), {
+      isApproved: true,
+      oldValues: null // Clear old values on approval
+    });
+    res.json(participant);
+  });
+
+  app.post("/api/admin/events/:eventId/participants/:participantId/reject", requireAdmin, async (req, res) => {
+    const { participantId } = req.params;
+    const participant = await storage.getEventParticipant(parseInt(participantId));
+
+    if (!participant || !participant.oldValues) {
+      return res.status(404).json({ message: "Katılım veya eski değerler bulunamadı" });
+    }
+
+    // Restore old values
+    const updatedParticipant = await storage.updateEventParticipant(parseInt(participantId), {
+      roomType: participant.oldValues.roomType,
+      roomOccupancy: participant.oldValues.roomOccupancy,
+      isApproved: participant.oldValues.isApproved,
+      oldValues: null
+    });
+
+    res.json(updatedParticipant);
   });
 
   app.get("/api/events/:id/participants", requireAuth, async (req, res) => {
