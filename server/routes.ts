@@ -312,16 +312,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.getUser(req.user!.id);
 
       if (!user?.instagram) {
-        return res.status(400).json({ 
-          message: "Instagram kullanıcı adı bulunamadı" 
+        return res.status(400).json({
+          message: "Instagram kullanıcı adı bulunamadı"
         });
       }
 
       try {
-        // Instagram'dan alınamazsa Gravatar'ı dene
+        // Instagram Basic Display API ile profil fotoğrafını al
+        const response = await axios.get(`https://graph.instagram.com/v12.0/me`, {
+          params: {
+            fields: 'id,username,profile_picture_url',
+            access_token: process.env.INSTAGRAM_CLIENT_ID
+          }
+        });
+
+        if (response.data?.profile_picture_url) {
+          const updatedUser = await storage.updateUser(user.id, {
+            avatarUrl: response.data.profile_picture_url
+          });
+
+          return res.json(updatedUser);
+        }
+
+        throw new Error("Profil fotoğrafı bulunamadı");
+
+      } catch (instagramError) {
+        console.error("Instagram API error:", instagramError);
+
+        // Instagram API başarısız olursa Gravatar'a dön
         if (user.email) {
           const md5 = createHash('md5').update(user.email.toLowerCase().trim()).digest('hex');
-          const gravatarUrl = `https://www.gravatar.com/avatar/${md5}?d=mp`;
+          const gravatarUrl = `https://www.gravatar.com/avatar/${md5}?d=mp&s=200`;
 
           const updatedUser = await storage.updateUser(user.id, {
             avatarUrl: gravatarUrl
@@ -329,8 +350,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           return res.json(updatedUser);
         }
-      } catch (error) {
-        console.error("Gravatar fallback error:", error);
       }
 
       // Hiçbir şey çalışmazsa varsayılan avatar URL'sini kullan
