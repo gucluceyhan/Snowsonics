@@ -12,7 +12,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 export default function EventDetailPage() {
   const { id } = useParams();
   const { user } = useAuth();
-  
+
   const { data: event } = useQuery<Event>({ 
     queryKey: [`/api/events/${id}`]
   });
@@ -35,7 +35,7 @@ export default function EventDetailPage() {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      
+
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto space-y-8">
           {event.imageUrl && (
@@ -50,13 +50,13 @@ export default function EventDetailPage() {
 
           <div className="space-y-4">
             <h1 className="text-4xl font-bold">{event.title}</h1>
-            
+
             <div className="flex flex-wrap gap-4 text-muted-foreground">
               <div className="flex items-center gap-2">
                 <Calendar className="h-5 w-5" />
-                {format(new Date(event.date), "PPP")}
+                {format(new Date(event.date), "PPP")} - {format(new Date(event.endDate), "PPP")}
               </div>
-              
+
               <div className="flex items-center gap-2">
                 <MapPin className="h-5 w-5" />
                 {event.location}
@@ -68,9 +68,10 @@ export default function EventDetailPage() {
               </div>
             </div>
 
-            <div className="prose prose-gray dark:prose-invert max-w-none">
-              <div dangerouslySetInnerHTML={{ __html: event.content }} />
-            </div>
+            <div 
+              className="prose prose-gray dark:prose-invert max-w-none"
+              dangerouslySetInnerHTML={{ __html: event.content as string }}
+            />
           </div>
 
           {user?.isApproved && (

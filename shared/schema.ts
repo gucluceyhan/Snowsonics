@@ -26,6 +26,7 @@ export const events = pgTable("events", {
   description: text("description").notNull(),
   content: json("content").notNull(),
   date: timestamp("date").notNull(),
+  endDate: timestamp("end_date").notNull(), // Bitiş tarihi eklendi
   location: text("location").notNull(),
   imageUrl: text("image_url"),
   createdById: integer("created_by_id").notNull(),
@@ -46,7 +47,10 @@ export const insertUserSchema = createInsertSchema(users).extend({
   phone: z.string().min(10, "Invalid phone number"),
 }).omit({ id: true, role: true, isApproved: true });
 
-export const insertEventSchema = createInsertSchema(events).omit({ 
+export const insertEventSchema = createInsertSchema(events).extend({
+  date: z.string().refine((date) => !isNaN(Date.parse(date)), "Geçerli bir başlangıç tarihi giriniz"),
+  endDate: z.string().refine((date) => !isNaN(Date.parse(date)), "Geçerli bir bitiş tarihi giriniz"),
+}).omit({ 
   id: true,
   createdById: true 
 });

@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import {
   Popover,
   PopoverContent,
@@ -38,8 +39,10 @@ export default function EventForm({ event, onSuccess }: EventFormProps) {
       title: "",
       description: "",
       content: "",
-      date: new Date(),
+      date: new Date().toISOString(),
+      endDate: new Date().toISOString(),
       location: "",
+      imageUrl: "",
     },
   });
 
@@ -53,8 +56,8 @@ export default function EventForm({ event, onSuccess }: EventFormProps) {
     },
     onSuccess: () => {
       toast({
-        title: `Event ${event ? "updated" : "created"}`,
-        description: `The event has been ${event ? "updated" : "created"} successfully`,
+        title: `Etkinlik ${event ? "güncellendi" : "oluşturuldu"}`,
+        description: `Etkinlik başarıyla ${event ? "güncellendi" : "oluşturuldu"}`,
       });
       onSuccess?.();
     },
@@ -71,7 +74,7 @@ export default function EventForm({ event, onSuccess }: EventFormProps) {
           name="title"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Title</FormLabel>
+              <FormLabel>Başlık</FormLabel>
               <FormControl>
                 <Input {...field} />
               </FormControl>
@@ -85,7 +88,7 @@ export default function EventForm({ event, onSuccess }: EventFormProps) {
           name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Description</FormLabel>
+              <FormLabel>Kısa Açıklama</FormLabel>
               <FormControl>
                 <Textarea {...field} />
               </FormControl>
@@ -97,21 +100,113 @@ export default function EventForm({ event, onSuccess }: EventFormProps) {
         <FormField
           control={form.control}
           name="content"
-          render={({ field: { onChange, value } }) => (
+          render={({ field }) => (
             <FormItem>
-              <FormLabel>Content</FormLabel>
+              <FormLabel>İçerik</FormLabel>
               <FormControl>
-                <Textarea 
-                  value={typeof value === 'string' ? value : JSON.stringify(value, null, 2)}
-                  onChange={(e) => {
-                    try {
-                      onChange(JSON.parse(e.target.value));
-                    } catch {
-                      onChange(e.target.value);
-                    }
-                  }}
-                  className="min-h-[200px] font-mono text-sm"
+                <RichTextEditor
+                  value={field.value as string}
+                  onChange={field.onChange}
+                  placeholder="Etkinlik içeriğini giriniz..."
                 />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="date"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>Başlangıç Tarihi</FormLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "w-full pl-3 text-left font-normal",
+                          !field.value && "text-muted-foreground"
+                        )}
+                      >
+                        {field.value ? (
+                          format(new Date(field.value), "PPP")
+                        ) : (
+                          <span>Tarih seçin</span>
+                        )}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={new Date(field.value)}
+                      onSelect={(date) => field.onChange(date?.toISOString())}
+                      disabled={(date) =>
+                        date < new Date(new Date().setHours(0, 0, 0, 0))
+                      }
+                    />
+                  </PopoverContent>
+                </Popover>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="endDate"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>Bitiş Tarihi</FormLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant={"outline"}
+                        className={cn(
+                          "w-full pl-3 text-left font-normal",
+                          !field.value && "text-muted-foreground"
+                        )}
+                      >
+                        {field.value ? (
+                          format(new Date(field.value), "PPP")
+                        ) : (
+                          <span>Tarih seçin</span>
+                        )}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={new Date(field.value)}
+                      onSelect={(date) => field.onChange(date?.toISOString())}
+                      disabled={(date) =>
+                        date < new Date(field.value || new Date().setHours(0, 0, 0, 0))
+                      }
+                    />
+                  </PopoverContent>
+                </Popover>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <FormField
+          control={form.control}
+          name="location"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Konum</FormLabel>
+              <FormControl>
+                <Input {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -120,51 +215,10 @@ export default function EventForm({ event, onSuccess }: EventFormProps) {
 
         <FormField
           control={form.control}
-          name="date"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Date</FormLabel>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "w-[240px] pl-3 text-left font-normal",
-                        !field.value && "text-muted-foreground"
-                      )}
-                    >
-                      {field.value ? (
-                        format(new Date(field.value), "PPP")
-                      ) : (
-                        <span>Pick a date</span>
-                      )}
-                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={new Date(field.value)}
-                    onSelect={(date) => field.onChange(date?.toISOString())}
-                    disabled={(date) =>
-                      date < new Date(new Date().setHours(0, 0, 0, 0))
-                    }
-                  />
-                </PopoverContent>
-              </Popover>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="location"
+          name="imageUrl"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Location</FormLabel>
+              <FormLabel>Görsel URL'i (Opsiyonel)</FormLabel>
               <FormControl>
                 <Input {...field} />
               </FormControl>
@@ -181,7 +235,7 @@ export default function EventForm({ event, onSuccess }: EventFormProps) {
           {mutation.isPending && (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           )}
-          {event ? "Update Event" : "Create Event"}
+          {event ? "Etkinliği Güncelle" : "Etkinlik Oluştur"}
         </Button>
       </form>
     </Form>
