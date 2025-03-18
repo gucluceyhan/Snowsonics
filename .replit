@@ -47,4 +47,4 @@ mode = "sequential"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "DISABLE_CLOUD_STORAGE=true npm run dev"
+args = "npm run dev"
