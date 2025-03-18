@@ -9,6 +9,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { User, LogOut } from "lucide-react";
 
+import { useQuery } from "@tanstack/react-query";
+
 export function Navbar() {
   const { user, logoutMutation } = useAuth();
   const { data: siteSettings } = useQuery({
