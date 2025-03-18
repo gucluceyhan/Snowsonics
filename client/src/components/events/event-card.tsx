@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Calendar, MapPin, Info } from "lucide-react";
 import { useLocation } from "wouter";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 type EventCardProps = {
   event: Event;
@@ -17,6 +18,7 @@ type EventCardProps = {
 export default function EventCard({ event, variant = "default" }: EventCardProps) {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
 
   const participateMutation = useMutation({
     mutationFn: async (status: string) => {
@@ -24,6 +26,17 @@ export default function EventCard({ event, variant = "default" }: EventCardProps
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/events"] });
+      toast({
+        title: "Katılım talebi gönderildi",
+        description: "Admin onayından sonra katılımınız onaylanacaktır.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Hata",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 

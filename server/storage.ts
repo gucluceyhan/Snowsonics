@@ -149,7 +149,8 @@ export class MemStorage implements IStorage {
       ...participant, 
       id,
       roomPreference: participant.roomPreference || null,
-      paymentStatus: participant.paymentStatus || "pending"
+      paymentStatus: participant.paymentStatus || "pending",
+      isApproved: false
     };
     this.eventParticipants.set(id, newParticipant);
     return newParticipant;
@@ -171,6 +172,12 @@ export class MemStorage implements IStorage {
   async getUserParticipations(userId: number): Promise<EventParticipant[]> {
     return Array.from(this.eventParticipants.values())
       .filter(p => p.userId === userId);
+  }
+
+  // Yeni eklenen fonksiyon
+  async getUserEventParticipation(userId: number, eventId: number): Promise<EventParticipant | undefined> {
+    return Array.from(this.eventParticipants.values())
+      .find(p => p.userId === userId && p.eventId === eventId);
   }
 }
 
