@@ -4,6 +4,8 @@ import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { insertEventSchema, insertSiteSettingsSchema } from "@shared/schema";
 import { z } from "zod";
+import {insertUserSchema} from "@shared/schema" // Assuming this schema exists
+
 
 function requireAuth(req: Express.Request, res: Express.Response, next: Express.NextFunction) {
   if (!req.isAuthenticated()) {
@@ -40,7 +42,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin routes
   app.get("/api/admin/users", requireAdmin, async (req, res) => {
     const users = await storage.getAllUsers();
-    res.json(users);
+    const approvedUsers = users.filter(user => user.isApproved);
+    res.json(approvedUsers);
   });
 
   app.post("/api/admin/users/:id/approve", requireAdmin, async (req, res) => {
@@ -270,6 +273,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     );
     res.json(participationsWithEvents);
   });
+
+  // Profil güncelleme route'u
+  app.put("/api/user/profile", requireAuth, async (req, res) => {
+    const result = insertUserSchema.partial().safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({ message: "Invalid user data" });
+    }
+
+    // Instagram profil fotoğrafını al
+    let avatarUrl = undefined;
+    if (result.data.instagram) {
+      try {
+        const response = await fetch(`https://www.instagram.com/${result.data.instagram}/?__a=1`);
+        const data = await response.json();
+        avatarUrl = data.graphql?.user?.profile_pic_url_hd;
+      } catch (error) {
+        console.error("Instagram profile photo fetch failed:", error);
+      }
+    }
+
+    const updatedUser = await storage.updateUser(req.user!.id, {
+      ...result.data,
+      avatarUrl
+    });
+
+    res.json(updatedUser);
+  });
+
 
   const httpServer = createServer(app);
   return httpServer;
