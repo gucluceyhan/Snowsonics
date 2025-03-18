@@ -311,52 +311,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const user = await storage.getUser(req.user!.id);
 
-      if (!user.instagram) {
+      if (!user?.instagram) {
         return res.status(400).json({ 
           message: "Instagram kullanıcı adı bulunamadı" 
         });
       }
 
-      // Instagram API'den fotoğrafı almayı dene
       try {
-        // Instagram Graph API kullanarak önce token al
-        const tokenResponse = await axios.get('https://graph.instagram.com/access_token', {
-          params: {
-            client_id: process.env.INSTAGRAM_CLIENT_ID,
-            client_secret: process.env.INSTAGRAM_CLIENT_SECRET,
-            grant_type: 'authorization_code',
-            code: req.body.code // Assuming the authorization code is sent in the request body
-          }
-        });
+        // Instagram'dan alınamazsa Gravatar'ı dene
+        if (user.email) {
+          const md5 = createHash('md5').update(user.email.toLowerCase().trim()).digest('hex');
+          const gravatarUrl = `https://www.gravatar.com/avatar/${md5}?d=mp`;
 
-        // Token ile profil bilgilerini al
-        const mediaResponse = await axios.get('https://graph.instagram.com/me', {
-          params: {
-            fields: 'id,username,profile_picture',
-            access_token: tokenResponse.data.access_token
-          }
-        });
-
-        if (mediaResponse.data && mediaResponse.data.profile_picture) {
           const updatedUser = await storage.updateUser(user.id, {
-            avatarUrl: mediaResponse.data.profile_picture
+            avatarUrl: gravatarUrl
           });
+
           return res.json(updatedUser);
         }
-      } catch (instagramError) {
-        console.error("Instagram API error:", instagramError);
-      }
-
-      // Instagram'dan alınamazsa Gravatar'ı dene
-      if (user.email) {
-        const md5 = createHash('md5').update(user.email.toLowerCase().trim()).digest('hex');
-        const gravatarUrl = `https://www.gravatar.com/avatar/${md5}?d=mp`;
-
-        const updatedUser = await storage.updateUser(user.id, {
-          avatarUrl: gravatarUrl
-        });
-
-        return res.json(updatedUser);
+      } catch (error) {
+        console.error("Gravatar fallback error:", error);
       }
 
       // Hiçbir şey çalışmazsa varsayılan avatar URL'sini kullan

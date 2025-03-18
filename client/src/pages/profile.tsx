@@ -62,13 +62,13 @@ export default function ProfilePage() {
       queryClient.setQueryData(["/api/user"], updatedUser);
       toast({
         title: "Başarılı",
-        description: "Instagram profil fotoğrafınız başarıyla içe aktarıldı.",
+        description: "Profil fotoğrafınız başarıyla güncellendi.",
       });
     },
     onError: (error: Error) => {
       toast({
         title: "Hata",
-        description: "Instagram profil fotoğrafı alınamadı. Lütfen Instagram kullanıcı adınızı kontrol edin.",
+        description: "Profil fotoğrafı güncellenemedi. Şu anda Gravatar profil fotoğrafınız kullanılacak.",
         variant: "destructive",
       });
     },
@@ -107,7 +107,14 @@ export default function ProfilePage() {
                   disabled={importInstagramPhotoMutation.isPending}
                 >
                   <Instagram className="h-4 w-4 mr-1" />
-                  {importInstagramPhotoMutation.isPending ? "İçe Aktarılıyor..." : "Instagram'dan İçe Aktar"}
+                  {importInstagramPhotoMutation.isPending ? (
+                    <>
+                      <span className="animate-spin mr-1">⏳</span>
+                      Yükleniyor...
+                    </>
+                  ) : (
+                    "Profil Fotoğrafını Güncelle"
+                  )}
                 </Button>
               )}
             </div>
