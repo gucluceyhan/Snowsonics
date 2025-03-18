@@ -10,7 +10,9 @@ import multer from "multer";
 import { Client } from "@replit/object-storage";
 
 const upload = multer({ storage: multer.memoryStorage() });
-const storage = new Client();
+const storage = new Client({
+  bucketName: "uploads"
+});
 
 function requireAuth(req: Express.Request, res: Express.Response, next: Express.NextFunction) {
   if (!req.isAuthenticated()) {
