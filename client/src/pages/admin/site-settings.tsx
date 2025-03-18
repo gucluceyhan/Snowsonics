@@ -89,7 +89,14 @@ export default function SiteSettingsPage() {
                     <FormControl>
                       <ImageUpload
                         value={field.value ? [field.value] : []}
-                        onChange={(urls) => field.onChange(urls[0])}
+                        onChange={(urls) => {
+                          field.onChange(urls[0] || "/assets/new_whatsapp_image.jpg");
+                          form.setValue("logoUrl", urls[0] || "/assets/new_whatsapp_image.jpg");
+                        }}
+                        onRemove={() => {
+                          field.onChange("/assets/new_whatsapp_image.jpg");
+                          form.setValue("logoUrl", "/assets/new_whatsapp_image.jpg");
+                        }}
                         maxFiles={1}
                       />
                     </FormControl>
