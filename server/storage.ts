@@ -1,4 +1,3 @@
-
 import path from "path";
 import fs from "fs/promises";
 import { IStorage } from "./types";
@@ -125,7 +124,7 @@ export class FileStorage implements IStorage {
     // Local file storage implementation
     const publicDir = path.join(process.cwd(), "public");
     const assetsDir = path.join(publicDir, "assets");
-    
+
     try {
       await fs.mkdir(assetsDir, { recursive: true });
       const fileName = `${Date.now()}-${file.originalname}`;
@@ -135,6 +134,22 @@ export class FileStorage implements IStorage {
     } catch (error) {
       console.error("Error saving file:", error);
       throw error;
+    }
+  }
+
+  async deleteFile(filePath: string): Promise<void> {
+    if (!filePath || !filePath.startsWith('/assets/')) return;
+
+    try {
+      const publicDir = path.join(process.cwd(), "public");
+      const fullPath = path.join(publicDir, filePath.substring(1)); //remove leading /
+      await fs.unlink(fullPath);
+    } catch (error) {
+      console.error("Error deleting file:", error);
+      // Don't throw error if file doesn't exist
+      if (error.code !== 'ENOENT') {
+        throw error;
+      }
     }
   }
 
@@ -152,10 +167,10 @@ export class FileStorage implements IStorage {
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = this.currentId.users++;
     const isFirstUser = (await this.getAllUsers()).length === 0;
-    const user: User = { 
-      ...insertUser, 
-      id, 
-      role: isFirstUser ? "admin" : "user", 
+    const user: User = {
+      ...insertUser,
+      id,
+      role: isFirstUser ? "admin" : "user",
       isApproved: isFirstUser,
       instagram: insertUser.instagram || null,
       avatarUrl: null,
@@ -193,8 +208,8 @@ export class FileStorage implements IStorage {
   // Event methods
   async createEvent(event: InsertEvent & { createdById: number }): Promise<Event> {
     const id = this.currentId.events++;
-    const newEvent: Event = { 
-      ...event, 
+    const newEvent: Event = {
+      ...event,
       id,
       date: new Date(event.date),
       endDate: new Date(event.endDate),
@@ -227,8 +242,8 @@ export class FileStorage implements IStorage {
   // Event participant methods
   async addEventParticipant(participant: InsertEventParticipant): Promise<EventParticipant> {
     const id = this.currentId.eventParticipants++;
-    const newParticipant: EventParticipant = { 
-      ...participant, 
+    const newParticipant: EventParticipant = {
+      ...participant,
       id,
       roomType: participant.roomType || null,
       roomOccupancy: participant.roomOccupancy || null,

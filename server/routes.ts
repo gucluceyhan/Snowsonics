@@ -7,8 +7,7 @@ import { z } from "zod";
 import { createHash, randomBytes } from "crypto";
 import axios from "axios";
 import multer from "multer";
-import passport from 'passport'; // Added passport import
-
+import passport from 'passport';
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -18,7 +17,6 @@ async function hashPassword(password: string): Promise<string> {
   const hash = createHash('sha256').update(password).digest('hex');
   return hash;
 }
-
 
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
@@ -70,13 +68,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(settings);
   });
 
-  app.put("/api/admin/site-settings", requireAdmin, async (req, res) => {
-    const result = insertSiteSettingsSchema.partial().safeParse(req.body);
-    if (!result.success) {
-      return res.status(400).json({ message: "Invalid settings data" });
+  app.put("/api/admin/site-settings", requireAdmin, upload.single('logo'), async (req, res) => {
+    try {
+      const currentSettings = await storage.getSiteSettings();
+      let logoUrl = currentSettings?.logoUrl;
+
+      // Handle new logo upload if provided
+      if (req.file) {
+        // Delete old logo first
+        if (currentSettings?.logoUrl) {
+          await storage.deleteFile(currentSettings.logoUrl);
+        }
+        // Save new logo
+        logoUrl = await storage.saveFile(req.file);
+      }
+
+      const result = insertSiteSettingsSchema.partial().safeParse({
+        ...req.body,
+        logoUrl
+      });
+
+      if (!result.success) {
+        return res.status(400).json({ message: "Invalid settings data" });
+      }
+
+      const settings = await storage.updateSiteSettings(result.data);
+      res.json(settings);
+    } catch (error) {
+      console.error("Error updating site settings:", error);
+      res.status(500).json({ message: "Site ayarları güncellenirken bir hata oluştu" });
     }
-    const settings = await storage.updateSiteSettings(result.data);
-    res.json(settings);
   });
 
   // Admin routes
