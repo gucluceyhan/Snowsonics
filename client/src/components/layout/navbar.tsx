@@ -7,7 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { User, LogOut, Settings } from "lucide-react";
+import { User, LogOut } from "lucide-react";
 
 export function Navbar() {
   const { user, logoutMutation } = useAuth();
@@ -16,7 +16,13 @@ export function Navbar() {
     <nav className="border-b bg-background">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <Link href="/">
-          <a className="text-2xl font-bold">Snowsonics</a>
+          <a className="flex items-center">
+            <img 
+              src="/logo.jpeg" 
+              alt="Logo" 
+              className="h-10 w-auto"
+            />
+          </a>
         </Link>
 
         <div className="flex items-center gap-4">

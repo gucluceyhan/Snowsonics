@@ -52,8 +52,13 @@ export default function HomePage() {
 
       <main className="container mx-auto px-4 py-8">
         <div className="space-y-8">
-          <div>
-            <h1 className="text-4xl font-bold">Hoş geldin, {user?.firstName}!</h1>
+          <div className="text-center">
+            <img 
+              src="/logo.jpeg" 
+              alt="Logo" 
+              className="h-20 w-auto mx-auto mb-6"
+            />
+            <h1 className="text-4xl font-bold text-primary">Hoş geldin, {user?.firstName}!</h1>
             <p className="text-muted-foreground mt-2">
               {!user?.isApproved 
                 ? "Hesabın onay bekliyor. Onaylandıktan sonra etkinliklere katılabilirsin."
@@ -62,7 +67,7 @@ export default function HomePage() {
           </div>
 
           <Tabs defaultValue="list" className="space-y-4">
-            <TabsList>
+            <TabsList className="mx-auto">
               <TabsTrigger value="list">Liste Görünümü</TabsTrigger>
               <TabsTrigger value="calendar">Takvim Görünümü</TabsTrigger>
             </TabsList>
