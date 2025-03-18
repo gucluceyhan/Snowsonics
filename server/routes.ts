@@ -23,7 +23,7 @@ const upload = multer({
       // Generate unique filename
       const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
       const ext = path.extname(file.originalname);
-      cb(null, `logo-${uniqueSuffix}${ext}`);
+      cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
     }
   }),
   limits: {
@@ -69,8 +69,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(settings);
     } catch (error) {
       console.error("Error updating site settings:", error);
-      res.status(500).json({ 
-        message: error.message || "Site ayarları güncellenirken bir hata oluştu" 
+      res.status(500).json({
+        message: error.message || "Site ayarları güncellenirken bir hata oluştu"
       });
     }
   });
@@ -138,26 +138,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(event);
   });
 
-  app.post("/api/events", requireAuth, async (req, res) => {
-    const result = insertEventSchema.safeParse(req.body);
-    if (!result.success) {
-      return res.status(400).json({ message: "Invalid event data" });
+  app.post("/api/events", requireAuth, upload.array('images', 5), async (req, res) => {
+    try {
+      const eventData = req.body;
+      const result = insertEventSchema.safeParse({
+        ...eventData,
+        images: req.files ? (req.files as Express.Multer.File[]).map(file => `/uploads/${file.filename}`) : []
+      });
+
+      if (!result.success) {
+        return res.status(400).json({ message: "Invalid event data" });
+      }
+
+      const event = await storage.createEvent({
+        ...result.data,
+        createdById: req.user!.id,
+      });
+
+      res.status(201).json(event);
+    } catch (error) {
+      console.error("Error creating event:", error);
+      res.status(500).json({ message: "Error creating event" });
     }
-    const event = await storage.createEvent({
-      ...result.data,
-      createdById: req.user.id,
-    });
-    res.status(201).json(event);
   });
 
-  app.put("/api/events/:id", requireAuth, async (req, res) => {
-    const { id } = req.params;
-    const result = insertEventSchema.partial().safeParse(req.body);
-    if (!result.success) {
-      return res.status(400).json({ message: "Invalid event data" });
+  app.put("/api/events/:id", requireAuth, upload.array('images', 5), async (req, res) => {
+    try {
+      const { id } = req.params;
+      const eventData = req.body;
+
+      let updateData = { ...eventData };
+      if (req.files && (req.files as Express.Multer.File[]).length > 0) {
+        updateData.images = (req.files as Express.Multer.File[]).map(file => `/uploads/${file.filename}`);
+      }
+
+      const result = insertEventSchema.partial().safeParse(updateData);
+      if (!result.success) {
+        return res.status(400).json({ message: "Invalid event data" });
+      }
+
+      const event = await storage.updateEvent(parseInt(id), result.data);
+      res.json(event);
+    } catch (error) {
+      console.error("Error updating event:", error);
+      res.status(500).json({ message: "Error updating event" });
     }
-    const event = await storage.updateEvent(parseInt(id), result.data);
-    res.json(event);
   });
 
   app.delete("/api/events/:id", requireAuth, async (req, res) => {
