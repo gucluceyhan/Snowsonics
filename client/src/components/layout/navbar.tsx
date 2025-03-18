@@ -9,13 +9,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { User, LogOut } from "lucide-react";
 
-import { useQuery } from "@tanstack/react-query";
-
 export function Navbar() {
   const { user, logoutMutation } = useAuth();
-  const { data: siteSettings } = useQuery({
-    queryKey: ["/api/admin/site-settings"],
-  });
 
   return (
     <nav className="border-b bg-background">
@@ -23,9 +18,9 @@ export function Navbar() {
         <Link href="/">
           <a className="flex items-center">
             <img
-              src={siteSettings?.logoUrl || "/assets/new_whatsapp_image.jpg"}
+              src="/assets/new_whatsapp_image.jpg"
               alt="Logo"
-              className="h-10 w-auto object-contain"
+              className="h-10 w-auto"
             />
           </a>
         </Link>

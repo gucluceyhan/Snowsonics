@@ -10,20 +10,6 @@ export default {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
-      spacing: {
-        18: "4.5rem",
-        112: "28rem",
-        120: "30rem",
-      },
-      maxWidth: {
-        "8xl": "88rem",
-      },
-      fontSize: {
-        "2xs": ["0.625rem", { lineHeight: "1rem" }],
-      },
-      opacity: {
-        15: "0.15",
-      },
       colors: {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",

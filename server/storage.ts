@@ -1,10 +1,8 @@
-import path from "path";
-import fs from "fs/promises";
 import { IStorage } from "./types";
 import { User, Event, EventParticipant, SiteSettings, InsertUser, InsertEvent, InsertEventParticipant, InsertSiteSettings } from "@shared/schema";
 import createMemoryStore from "memorystore";
 import session from "express-session";
-import { scrypt, randomBytes, createHash } from "crypto";
+import { scrypt, randomBytes } from "crypto";
 import { promisify } from "util";
 
 const MemoryStore = createMemoryStore(session);
@@ -16,7 +14,7 @@ async function hashDevPassword(password: string) {
   return `${buf.toString("hex")}.${salt}`;
 }
 
-export class FileStorage implements IStorage {
+export class MemStorage implements IStorage {
   private users: Map<number, User>;
   private events: Map<number, Event>;
   private eventParticipants: Map<number, EventParticipant>;
@@ -102,7 +100,9 @@ export class FileStorage implements IStorage {
       date: new Date("2025-04-15"),
       endDate: new Date("2025-04-19"),
       location: "Kars, Sarıkamış",
-      images: ["/assets/test-image.jpg"],
+      images: [
+        "/assets/new_whatsapp_image.jpg"
+      ],
       createdById: 1
     };
     this.events.set(testEvent.id, testEvent);
@@ -112,44 +112,11 @@ export class FileStorage implements IStorage {
     if (!this.siteSettings) {
       this.siteSettings = {
         id: 1,
-        logoUrl: "/assets/logo.jpg",
+        logoUrl: "/assets/new_whatsapp_image.jpg",
         primaryColor: "#914199",
         secondaryColor: "#F7E15C",
         updatedAt: new Date(),
       };
-    }
-  }
-
-  async saveFile(file: Express.Multer.File): Promise<string> {
-    // Local file storage implementation
-    const publicDir = path.join(process.cwd(), "public");
-    const assetsDir = path.join(publicDir, "assets");
-
-    try {
-      await fs.mkdir(assetsDir, { recursive: true });
-      const fileName = `${Date.now()}-${file.originalname}`;
-      const filePath = path.join(assetsDir, fileName);
-      await fs.writeFile(filePath, file.buffer);
-      return `/assets/${fileName}`;
-    } catch (error) {
-      console.error("Error saving file:", error);
-      throw error;
-    }
-  }
-
-  async deleteFile(filePath: string): Promise<void> {
-    if (!filePath || !filePath.startsWith('/assets/')) return;
-
-    try {
-      const publicDir = path.join(process.cwd(), "public");
-      const fullPath = path.join(publicDir, filePath.substring(1)); //remove leading /
-      await fs.unlink(fullPath);
-    } catch (error) {
-      console.error("Error deleting file:", error);
-      // Don't throw error if file doesn't exist
-      if (error.code !== 'ENOENT') {
-        throw error;
-      }
     }
   }
 
@@ -167,10 +134,10 @@ export class FileStorage implements IStorage {
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = this.currentId.users++;
     const isFirstUser = (await this.getAllUsers()).length === 0;
-    const user: User = {
-      ...insertUser,
-      id,
-      role: isFirstUser ? "admin" : "user",
+    const user: User = { 
+      ...insertUser, 
+      id, 
+      role: isFirstUser ? "admin" : "user", 
       isApproved: isFirstUser,
       instagram: insertUser.instagram || null,
       avatarUrl: null,
@@ -205,11 +172,12 @@ export class FileStorage implements IStorage {
     );
   }
 
+
   // Event methods
   async createEvent(event: InsertEvent & { createdById: number }): Promise<Event> {
     const id = this.currentId.events++;
-    const newEvent: Event = {
-      ...event,
+    const newEvent: Event = { 
+      ...event, 
       id,
       date: new Date(event.date),
       endDate: new Date(event.endDate),
@@ -242,8 +210,8 @@ export class FileStorage implements IStorage {
   // Event participant methods
   async addEventParticipant(participant: InsertEventParticipant): Promise<EventParticipant> {
     const id = this.currentId.eventParticipants++;
-    const newParticipant: EventParticipant = {
-      ...participant,
+    const newParticipant: EventParticipant = { 
+      ...participant, 
       id,
       roomType: participant.roomType || null,
       roomOccupancy: participant.roomOccupancy || null,
@@ -292,4 +260,4 @@ export class FileStorage implements IStorage {
   }
 }
 
-export const storage = new FileStorage();
+export const storage = new MemStorage();

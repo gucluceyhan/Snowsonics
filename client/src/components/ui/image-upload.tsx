@@ -7,9 +7,15 @@ interface ImageUploadProps {
   value: string[];
   onChange: (urls: string[]) => void;
   maxFiles?: number;
+  acceptedTypes?: string;
 }
 
-export function ImageUpload({ value = [], onChange, maxFiles = 5 }: ImageUploadProps) {
+export function ImageUpload({ 
+  value = [], 
+  onChange, 
+  maxFiles = 5,
+  acceptedTypes = "image/*"
+}: ImageUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -45,28 +51,16 @@ export function ImageUpload({ value = [], onChange, maxFiles = 5 }: ImageUploadP
     handleFiles(files);
   }, [value, maxFiles]);
 
-  const handleFiles = async (files: File[]) => {
-    try {
-      const formData = new FormData();
-      files.forEach(file => {
-        formData.append('files', file);
-      });
-      
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData
-      });
-      
-      if (!response.ok) {
-        throw new Error('Upload failed');
-      }
-      
-      const uploadedFiles = await response.json();
-      onChange([...value, ...uploadedFiles.urls]);
-    } catch (error) {
-      console.error('Upload error:', error);
-      alert('Dosya yükleme başarısız oldu');
+  const handleFiles = (files: File[]) => {
+    // For single file upload (like logo), just emit the file directly
+    if (maxFiles === 1) {
+      onChange([files[0].name]); // We'll just use the filename as a placeholder
+      return;
     }
+
+    // For multiple files, create temporary URLs
+    const urls = files.map(file => URL.createObjectURL(file));
+    onChange([...value, ...urls]);
   };
 
   const removeImage = (index: number) => {
@@ -89,8 +83,8 @@ export function ImageUpload({ value = [], onChange, maxFiles = 5 }: ImageUploadP
       >
         <input
           type="file"
-          accept="image/*"
-          multiple
+          accept={acceptedTypes}
+          multiple={maxFiles > 1}
           className="hidden"
           id="image-upload"
           onChange={handleFileSelect}
@@ -101,15 +95,21 @@ export function ImageUpload({ value = [], onChange, maxFiles = 5 }: ImageUploadP
         >
           <Upload className="h-8 w-8 mb-2 text-muted-foreground" />
           <div className="text-sm text-muted-foreground">
-            Fotoğrafları buraya sürükleyin veya seçmek için tıklayın
+            {maxFiles === 1 ? (
+              "Logo seçmek için tıklayın veya sürükleyin"
+            ) : (
+              "Fotoğrafları buraya sürükleyin veya seçmek için tıklayın"
+            )}
           </div>
-          <div className="text-xs text-muted-foreground mt-1">
-            (Maksimum {maxFiles} fotoğraf)
-          </div>
+          {maxFiles > 1 && (
+            <div className="text-xs text-muted-foreground mt-1">
+              (Maksimum {maxFiles} fotoğraf)
+            </div>
+          )}
         </label>
       </div>
 
-      {value.length > 0 && (
+      {value.length > 0 && maxFiles > 1 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
           {value.map((url, index) => (
             <div key={index} className="relative aspect-square group">

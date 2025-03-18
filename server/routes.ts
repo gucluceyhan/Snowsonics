@@ -6,10 +6,32 @@ import { insertEventSchema, insertSiteSettingsSchema, insertUserSchema } from "@
 import { z } from "zod";
 import { createHash, randomBytes } from "crypto";
 import axios from "axios";
-import multer from "multer";
-import passport from 'passport';
+import multer from 'multer'; // Assuming multer is used for file uploads.  Add this import.
 
-const upload = multer({ storage: multer.memoryStorage() });
+// Assuming SiteSettings type is defined elsewhere and imported correctly.
+type SiteSettings = {
+  primaryColor: string;
+  secondaryColor: string;
+  logoUrl?: string;
+  // ... other settings
+};
+
+const upload = multer(); // Configure Multer instance as needed.
+
+
+function requireAuth(req: Express.Request, res: Express.Response, next: Express.NextFunction) {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+  next();
+}
+
+function requireAdmin(req: Express.Request, res: Express.Response, next: Express.NextFunction) {
+  if (!req.isAuthenticated() || req.user.role !== "admin") {
+    return res.status(403).json({ message: "Forbidden" });
+  }
+  next();
+}
 
 // Assume hashPassword function exists elsewhere and is imported correctly.
 async function hashPassword(password: string): Promise<string> {
@@ -18,49 +40,9 @@ async function hashPassword(password: string): Promise<string> {
   return hash;
 }
 
+
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
-
-  // Auth routes
-  app.post("/api/register", async (req, res, next) => {
-    try {
-      const existingUser = await storage.getUserByUsername(req.body.username);
-      if (existingUser) {
-        return res.status(400).json({ message: "Bu kullanıcı adı zaten kullanılıyor" });
-      }
-
-      const hashedPassword = await hashPassword(req.body.password);
-      const user = await storage.createUser({
-        ...req.body,
-        password: hashedPassword,
-      });
-
-      req.login(user, (err) => {
-        if (err) return next(err);
-        res.status(201).json(user);
-      });
-    } catch (error) {
-      next(error);
-    }
-  });
-
-  app.post("/api/login", passport.authenticate("local"), (req, res) => {
-    res.json(req.user);
-  });
-
-  app.post("/api/logout", (req, res, next) => {
-    req.logout((err) => {
-      if (err) return next(err);
-      res.sendStatus(200);
-    });
-  });
-
-  app.get("/api/user", (req, res) => {
-    if (!req.user) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-    res.json(req.user);
-  });
 
   // Site settings routes
   app.get("/api/admin/site-settings", requireAdmin, async (req, res) => {
@@ -70,29 +52,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/admin/site-settings", requireAdmin, upload.single('logo'), async (req, res) => {
     try {
+      // Start with existing settings
       const currentSettings = await storage.getSiteSettings();
-      let logoUrl = currentSettings?.logoUrl;
+      const updateData: Partial<SiteSettings> = {
+        primaryColor: req.body.primaryColor,
+        secondaryColor: req.body.secondaryColor,
+      };
 
-      // Handle new logo upload if provided
+      // Handle logo upload if present
       if (req.file) {
-        // Delete old logo first
-        if (currentSettings?.logoUrl) {
-          await storage.deleteFile(currentSettings.logoUrl);
-        }
-        // Save new logo
-        logoUrl = await storage.saveFile(req.file);
+        const logoUrl = await storage.saveFile(req.file);
+        updateData.logoUrl = logoUrl;
       }
 
-      const result = insertSiteSettingsSchema.partial().safeParse({
-        ...req.body,
-        logoUrl
-      });
-
-      if (!result.success) {
-        return res.status(400).json({ message: "Invalid settings data" });
-      }
-
-      const settings = await storage.updateSiteSettings(result.data);
+      const settings = await storage.updateSiteSettings(updateData);
       res.json(settings);
     } catch (error) {
       console.error("Error updating site settings:", error);
@@ -504,45 +477,5 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
-  // Upload endpoint
-  app.post('/api/upload', requireAuth, upload.array('files'), async (req, res) => {
-    try {
-      const files = req.files as Express.Multer.File[];
-      const urls = await Promise.all(files.map(async (file) => {
-        const fileName = `uploads/${Date.now()}-${file.originalname}`;
-        await storage.put(fileName, file.buffer);
-        return `/api/files/${fileName}`;
-      }));
-      res.json({ urls });
-    } catch (error) {
-      console.error('Upload error:', error);
-      res.status(500).json({ message: 'Upload failed' });
-    }
-  });
-
-  // Serve uploaded files
-  app.get('/api/files/:path(*)', async (req, res) => {
-    try {
-      const file = await storage.get(req.params.path);
-      res.send(file);
-    } catch (error) {
-      res.status(404).send('File not found');
-    }
-  });
-
-  function requireAuth(req: Express.Request, res: Express.Response, next: Express.NextFunction) {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-    next();
-  }
-
-  function requireAdmin(req: Express.Request, res: Express.Response, next: Express.NextFunction) {
-    if (!req.isAuthenticated() || req.user.role !== "admin") {
-      return res.status(403).json({ message: "Forbidden" });
-    }
-    next();
-  }
-
   return httpServer;
 }

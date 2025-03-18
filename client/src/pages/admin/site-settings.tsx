@@ -18,22 +18,6 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 
-function rgbToHex(r: number, g: number, b: number) {
-  return "#" + [r, g, b].map(x => {
-    const hex = x.toString(16);
-    return hex.length === 1 ? "0" + hex : hex;
-  }).join("");
-}
-
-function hexToRgb(hex: string) {
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  return result ? {
-    r: parseInt(result[1], 16),
-    g: parseInt(result[2], 16),
-    b: parseInt(result[3], 16)
-  } : null;
-}
-
 export default function SiteSettingsPage() {
   const { toast } = useToast();
   const { data: settings } = useQuery<SiteSettings>({
@@ -42,16 +26,22 @@ export default function SiteSettingsPage() {
 
   const form = useForm({
     defaultValues: {
-      logoUrl: settings?.logoUrl || "/assets/new_whatsapp_image.jpg",
+      logoUrl: settings?.logoUrl || "",
       primaryColor: settings?.primaryColor || "#914199",
       secondaryColor: settings?.secondaryColor || "#F7E15C",
     },
-    values: settings || undefined,
   });
 
   const mutation = useMutation({
-    mutationFn: async (data: Partial<SiteSettings>) => {
-      await apiRequest("PUT", "/api/admin/site-settings", data);
+    mutationFn: async (data: FormData) => {
+      const response = await fetch('/api/admin/site-settings', {
+        method: 'PUT',
+        body: data,
+      });
+      if (!response.ok) {
+        throw new Error('Ayarlar güncellenirken bir hata oluştu');
+      }
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/site-settings"] });
@@ -60,10 +50,28 @@ export default function SiteSettingsPage() {
         description: "Site ayarları başarıyla güncellendi",
       });
     },
+    onError: (error: Error) => {
+      toast({
+        title: "Hata",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   });
 
-  const primaryRgb = hexToRgb(settings?.primaryColor || "#914199");
-  const secondaryRgb = hexToRgb(settings?.secondaryColor || "#F7E15C");
+  const onSubmit = async (data: any) => {
+    const formData = new FormData();
+    formData.append('primaryColor', data.primaryColor);
+    formData.append('secondaryColor', data.secondaryColor);
+
+    // Get the actual file from the input element
+    const fileInput = document.getElementById('image-upload') as HTMLInputElement;
+    if (fileInput?.files?.length) {
+      formData.append('logo', fileInput.files[0]);
+    }
+
+    mutation.mutate(formData);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -79,7 +87,7 @@ export default function SiteSettingsPage() {
           </div>
 
           <Form {...form}>
-            <form onSubmit={form.handleSubmit((data) => mutation.mutate(data))} className="space-y-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <FormField
                 control={form.control}
                 name="logoUrl"
@@ -88,16 +96,11 @@ export default function SiteSettingsPage() {
                     <FormLabel>Logo</FormLabel>
                     <FormControl>
                       <ImageUpload
+                        id="image-upload" // Added ID for file access
                         value={field.value ? [field.value] : []}
-                        onChange={(urls) => {
-                          field.onChange(urls[0] || "/assets/new_whatsapp_image.jpg");
-                          form.setValue("logoUrl", urls[0] || "/assets/new_whatsapp_image.jpg");
-                        }}
-                        onRemove={() => {
-                          field.onChange("/assets/new_whatsapp_image.jpg");
-                          form.setValue("logoUrl", "/assets/new_whatsapp_image.jpg");
-                        }}
+                        onChange={(urls) => field.onChange(urls[0])}
                         maxFiles={1}
+                        acceptedTypes="image/jpeg,image/png"
                       />
                     </FormControl>
                     <FormMessage />
@@ -111,7 +114,7 @@ export default function SiteSettingsPage() {
                   name="primaryColor"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Ana Renk (RGB: {primaryRgb?.r}, {primaryRgb?.g}, {primaryRgb?.b})</FormLabel>
+                      <FormLabel>Ana Renk</FormLabel>
                       <FormControl>
                         <div className="flex gap-2">
                           <Input type="color" {...field} />
@@ -128,7 +131,7 @@ export default function SiteSettingsPage() {
                   name="secondaryColor"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>İkincil Renk (RGB: {secondaryRgb?.r}, {secondaryRgb?.g}, {secondaryRgb?.b})</FormLabel>
+                      <FormLabel>İkincil Renk</FormLabel>
                       <FormControl>
                         <div className="flex gap-2">
                           <Input type="color" {...field} />
@@ -145,11 +148,13 @@ export default function SiteSettingsPage() {
                 <h3 className="text-lg font-semibold">Önizleme</h3>
                 <div className="p-6 border rounded-lg space-y-4">
                   <div className="flex items-center justify-center">
-                    <img 
-                      src={form.watch("logoUrl") || "/assets/new_whatsapp_image.jpg"}
-                      alt="Logo Preview"
-                      className="h-20 w-auto object-contain"
-                    />
+                    {settings?.logoUrl && (
+                      <img 
+                        src={settings.logoUrl}
+                        alt="Logo Preview"
+                        className="h-20 w-auto"
+                      />
+                    )}
                   </div>
                   <div 
                     className="h-20 rounded-lg" 
