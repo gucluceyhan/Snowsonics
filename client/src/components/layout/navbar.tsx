@@ -51,6 +51,12 @@ export function Navbar() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              <Link href="/profile">
+                <DropdownMenuItem>
+                  <User className="mr-2 h-4 w-4" />
+                  Profil
+                </DropdownMenuItem>
+              </Link>
               <DropdownMenuItem onClick={() => logoutMutation.mutate()}>
                 <LogOut className="mr-2 h-4 w-4" />
                 Çıkış Yap
