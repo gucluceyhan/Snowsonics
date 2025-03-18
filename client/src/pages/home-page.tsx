@@ -52,13 +52,19 @@ export default function HomePage() {
 
       <main className="container mx-auto px-4 py-8">
         <div className="space-y-8">
-          <div className="text-center">
-            <img 
-              src="/logo.jpeg" 
-              alt="Logo" 
-              className="h-20 w-auto mx-auto mb-6"
-            />
-            <h1 className="text-4xl font-bold text-primary">Hoş geldin, {user?.firstName}!</h1>
+          <div className="text-center max-w-2xl mx-auto">
+            <div className="w-40 h-40 mx-auto mb-6 bg-gradient-to-br from-[#914199] to-[#F7E15C] rounded-full p-1">
+              <div className="w-full h-full bg-background rounded-full flex items-center justify-center">
+                <img 
+                  src="/logo.jpeg" 
+                  alt="Logo" 
+                  className="h-32 w-auto"
+                />
+              </div>
+            </div>
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-[#914199] to-[#F7E15C] bg-clip-text text-transparent">
+              Hoş geldin, {user?.firstName}!
+            </h1>
             <p className="text-muted-foreground mt-2">
               {!user?.isApproved 
                 ? "Hesabın onay bekliyor. Onaylandıktan sonra etkinliklere katılabilirsin."
