@@ -32,6 +32,7 @@ export class MemStorage implements IStorage {
       checkPeriod: 86400000,
     });
     this.initDevUsers();
+    this.initTestEvents();
     this.initDefaultSettings();
   }
 
@@ -69,6 +70,38 @@ export class MemStorage implements IStorage {
       isApproved: true
     };
     this.users.set(testUser.id, testUser);
+  }
+
+  private async initTestEvents() {
+    const testEvent: Event = {
+      id: 1,
+      title: "20-24 Şubat 2025 Kars Sarıkamış",
+      description: "Kars Sarıkamış'ta muhteşem bir snowboard deneyimi",
+      content: `<h2>Etkinlik Detayları</h2>
+<p>20-24 Şubat 2025 tarihleri arasında Kars Sarıkamış'ta düzenlenecek olan snowboard etkinliğimize davetlisiniz!</p>
+<h3>Program</h3>
+<ul>
+<li>20 Şubat: Karşılama ve otele yerleşme</li>
+<li>21-23 Şubat: Snowboard aktiviteleri</li>
+<li>24 Şubat: Kapanış ve dönüş</li>
+</ul>
+<h3>Konaklama</h3>
+<p>Katılımcılar için farklı oda seçenekleri mevcuttur:</p>
+<ul>
+<li>Tek kişilik odalar</li>
+<li>İki kişilik odalar</li>
+<li>Üç kişilik odalar</li>
+<li>Dört kişilik odalar</li>
+</ul>`,
+      date: new Date("2025-02-20").toISOString(),
+      endDate: new Date("2025-02-24").toISOString(),
+      location: "Kars, Sarıkamış",
+      images: [
+        "/assets/new_whatsapp_image.jpg"
+      ],
+      createdById: 1
+    };
+    this.events.set(testEvent.id, testEvent);
   }
 
   private async initDefaultSettings() {
@@ -159,7 +192,8 @@ export class MemStorage implements IStorage {
     const newParticipant: EventParticipant = { 
       ...participant, 
       id,
-      roomPreference: participant.roomPreference || null,
+      roomType: participant.roomType || null,
+      roomOccupancy: participant.roomOccupancy || null,
       paymentStatus: participant.paymentStatus || "pending",
       isApproved: false
     };
