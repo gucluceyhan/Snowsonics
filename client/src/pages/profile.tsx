@@ -17,7 +17,7 @@ export default function ProfilePage() {
   const { toast } = useToast();
 
   const form = useForm<InsertUser>({
-    resolver: zodResolver(insertUserSchema),
+    resolver: zodResolver(insertUserSchema.partial()),
     defaultValues: {
       username: user?.username || "",
       firstName: user?.firstName || "",
@@ -32,10 +32,15 @@ export default function ProfilePage() {
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data: Partial<InsertUser>) => {
-      await apiRequest("PUT", "/api/user/profile", data);
+      const response = await apiRequest("PUT", "/api/user/profile", data);
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Profil güncellenirken bir hata oluştu");
+      }
+      return await response.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+    onSuccess: (updatedUser) => {
+      queryClient.setQueryData(["/api/user"], updatedUser);
       toast({
         title: "Profil güncellendi",
         description: "Bilgileriniz başarıyla güncellendi.",
@@ -51,7 +56,11 @@ export default function ProfilePage() {
   });
 
   const onSubmit = (data: InsertUser) => {
-    updateProfileMutation.mutate(data);
+    // Boş string değerleri null'a çevir
+    const formData = Object.fromEntries(
+      Object.entries(data).map(([key, value]) => [key, value === "" ? null : value])
+    );
+    updateProfileMutation.mutate(formData);
   };
 
   return (
@@ -70,7 +79,7 @@ export default function ProfilePage() {
                 </AvatarFallback>
               )}
             </Avatar>
-            
+
             <div>
               <h1 className="text-2xl font-bold">Profil Bilgilerim</h1>
               <p className="text-muted-foreground">
@@ -88,7 +97,7 @@ export default function ProfilePage() {
                   <FormItem>
                     <FormLabel>Kullanıcı Adı</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} value={field.value || ""} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -103,7 +112,7 @@ export default function ProfilePage() {
                     <FormItem>
                       <FormLabel>Ad</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <Input {...field} value={field.value || ""} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -117,7 +126,7 @@ export default function ProfilePage() {
                     <FormItem>
                       <FormLabel>Soyad</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <Input {...field} value={field.value || ""} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -132,7 +141,7 @@ export default function ProfilePage() {
                   <FormItem>
                     <FormLabel>E-posta</FormLabel>
                     <FormControl>
-                      <Input {...field} type="email" />
+                      <Input {...field} type="email" value={field.value || ""} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -146,7 +155,7 @@ export default function ProfilePage() {
                   <FormItem>
                     <FormLabel>Telefon</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} value={field.value || ""} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -161,7 +170,7 @@ export default function ProfilePage() {
                     <FormItem>
                       <FormLabel>Şehir</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <Input {...field} value={field.value || ""} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -175,7 +184,7 @@ export default function ProfilePage() {
                     <FormItem>
                       <FormLabel>Meslek</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <Input {...field} value={field.value || ""} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -190,7 +199,7 @@ export default function ProfilePage() {
                   <FormItem>
                     <FormLabel>Instagram Kullanıcı Adı</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} value={field.value || ""} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -202,7 +211,7 @@ export default function ProfilePage() {
                 className="w-full"
                 disabled={updateProfileMutation.isPending}
               >
-                Değişiklikleri Kaydet
+                {updateProfileMutation.isPending ? "Kaydediliyor..." : "Değişiklikleri Kaydet"}
               </Button>
             </form>
           </Form>

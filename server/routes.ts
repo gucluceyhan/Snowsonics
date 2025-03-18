@@ -2,10 +2,8 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
-import { insertEventSchema, insertSiteSettingsSchema } from "@shared/schema";
+import { insertEventSchema, insertSiteSettingsSchema, insertUserSchema } from "@shared/schema";
 import { z } from "zod";
-import {insertUserSchema} from "@shared/schema" // Assuming this schema exists
-
 
 function requireAuth(req: Express.Request, res: Express.Response, next: Express.NextFunction) {
   if (!req.isAuthenticated()) {
@@ -278,29 +276,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/user/profile", requireAuth, async (req, res) => {
     const result = insertUserSchema.partial().safeParse(req.body);
     if (!result.success) {
-      return res.status(400).json({ message: "Invalid user data" });
+      return res.status(400).json({
+        message: "Geçersiz kullanıcı verisi",
+        errors: result.error.errors
+      });
     }
 
-    // Instagram profil fotoğrafını al
-    let avatarUrl = undefined;
-    if (result.data.instagram) {
-      try {
-        const response = await fetch(`https://www.instagram.com/${result.data.instagram}/?__a=1`);
-        const data = await response.json();
-        avatarUrl = data.graphql?.user?.profile_pic_url_hd;
-      } catch (error) {
-        console.error("Instagram profile photo fetch failed:", error);
+    try {
+      // Instagram profil fotoğrafını al
+      let avatarUrl = undefined;
+      if (result.data.instagram) {
+        try {
+          const response = await fetch(`https://www.instagram.com/${result.data.instagram}/?__a=1&__d=dis`);
+          if (response.ok) {
+            const data = await response.json();
+            avatarUrl = data.graphql?.user?.profile_pic_url_hd;
+          }
+        } catch (error) {
+          console.error("Instagram profile photo fetch failed:", error);
+        }
       }
+
+      const updatedUser = await storage.updateUser(req.user!.id, {
+        ...result.data,
+        avatarUrl: avatarUrl || result.data.avatarUrl
+      });
+
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Profile update error:", error);
+      res.status(500).json({
+        message: "Profil güncellenirken bir hata oluştu"
+      });
     }
-
-    const updatedUser = await storage.updateUser(req.user!.id, {
-      ...result.data,
-      avatarUrl
-    });
-
-    res.json(updatedUser);
   });
-
 
   const httpServer = createServer(app);
   return httpServer;
