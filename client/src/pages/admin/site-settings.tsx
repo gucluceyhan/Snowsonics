@@ -42,10 +42,11 @@ export default function SiteSettingsPage() {
 
   const form = useForm({
     defaultValues: {
-      logoUrl: settings?.logoUrl || "",
+      logoUrl: settings?.logoUrl || "/assets/new_whatsapp_image.jpg",
       primaryColor: settings?.primaryColor || "#914199",
       secondaryColor: settings?.secondaryColor || "#F7E15C",
     },
+    values: settings || undefined,
   });
 
   const mutation = useMutation({

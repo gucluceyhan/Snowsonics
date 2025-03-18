@@ -11,8 +11,9 @@ import { User, LogOut } from "lucide-react";
 
 export function Navbar() {
   const { user, logoutMutation } = useAuth();
-  // Assuming siteSettings is available in the context.  If not, this needs to be adjusted.
-  const siteSettings = {logoUrl: null}; // Placeholder for site settings; replace with actual retrieval.
+  const { data: siteSettings } = useQuery({
+    queryKey: ["/api/admin/site-settings"],
+  });
 
   return (
     <nav className="border-b bg-background">
