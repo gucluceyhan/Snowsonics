@@ -65,10 +65,13 @@ export default function EventForm({ event, onSuccess }: EventFormProps) {
       formData.append('location', data.location);
 
       // Handle file uploads
-      if (data.images && Array.isArray(data.images)) {
-        data.images.forEach((image) => {
+      const images = data.images || [];
+      if (Array.isArray(images)) {
+        images.forEach((image) => {
           if (image instanceof File) {
             formData.append('images', image);
+          } else if (typeof image === 'string') {
+            formData.append('existingImages', image);
           }
         });
       }
@@ -106,6 +109,7 @@ export default function EventForm({ event, onSuccess }: EventFormProps) {
       <form 
         onSubmit={form.handleSubmit((data) => mutation.mutate(data))}
         className="space-y-4"
+        encType="multipart/form-data"
       >
         <FormField
           control={form.control}
@@ -259,9 +263,17 @@ export default function EventForm({ event, onSuccess }: EventFormProps) {
               <FormLabel>Fotoğraflar</FormLabel>
               <FormControl>
                 <ImageUpload
-                  onChange={(files) => field.onChange(files)}
+                  onChange={(files) => {
+                    if (Array.isArray(files)) {
+                      field.onChange(files);
+                    } else if (files instanceof File) {
+                      field.onChange([files]);
+                    } else {
+                      field.onChange([]);
+                    }
+                  }}
                   maxFiles={5}
-                  preview={field.value as string[]}
+                  preview={Array.isArray(field.value) ? field.value : []}
                 />
               </FormControl>
               <FormMessage />
