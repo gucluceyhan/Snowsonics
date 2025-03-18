@@ -11,6 +11,8 @@ import { User, LogOut } from "lucide-react";
 
 export function Navbar() {
   const { user, logoutMutation } = useAuth();
+  // Assuming siteSettings is available in the context.  If not, this needs to be adjusted.
+  const siteSettings = {logoUrl: null}; // Placeholder for site settings; replace with actual retrieval.
 
   return (
     <nav className="border-b bg-background">
@@ -18,9 +20,9 @@ export function Navbar() {
         <Link href="/">
           <a className="flex items-center">
             <img
-              src="/assets/new_whatsapp_image.jpg"
+              src={siteSettings?.logoUrl || "/assets/new_whatsapp_image.jpg"}
               alt="Logo"
-              className="h-10 w-auto"
+              className="h-10 w-auto object-contain"
             />
           </a>
         </Link>

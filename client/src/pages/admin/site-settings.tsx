@@ -138,9 +138,9 @@ export default function SiteSettingsPage() {
                 <div className="p-6 border rounded-lg space-y-4">
                   <div className="flex items-center justify-center">
                     <img 
-                      src={form.watch("logoUrl") || "/logo.jpeg"}
+                      src={form.watch("logoUrl") || "/assets/new_whatsapp_image.jpg"}
                       alt="Logo Preview"
-                      className="h-20 w-auto"
+                      className="h-20 w-auto object-contain"
                     />
                   </div>
                   <div 
