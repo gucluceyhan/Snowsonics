@@ -4,9 +4,9 @@ import { Upload, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ImageUploadProps {
-  onChange: (file: File | null) => void;
+  onChange: (files: File[] | File | null) => void;
   onDelete?: () => void;
-  preview?: string | null;
+  preview?: string | string[] | null;
   acceptedTypes?: string;
   maxFiles?: number;
 }
@@ -40,7 +40,7 @@ export function ImageUpload({
       return;
     }
 
-    onChange(maxFiles === 1 ? files[0] : null);
+    onChange(maxFiles === 1 ? files[0] : files);
   }, [onChange, maxFiles]);
 
   const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -50,7 +50,7 @@ export function ImageUpload({
       return;
     }
 
-    onChange(maxFiles === 1 ? files[0] : null);
+    onChange(maxFiles === 1 ? files[0] : files);
   }, [onChange, maxFiles]);
 
   return (
@@ -71,6 +71,7 @@ export function ImageUpload({
           className="hidden"
           id="image-upload"
           onChange={handleFileSelect}
+          multiple={maxFiles > 1}
         />
         <label
           htmlFor="image-upload"
@@ -78,28 +79,48 @@ export function ImageUpload({
         >
           <Upload className="h-8 w-8 mb-2 text-muted-foreground" />
           <div className="text-sm text-muted-foreground">
-            Logo seçmek için tıklayın veya sürükleyin
+            {maxFiles === 1 
+              ? "Resim seçmek için tıklayın veya sürükleyin"
+              : `En fazla ${maxFiles} resim seçmek için tıklayın veya sürükleyin`
+            }
           </div>
         </label>
       </div>
 
       {preview && (
-        <div className="relative w-fit mx-auto">
-          <img
-            src={preview}
-            alt="Preview"
-            className="h-20 w-auto"
-          />
-          {onDelete && (
-            <Button
-              variant="destructive"
-              size="icon"
-              className="absolute -top-2 -right-2"
-              onClick={onDelete}
-              type="button"
-            >
-              <X className="h-4 w-4" />
-            </Button>
+        <div className={cn(
+          "relative grid gap-4",
+          maxFiles > 1 ? "grid-cols-2 md:grid-cols-3" : "place-items-center"
+        )}>
+          {Array.isArray(preview) ? (
+            preview.map((url, index) => (
+              <div key={index} className="relative">
+                <img
+                  src={url}
+                  alt={`Preview ${index + 1}`}
+                  className="w-full h-32 object-cover rounded-lg"
+                />
+              </div>
+            ))
+          ) : (
+            <div className="relative">
+              <img
+                src={preview}
+                alt="Preview"
+                className="h-20 w-auto"
+              />
+              {onDelete && (
+                <Button
+                  variant="destructive"
+                  size="icon"
+                  className="absolute -top-2 -right-2"
+                  onClick={onDelete}
+                  type="button"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
           )}
         </div>
       )}
