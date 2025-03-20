@@ -7,10 +7,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { InsertUser, insertUserSchema } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { queryClient } from "@/lib/queryClient";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { User } from "lucide-react";
+import { useEffect } from "react";
 
 export default function ProfilePage() {
   const { user } = useAuth();
@@ -19,7 +20,7 @@ export default function ProfilePage() {
   console.log("Profil sayfası yükleniyor, mevcut kullanıcı bilgileri:", user);
 
   const form = useForm<InsertUser>({
-    resolver: zodResolver(insertUserSchema),
+    resolver: zodResolver(insertUserSchema.partial()),
     defaultValues: {
       username: user?.username || "",
       firstName: user?.firstName || "",
@@ -31,39 +32,80 @@ export default function ProfilePage() {
       instagram: user?.instagram || "",
     },
   });
+  
+  // Kullanıcı verisi değiştiğinde form alanlarını güncelle
+  useEffect(() => {
+    if (user) {
+      form.reset({
+        username: user.username || "",
+        firstName: user.firstName || "",
+        lastName: user.lastName || "",
+        email: user.email || "",
+        phone: user.phone || "",
+        city: user.city || "",
+        occupation: user.occupation || "",
+        instagram: user.instagram || "",
+      });
+    }
+  }, [user, form]);
 
-  const updateProfileMutation = useMutation({
-    mutationFn: async (data: Partial<InsertUser>) => {
-      console.log('Profil güncelleme isteği gönderiliyor:', data);
-      // Parola alanını gönderme (güvenlik için)
-      const updatedData = { ...data };
-      delete updatedData.password;
+  // Doğrudan fetch API kullan
+  const updateProfile = async (formData: Partial<InsertUser>) => {
+    try {
+      console.log('Profil güncelleme isteği gönderiliyor:', formData);
       
-      // Tüm değerleri gönder
-      console.log('Gönderilecek veri:', updatedData);
+      // Parola alanını temizle
+      const { password, ...updatedData } = formData;
       
-      // PUT yerine POST kullan ve timestamp ekle
-      return await apiRequest(
-        "POST", 
-        `/api/user/profile?t=${new Date().getTime()}`, 
-        updatedData
+      // Null değerleri boş stringe çevir
+      const sanitizedData = Object.fromEntries(
+        Object.entries(updatedData).map(([key, value]) => [key, value === null ? "" : value])
       );
-    },
+      
+      console.log('Hazırlanan ve gönderilecek veri:', sanitizedData);
+      
+      // Fetch API ile istek gönder
+      const response = await fetch(`/api/user/profile?t=${Date.now()}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        },
+        body: JSON.stringify(sanitizedData),
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Profil güncellenirken bir hata oluştu');
+      }
+      
+      const result = await response.json();
+      console.log('Sunucudan dönen güncelleme yanıtı:', result);
+      
+      return result;
+    } catch (error) {
+      console.error('Profil güncelleme hatası:', error);
+      throw error;
+    }
+  };
+  
+  const updateProfileMutation = useMutation({
+    mutationFn: updateProfile,
     onSuccess: () => {
-      // Tüm önbelleği temizle ve yeniden yükle
+      // Önbelleği temizle
       queryClient.clear();
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-      queryClient.refetchQueries({ queryKey: ["/api/user"] });
       
       toast({
         title: "Profil güncellendi",
         description: "Bilgileriniz başarıyla güncellendi.",
       });
       
-      // Sayfayı yenilemek için 1 sn bekle
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
+      // Sayfayı yenile
+      window.location.reload();
     },
     onError: (error: Error) => {
       console.error('Profil güncelleme hatası:', error);
