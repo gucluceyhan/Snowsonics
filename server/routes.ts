@@ -350,29 +350,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Profil güncelleme route'u
   app.put("/api/user/profile", requireAuth, async (req, res) => {
-    const result = insertUserSchema.partial().safeParse(req.body);
-    if (!result.success) {
-      return res.status(400).json({ message: "Invalid user data" });
-    }
-
-    // Instagram profil fotoğrafını al
-    let avatarUrl = undefined;
-    if (result.data.instagram) {
-      try {
-        const response = await fetch(`https://www.instagram.com/${result.data.instagram}/?__a=1`);
-        const data = await response.json();
-        avatarUrl = data.graphql?.user?.profile_pic_url_hd;
-      } catch (error) {
-        console.error("Instagram profile photo fetch failed:", error);
+    try {
+      const result = insertUserSchema.partial().safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ message: "Invalid user data", errors: result.error.issues });
       }
+
+      // Instagram artık doğrudan API kullanımını engellediği için avatarUrl'i güncellemiyoruz
+      // Sadece kullanıcı tarafından sağlanan diğer bilgileri güncelliyoruz
+      
+      log(`Profil güncellemesi: Kullanıcı ID ${req.user!.id}`, 'routes');
+      
+      const updatedUser = await global.appStorage.updateUser(req.user!.id, {
+        ...result.data
+      });
+
+      log(`Profil başarıyla güncellendi: ${JSON.stringify(updatedUser, (key, value) => {
+        if (key === 'password') return '[GİZLİ]';
+        return value;
+      })}`, 'routes');
+      
+      res.json(updatedUser);
+    } catch (error) {
+      log(`Profil güncellemesi sırasında hata: ${error}`, 'routes');
+      res.status(500).json({ message: "Profil güncellenirken hata oluştu", error: error.message });
     }
-
-    const updatedUser = await global.appStorage.updateUser(req.user!.id, {
-      ...result.data,
-      avatarUrl
-    });
-
-    res.json(updatedUser);
   });
 
 
