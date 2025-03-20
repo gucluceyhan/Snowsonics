@@ -199,7 +199,8 @@ export default function UsersPage() {
             </div>
             
             <Button
-              variant="outline"
+              variant="default"
+              className="bg-primary hover:bg-primary/90"
               onClick={() => {
                 // Excel verileri için uygun formatta bir dizi oluştur
                 const excelData = [
