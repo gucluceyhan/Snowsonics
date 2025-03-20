@@ -26,6 +26,7 @@ export const users = pgTable("users", {
   avatarUrl: text("avatar_url"),
   role: text("role").notNull().default("user"),
   isApproved: boolean("is_approved").notNull().default(false),
+  isActive: boolean("is_active").notNull().default(true),
 });
 
 // Events table

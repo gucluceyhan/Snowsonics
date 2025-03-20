@@ -111,6 +111,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const user = await global.appStorage.updateUser(parseInt(id), { role });
     res.json(user);
   });
+  
+  // Kullanıcı aktif/pasif durum değiştirme rotası
+  app.post("/api/admin/users/:id/toggle-active", requireAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const userId = parseInt(id);
+      
+      // Mevcut kullanıcıyı al
+      const user = await global.appStorage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "Kullanıcı bulunamadı" });
+      }
+      
+      // Aktiflik durumunu tersine çevir
+      const newStatus = !user.isActive;
+      const updatedUser = await global.appStorage.updateUser(userId, { isActive: newStatus });
+      
+      log(`Kullanıcı ${userId} aktiflik durumu ${newStatus ? 'aktif' : 'pasif'} olarak güncellendi`, 'routes');
+      res.json(updatedUser);
+    } catch (error) {
+      log(`Kullanıcı aktiflik durumu güncellenirken hata: ${error}`, 'routes');
+      res.status(500).json({ message: `Kullanıcı durumu güncellenirken hata oluştu: ${error.message}` });
+    }
+  });
 
   // Admin participant approval route
   app.post("/api/admin/events/:eventId/participants/:participantId/approve", requireAdmin, async (req, res) => {

@@ -16,10 +16,11 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Shield, MoreVertical, CheckCircle, UserCheck, UserCog, AlertCircle } from "lucide-react";
+import { Shield, MoreVertical, CheckCircle, UserCheck, UserCog, AlertCircle, UserX, UserPlus } from "lucide-react";
 
 export default function UsersPage() {
   const { toast } = useToast();
@@ -56,13 +57,39 @@ export default function UsersPage() {
       });
     },
   });
+  
+  const toggleActiveStatusMutation = useMutation({
+    mutationFn: async (userId: number) => {
+      await apiRequest("POST", `/api/admin/users/${userId}/toggle-active`);
+    },
+    onSuccess: (_, userId) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      
+      // Kullanıcı bilgilerini al ve aktif duruma göre mesaj göster
+      const user = users.find(u => u.id === userId);
+      const isNowActive = user ? !user.isActive : false;
+      
+      toast({
+        title: isNowActive ? "Kullanıcı aktifleştirildi" : "Kullanıcı pasifleştirildi",
+        description: isNowActive 
+          ? "Kullanıcı artık sisteme giriş yapabilir" 
+          : "Kullanıcı artık sisteme giriş yapamaz, admin ile iletişime geçmelidir",
+      });
+    },
+  });
 
   const renderUserRow = (user: User) => (
-    <TableRow key={user.id} className={!user.isApproved ? "bg-yellow-50 dark:bg-yellow-950/20" : ""}>
+    <TableRow key={user.id} className={
+      !user.isApproved 
+        ? "bg-yellow-50 dark:bg-yellow-950/20" 
+        : !user.isActive 
+          ? "bg-red-50 dark:bg-red-950/20" 
+          : ""
+    }>
       <TableCell>{user.username}</TableCell>
       <TableCell>{user.firstName} {user.lastName}</TableCell>
       <TableCell>{user.email}</TableCell>
-      <TableCell>
+      <TableCell className="space-y-1">
         {user.isApproved ? (
           <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200">
             <UserCheck className="w-3 h-3 mr-1" />
@@ -73,6 +100,23 @@ export default function UsersPage() {
             <UserCog className="w-3 h-3 mr-1" />
             Onay Bekliyor
           </Badge>
+        )}
+        
+        {/* Aktif/Pasif durumu göster */}
+        {user.isApproved && (
+          <div className="mt-1">
+            {user.isActive ? (
+              <Badge variant="outline" className="bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-300 border-green-200 dark:border-green-800">
+                <UserPlus className="w-3 h-3 mr-1" />
+                Aktif
+              </Badge>
+            ) : (
+              <Badge variant="outline" className="bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-300 border-red-200 dark:border-red-800">
+                <UserX className="w-3 h-3 mr-1" />
+                Pasif
+              </Badge>
+            )}
+          </div>
         )}
       </TableCell>
       <TableCell>
@@ -99,6 +143,7 @@ export default function UsersPage() {
                 Kullanıcıyı Onayla
               </DropdownMenuItem>
             )}
+            
             <DropdownMenuItem
               onClick={() => roleUpdateMutation.mutate({
                 userId: user.id,
@@ -109,6 +154,29 @@ export default function UsersPage() {
               <Shield className="mr-2 h-4 w-4" />
               {user.role === "admin" ? "Kullanıcı Yap" : "Yönetici Yap"}
             </DropdownMenuItem>
+            
+            {user.isApproved && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => toggleActiveStatusMutation.mutate(user.id)}
+                  disabled={toggleActiveStatusMutation.isPending}
+                  className={user.isActive ? "text-red-600" : "text-green-600"}
+                >
+                  {user.isActive ? (
+                    <>
+                      <UserX className="mr-2 h-4 w-4" />
+                      Kullanıcıyı Pasif Yap
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus className="mr-2 h-4 w-4" />
+                      Kullanıcıyı Aktif Yap
+                    </>
+                  )}
+                </DropdownMenuItem>
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </TableCell>
