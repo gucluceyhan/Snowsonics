@@ -31,32 +31,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.put("/api/admin/site-settings", requireAdmin, async (req, res) => {
-    const result = insertSiteSettingsSchema.partial().safeParse(req.body);
-    if (!result.success) {
-      return res.status(400).json({ message: "Invalid settings data" });
-    }
-    
-    // Process the settings data
-    const settingsData = { ...result.data };
-    
-    // Check if logoUrl is a blob URL or data URL
-    if (settingsData.logoUrl) {
-      if (settingsData.logoUrl.startsWith('blob:')) {
-        // For blob URLs, we'll use the default logo
-        settingsData.logoUrl = '/assets/logo.jpeg';
-        log(`Changed blob URL to default logo path: ${settingsData.logoUrl}`, 'routes');
-      } else if (settingsData.logoUrl.startsWith('data:image/')) {
-        // This is a base64 encoded image that we can store directly
-        log(`Saving base64 image data (length: ${settingsData.logoUrl.length})`, 'routes');
-        // Keep as is, the base64 data will be stored in the database
-      } else {
-        log(`Using existing logo URL: ${settingsData.logoUrl}`, 'routes');
+    try {
+      log(`Received site settings update request: ${JSON.stringify(req.body, (key, value) => {
+        // Hide long string content in logs
+        if (typeof value === 'string' && value.length > 50) {
+          return value.substring(0, 47) + '...';
+        }
+        return value;
+      })}`, 'routes');
+      
+      const result = insertSiteSettingsSchema.partial().safeParse(req.body);
+      if (!result.success) {
+        log(`Invalid settings data: ${JSON.stringify(result.error.issues)}`, 'routes');
+        return res.status(400).json({ message: "Invalid settings data", errors: result.error.issues });
       }
+      
+      // Process the settings data
+      const settingsData = { ...result.data };
+      
+      // Check if logoUrl is a blob URL or data URL
+      if (settingsData.logoUrl) {
+        log(`Processing logoUrl of type: ${typeof settingsData.logoUrl}`, 'routes');
+        
+        if (typeof settingsData.logoUrl === 'object' && Array.isArray(settingsData.logoUrl)) {
+          // Handle case where logoUrl is an array (from the image upload component)
+          if (settingsData.logoUrl.length > 0) {
+            settingsData.logoUrl = settingsData.logoUrl[0];
+            log(`Converted logoUrl from array to string, new length: ${settingsData.logoUrl.length}`, 'routes');
+          } else {
+            settingsData.logoUrl = '/assets/logo.jpeg';
+            log(`Empty array received for logoUrl, using default`, 'routes');
+          }
+        }
+        
+        if (typeof settingsData.logoUrl === 'string') {
+          if (settingsData.logoUrl.startsWith('blob:')) {
+            // For blob URLs, we'll use the default logo
+            settingsData.logoUrl = '/assets/logo.jpeg';
+            log(`Changed blob URL to default logo path: ${settingsData.logoUrl}`, 'routes');
+          } else if (settingsData.logoUrl.startsWith('data:image/')) {
+            // This is a base64 encoded image that we can store directly
+            log(`Saving base64 image data (length: ${settingsData.logoUrl.length})`, 'routes');
+            // Keep as is, the base64 data will be stored in the database
+          } else {
+            log(`Using existing logo URL: ${settingsData.logoUrl}`, 'routes');
+          }
+        }
+      }
+      
+      const settings = await global.appStorage.updateSiteSettings(settingsData);
+      log(`Site settings updated successfully`, 'routes');
+      res.json(settings);
+    } catch (error) {
+      log(`Error updating site settings: ${error}`, 'routes');
+      console.error('Full error:', error);
+      res.status(500).json({ message: `Error updating site settings: ${error.message}` });
     }
-    
-    const settings = await global.appStorage.updateSiteSettings(settingsData);
-    log(`Site settings updated successfully`, 'routes');
-    res.json(settings);
   });
 
   // Admin routes

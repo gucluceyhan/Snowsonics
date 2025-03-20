@@ -50,15 +50,37 @@ export default function SiteSettingsPage() {
 
   const mutation = useMutation({
     mutationFn: async (data: Partial<SiteSettings>) => {
-      await apiRequest("PUT", "/api/admin/site-settings", data);
+      console.log("Submitting site settings with data:", data);
+      
+      // If we have a logo URL, make sure it's processed properly
+      if (data.logoUrl) {
+        console.log(`Logo URL type: ${typeof data.logoUrl}, length: ${data.logoUrl.length}`);
+        
+        // If it's an array (from ImageUpload component), use the first item
+        if (Array.isArray(data.logoUrl) && data.logoUrl.length > 0) {
+          data.logoUrl = data.logoUrl[0];
+          console.log("Converted array to string URL");
+        }
+      }
+      
+      return await apiRequest("PUT", "/api/admin/site-settings", data);
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("Site settings updated successfully:", data);
       queryClient.invalidateQueries({ queryKey: ["/api/admin/site-settings"] });
       toast({
         title: "Ayarlar güncellendi",
         description: "Site ayarları başarıyla güncellendi",
       });
     },
+    onError: (error) => {
+      console.error("Error updating site settings:", error);
+      toast({
+        title: "Hata",
+        description: `Ayarlar güncellenirken bir hata oluştu: ${error.message}`,
+        variant: "destructive",
+      });
+    }
   });
 
   const primaryRgb = hexToRgb(settings?.primaryColor || "#914199");
