@@ -39,7 +39,7 @@ app.use((req, res, next) => {
 
 (async () => {
   try {
-    // Initialize storage (MySQL or fallback to in-memory)
+    // Initialize storage (PostgreSQL or fallback to in-memory)
     const dbStorage = await initializeStorage();
     
     // Set global storage for route handlers
@@ -72,7 +72,7 @@ app.use((req, res, next) => {
       host: "0.0.0.0",
       reusePort: true,
     }, () => {
-      log(`Server running with ${process.env.DATABASE_URL ? 'MySQL' : 'in-memory'} storage on port ${port}`);
+      log(`Server running with ${process.env.DATABASE_URL ? 'PostgreSQL' : 'in-memory'} storage on port ${port}`);
     });
   } catch (error) {
     console.error('Failed to start server:', error);

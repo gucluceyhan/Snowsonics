@@ -1,4 +1,4 @@
-import { IStorage } from './storage';
+import { IStorage } from './types';
 import { Event, EventParticipant, InsertEvent, InsertEventParticipant, InsertSiteSettings, InsertUser, SiteSettings, User } from '../shared/schema';
 import { db } from './db';
 import { and, eq } from 'drizzle-orm';
@@ -6,134 +6,242 @@ import { events, eventParticipants, siteSettings, users } from '../shared/schema
 import { log } from './vite';
 import session from 'express-session';
 import pgSession from 'connect-pg-simple';
+import pg from 'pg';
 
 export class PostgresStorage implements IStorage {
   sessionStore: session.Store;
+  private pool: pg.Pool;
 
   constructor() {
+    // Create a connection pool for the session store
+    this.pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: {
+        rejectUnauthorized: false // Required for Neon DB
+      }
+    });
+    
     // Set up PostgreSQL session store
     const PostgresqlStore = pgSession(session);
     this.sessionStore = new PostgresqlStore({
-      conString: process.env.DATABASE_URL,
+      pool: this.pool,
       tableName: 'session',
       createTableIfMissing: true
     });
+    
     log('PostgreSQL storage initialized', 'pg-storage');
   }
 
   async getUser(id: number): Promise<User | undefined> {
-    return db.query.users.findFirst({
-      where: (users, { eq }) => eq(users.id, id)
-    });
+    try {
+      const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
+      return result[0];
+    } catch (error) {
+      log(`Error getting user: ${error}`, 'pg-storage');
+      return undefined;
+    }
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return db.query.users.findFirst({
-      where: (users, { eq }) => eq(users.username, username)
-    });
+    try {
+      const result = await db.select().from(users).where(eq(users.username, username)).limit(1);
+      return result[0];
+    } catch (error) {
+      log(`Error getting user by username: ${error}`, 'pg-storage');
+      return undefined;
+    }
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const result = await db.insert(users).values(insertUser).returning();
-    return result[0];
+    try {
+      const result = await db.insert(users).values(insertUser).returning();
+      return result[0];
+    } catch (error) {
+      log(`Error creating user: ${error}`, 'pg-storage');
+      throw error;
+    }
   }
 
   async updateUser(id: number, updates: Partial<User>): Promise<User> {
-    const result = await db.update(users)
-      .set(updates)
-      .where(eq(users.id, id))
-      .returning();
-    return result[0];
+    try {
+      const result = await db.update(users)
+        .set(updates)
+        .where(eq(users.id, id))
+        .returning();
+      return result[0];
+    } catch (error) {
+      log(`Error updating user: ${error}`, 'pg-storage');
+      throw error;
+    }
   }
 
   async getAllUsers(): Promise<User[]> {
-    return db.query.users.findMany();
+    try {
+      return await db.select().from(users);
+    } catch (error) {
+      log(`Error getting all users: ${error}`, 'pg-storage');
+      return [];
+    }
   }
 
   async createEvent(event: InsertEvent & { createdById: number }): Promise<Event> {
-    const result = await db.insert(events).values(event).returning();
-    return result[0];
+    try {
+      const result = await db.insert(events).values(event).returning();
+      return result[0];
+    } catch (error) {
+      log(`Error creating event: ${error}`, 'pg-storage');
+      throw error;
+    }
   }
 
   async getEvent(id: number): Promise<Event | undefined> {
-    return db.query.events.findFirst({
-      where: (events, { eq }) => eq(events.id, id)
-    });
+    try {
+      const result = await db.select().from(events).where(eq(events.id, id)).limit(1);
+      return result[0];
+    } catch (error) {
+      log(`Error getting event: ${error}`, 'pg-storage');
+      return undefined;
+    }
   }
 
   async getAllEvents(): Promise<Event[]> {
-    return db.query.events.findMany();
+    try {
+      return await db.select().from(events);
+    } catch (error) {
+      log(`Error getting all events: ${error}`, 'pg-storage');
+      return [];
+    }
   }
 
   async updateEvent(id: number, updates: Partial<Event>): Promise<Event> {
-    const result = await db.update(events)
-      .set(updates)
-      .where(eq(events.id, id))
-      .returning();
-    return result[0];
+    try {
+      const result = await db.update(events)
+        .set(updates)
+        .where(eq(events.id, id))
+        .returning();
+      return result[0];
+    } catch (error) {
+      log(`Error updating event: ${error}`, 'pg-storage');
+      throw error;
+    }
   }
 
   async deleteEvent(id: number): Promise<void> {
-    await db.delete(events).where(eq(events.id, id));
+    try {
+      await db.delete(events).where(eq(events.id, id));
+    } catch (error) {
+      log(`Error deleting event: ${error}`, 'pg-storage');
+      throw error;
+    }
   }
 
   async addEventParticipant(participant: InsertEventParticipant): Promise<EventParticipant> {
-    const result = await db.insert(eventParticipants).values(participant).returning();
-    return result[0];
+    try {
+      const result = await db.insert(eventParticipants).values(participant).returning();
+      return result[0];
+    } catch (error) {
+      log(`Error adding event participant: ${error}`, 'pg-storage');
+      throw error;
+    }
   }
 
   async getEventParticipants(eventId: number): Promise<EventParticipant[]> {
-    return db.query.eventParticipants.findMany({
-      where: (eventParticipants, { eq }) => eq(eventParticipants.eventId, eventId)
-    });
+    try {
+      return await db.select()
+        .from(eventParticipants)
+        .where(eq(eventParticipants.eventId, eventId));
+    } catch (error) {
+      log(`Error getting event participants: ${error}`, 'pg-storage');
+      return [];
+    }
   }
 
   async updateEventParticipant(id: number, updates: Partial<EventParticipant>): Promise<EventParticipant> {
-    const result = await db.update(eventParticipants)
-      .set(updates)
-      .where(eq(eventParticipants.id, id))
-      .returning();
-    return result[0];
+    try {
+      const result = await db.update(eventParticipants)
+        .set(updates)
+        .where(eq(eventParticipants.id, id))
+        .returning();
+      return result[0];
+    } catch (error) {
+      log(`Error updating event participant: ${error}`, 'pg-storage');
+      throw error;
+    }
   }
 
   async getUserParticipations(userId: number): Promise<EventParticipant[]> {
-    return db.query.eventParticipants.findMany({
-      where: (eventParticipants, { eq }) => eq(eventParticipants.userId, userId),
-      with: {
-        event: true
+    try {
+      // Query event participants by user ID
+      const participations = await db.select()
+        .from(eventParticipants)
+        .where(eq(eventParticipants.userId, userId));
+      
+      // For each participation, fetch the associated event details
+      // This is a bit inefficient but should work until we implement proper relations
+      const participationsWithEvents: any[] = [];
+      for (const p of participations) {
+        const event = await this.getEvent(p.eventId);
+        if (event) {
+          participationsWithEvents.push({
+            ...p,
+            event
+          });
+        }
       }
-    });
+      
+      return participationsWithEvents;
+    } catch (error) {
+      log(`Error getting user participations: ${error}`, 'pg-storage');
+      return [];
+    }
   }
 
   async getUserEventParticipation(userId: number, eventId: number): Promise<EventParticipant | undefined> {
-    return db.query.eventParticipants.findFirst({
-      where: (ep, { eq, and }) => and(
-        eq(ep.userId, userId),
-        eq(ep.eventId, eventId)
-      )
-    });
+    try {
+      const result = await db.select()
+        .from(eventParticipants)
+        .where(and(
+          eq(eventParticipants.userId, userId),
+          eq(eventParticipants.eventId, eventId)
+        ))
+        .limit(1);
+      return result[0];
+    } catch (error) {
+      log(`Error getting user event participation: ${error}`, 'pg-storage');
+      return undefined;
+    }
   }
 
   async getSiteSettings(): Promise<SiteSettings | null> {
-    const settings = await db.query.siteSettings.findFirst();
-    return settings || null;
+    try {
+      const result = await db.select().from(siteSettings).limit(1);
+      return result[0] || null;
+    } catch (error) {
+      log(`Error getting site settings: ${error}`, 'pg-storage');
+      return null;
+    }
   }
 
   async updateSiteSettings(settings: Partial<InsertSiteSettings>): Promise<SiteSettings> {
-    // Get the current settings first
-    const currentSettings = await this.getSiteSettings();
-    
-    if (currentSettings) {
-      // Update existing settings
-      const result = await db.update(siteSettings)
-        .set(settings)
-        .where(eq(siteSettings.id, currentSettings.id))
-        .returning();
-      return result[0];
-    } else {
-      // Create new settings if none exist
-      const result = await db.insert(siteSettings).values(settings).returning();
-      return result[0];
+    try {
+      // Get the current settings first
+      const currentSettings = await this.getSiteSettings();
+      
+      if (currentSettings) {
+        // Update existing settings
+        const result = await db.update(siteSettings)
+          .set(settings)
+          .where(eq(siteSettings.id, currentSettings.id))
+          .returning();
+        return result[0];
+      } else {
+        // Create new settings if none exist
+        const result = await db.insert(siteSettings).values(settings).returning();
+        return result[0];
+      }
+    } catch (error) {
+      log(`Error updating site settings: ${error}`, 'pg-storage');
+      throw error;
     }
   }
 }
