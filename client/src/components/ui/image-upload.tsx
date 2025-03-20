@@ -46,10 +46,21 @@ export function ImageUpload({ value = [], onChange, maxFiles = 5 }: ImageUploadP
   }, [value, maxFiles]);
 
   const handleFiles = async (files: File[]) => {
-    // For now, we'll just create object URLs
-    // In a real app, you'd upload these to a server
-    const urls = files.map(file => URL.createObjectURL(file));
-    onChange([...value, ...urls]);
+    // For server-uploaded images, we would typically use FormData
+    // For now, let's convert these to base64 strings which can be saved in the database
+    const urlPromises = files.map(file => {
+      return new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          // reader.result contains the base64 data URL
+          resolve(reader.result as string);
+        };
+        reader.readAsDataURL(file);
+      });
+    });
+    
+    const base64Urls = await Promise.all(urlPromises);
+    onChange([...value, ...base64Urls]);
   };
 
   const removeImage = (index: number) => {

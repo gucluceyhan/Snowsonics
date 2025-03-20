@@ -38,14 +38,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // Process the settings data
     const settingsData = { ...result.data };
     
-    // Check if logoUrl is a blob URL and handle accordingly
-    if (settingsData.logoUrl && settingsData.logoUrl.startsWith('blob:')) {
-      // For blob URLs, we should save the image locally or use a permanent URL
-      // For now, we'll use the default logo if it's a blob URL
-      settingsData.logoUrl = '/assets/logo.jpeg';
+    // Check if logoUrl is a blob URL or data URL
+    if (settingsData.logoUrl) {
+      if (settingsData.logoUrl.startsWith('blob:')) {
+        // For blob URLs, we'll use the default logo
+        settingsData.logoUrl = '/assets/logo.jpeg';
+        log(`Changed blob URL to default logo path: ${settingsData.logoUrl}`, 'routes');
+      } else if (settingsData.logoUrl.startsWith('data:image/')) {
+        // This is a base64 encoded image that we can store directly
+        log(`Saving base64 image data (length: ${settingsData.logoUrl.length})`, 'routes');
+        // Keep as is, the base64 data will be stored in the database
+      } else {
+        log(`Using existing logo URL: ${settingsData.logoUrl}`, 'routes');
+      }
     }
     
     const settings = await global.appStorage.updateSiteSettings(settingsData);
+    log(`Site settings updated successfully`, 'routes');
     res.json(settings);
   });
 

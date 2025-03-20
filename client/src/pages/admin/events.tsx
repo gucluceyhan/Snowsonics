@@ -33,7 +33,8 @@ import { ParticipantList } from "@/components/admin/participant-list";
 export default function EventsPage() {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
+  const [isNewEventDialogOpen, setIsNewEventDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [showParticipants, setShowParticipants] = useState(false);
   const { toast } = useToast();
 
@@ -74,25 +75,10 @@ export default function EventsPage() {
               </p>
             </div>
 
-            <Dialog open={isOpen} onOpenChange={setIsOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Event
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>Create New Event</DialogTitle>
-                </DialogHeader>
-                <EventForm 
-                  onSuccess={() => {
-                    queryClient.invalidateQueries({ queryKey: ["/api/events"] });
-                    setIsOpen(false);
-                  }} 
-                />
-              </DialogContent>
-            </Dialog>
+            <Button onClick={() => setIsNewEventDialogOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Event
+            </Button>
           </div>
 
           <div className="rounded-md border">
@@ -124,32 +110,16 @@ export default function EventsPage() {
                           <Users className="h-4 w-4" />
                         </Button>
 
-                        <Dialog open={isOpen} onOpenChange={setIsOpen}>
-                          <DialogTrigger asChild>
-                            <Button 
-                              variant="ghost" 
-                              size="icon"
-                              onClick={() => {
-                                setSelectedEvent(event);
-                                setIsOpen(true);
-                              }}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
-                            <DialogHeader>
-                              <DialogTitle>Edit Event</DialogTitle>
-                            </DialogHeader>
-                            <EventForm 
-                              event={event}
-                              onSuccess={() => {
-                                queryClient.invalidateQueries({ queryKey: ["/api/events"] });
-                                setIsOpen(false);
-                              }} 
-                            />
-                          </DialogContent>
-                        </Dialog>
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => {
+                            setSelectedEvent(event);
+                            setIsEditDialogOpen(true);
+                          }}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
 
                         <Button 
                           variant="ghost" 
@@ -167,6 +137,40 @@ export default function EventsPage() {
           </div>
         </div>
 
+        {/* New Event Dialog */}
+        <Dialog open={isNewEventDialogOpen} onOpenChange={setIsNewEventDialogOpen}>
+          <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Create New Event</DialogTitle>
+            </DialogHeader>
+            <EventForm 
+              onSuccess={() => {
+                queryClient.invalidateQueries({ queryKey: ["/api/events"] });
+                setIsNewEventDialogOpen(false);
+              }} 
+            />
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Event Dialog */}
+        {selectedEvent && (
+          <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+            <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Edit Event</DialogTitle>
+              </DialogHeader>
+              <EventForm 
+                event={selectedEvent}
+                onSuccess={() => {
+                  queryClient.invalidateQueries({ queryKey: ["/api/events"] });
+                  setIsEditDialogOpen(false);
+                }} 
+              />
+            </DialogContent>
+          </Dialog>
+        )}
+
+        {/* Participants Dialog */}
         <Dialog open={showParticipants} onOpenChange={setShowParticipants}>
           <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
@@ -176,6 +180,7 @@ export default function EventsPage() {
           </DialogContent>
         </Dialog>
 
+        {/* Delete Confirmation Dialog */}
         <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
