@@ -56,7 +56,7 @@ export default function EventForm({ event, onSuccess }: EventFormProps) {
     mutationFn: async (data: InsertEvent) => {
       const formData = new FormData();
 
-      // Convert event data to JSON and append as a single field
+      // Event data'yı tek bir field olarak gönder
       const eventData = {
         title: data.title,
         description: data.description,
@@ -67,7 +67,7 @@ export default function EventForm({ event, onSuccess }: EventFormProps) {
       };
       formData.append('data', JSON.stringify(eventData));
 
-      // Handle file uploads
+      // Dosyaları ayrı ayrı ekle
       if (data.images && Array.isArray(data.images)) {
         data.images.forEach(image => {
           if (image instanceof File) {
