@@ -66,7 +66,7 @@ export class PostgresStorage implements IStorage {
 
   async updateUser(id: number, updates: Partial<User>): Promise<User> {
     try {
-      console.log(`PostgreSQL Storage: Updating user with ID ${id}, updates:`, updates);
+      console.log(`PostgreSQL Storage: Updating user with ID ${id}, updates:`, JSON.stringify(updates));
       
       // Güvenlik için password alanını temizle (hash'lenmemiş şifreyi kabul etme)
       if (updates.password) {
@@ -84,17 +84,45 @@ export class PostgresStorage implements IStorage {
         return currentUser;
       }
       
-      const result = await db.update(users)
-        .set(updates)
-        .where(eq(users.id, id))
-        .returning();
+      // SQL sorguyu takip etmek için
+      console.log("Executing SQL update query:", 
+        `UPDATE users SET ${Object.keys(updates).map(k => `${k}=?`).join(', ')} WHERE id=${id}`);
       
-      if (!result.length) {
-        throw new Error(`User with ID ${id} not found or could not be updated`);
+      try {
+        // Drizzle update işlemi
+        const result = await db.update(users)
+          .set(updates)
+          .where(eq(users.id, id))
+          .returning();
+        
+        if (!result.length) {
+          throw new Error(`User with ID ${id} not found or could not be updated`);
+        }
+        
+        console.log(`User updated successfully:`, JSON.stringify(result[0]));
+        return result[0];
+      } catch (dbError) {
+        console.error("Database operation error:", dbError);
+        
+        // Son çare olarak ham SQL kullan
+        console.log("Attempting raw SQL update as fallback");
+        
+        const updateFields = Object.entries(updates)
+          .map(([key, value]) => `${key} = '${value}'`)
+          .join(', ');
+          
+        const sql = `UPDATE users SET ${updateFields} WHERE id = ${id} RETURNING *`;
+        console.log("Raw SQL query:", sql);
+        
+        const rawResult = await db.execute(sql);
+        console.log("Raw SQL result:", rawResult);
+        
+        if (rawResult.length === 0) {
+          throw new Error(`User with ID ${id} not found or could not be updated (fallback method)`);
+        }
+        
+        return rawResult[0];
       }
-      
-      console.log(`User updated successfully:`, result[0]);
-      return result[0];
     } catch (error) {
       console.error(`PostgreSQL Storage: Error updating user with ID ${id}:`, error);
       log(`Error updating user: ${error}`, 'pg-storage');

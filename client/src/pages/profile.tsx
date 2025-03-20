@@ -39,25 +39,31 @@ export default function ProfilePage() {
       const updatedData = { ...data };
       delete updatedData.password;
       
-      // Sadece değişen alanları gönder
-      const changedFields: Partial<InsertUser> = {};
-      Object.keys(updatedData).forEach(key => {
-        const typedKey = key as keyof InsertUser;
-        if (updatedData[typedKey] !== user?.[typedKey]) {
-          changedFields[typedKey] = updatedData[typedKey];
-        }
-      });
+      // Tüm değerleri gönder
+      console.log('Gönderilecek veri:', updatedData);
       
-      console.log('Değişen alanlar:', changedFields);
-      // PUT yerine POST kullan
-      return await apiRequest("POST", "/api/user/profile", changedFields);
+      // PUT yerine POST kullan ve timestamp ekle
+      return await apiRequest(
+        "POST", 
+        `/api/user/profile?t=${new Date().getTime()}`, 
+        updatedData
+      );
     },
     onSuccess: () => {
+      // Tüm önbelleği temizle ve yeniden yükle
+      queryClient.clear();
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      queryClient.refetchQueries({ queryKey: ["/api/user"] });
+      
       toast({
         title: "Profil güncellendi",
         description: "Bilgileriniz başarıyla güncellendi.",
       });
+      
+      // Sayfayı yenilemek için 1 sn bekle
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
     },
     onError: (error: Error) => {
       console.error('Profil güncelleme hatası:', error);
