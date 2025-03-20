@@ -34,7 +34,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!result.success) {
       return res.status(400).json({ message: "Invalid settings data" });
     }
-    const settings = await global.appStorage.updateSiteSettings(result.data);
+    
+    // Process the settings data
+    const settingsData = { ...result.data };
+    
+    // Check if logoUrl is a blob URL and handle accordingly
+    if (settingsData.logoUrl && settingsData.logoUrl.startsWith('blob:')) {
+      // For blob URLs, we should save the image locally or use a permanent URL
+      // For now, we'll use the default logo if it's a blob URL
+      settingsData.logoUrl = '/assets/logo.jpeg';
+    }
+    
+    const settings = await global.appStorage.updateSiteSettings(settingsData);
     res.json(settings);
   });
 

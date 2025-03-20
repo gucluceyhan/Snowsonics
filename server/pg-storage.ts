@@ -119,21 +119,48 @@ export class PostgresStorage implements IStorage {
       // Process date fields if they exist and are strings
       const processedUpdates = { ...updates };
       
-      if (updates.date && typeof updates.date === 'string') {
-        processedUpdates.date = new Date(updates.date);
+      // Enhanced date handling with logging
+      if (updates.date) {
+        if (typeof updates.date === 'string') {
+          log(`Converting date string to Date object: ${updates.date}`, 'pg-storage');
+          processedUpdates.date = new Date(updates.date);
+        } else if (updates.date instanceof Date) {
+          log(`Using existing Date object for date`, 'pg-storage');
+          processedUpdates.date = updates.date;
+        } else {
+          log(`Unknown date format, using as is: ${typeof updates.date}`, 'pg-storage');
+        }
       }
       
-      if (updates.endDate && typeof updates.endDate === 'string') {
-        processedUpdates.endDate = new Date(updates.endDate);
+      if (updates.endDate) {
+        if (typeof updates.endDate === 'string') {
+          log(`Converting endDate string to Date object: ${updates.endDate}`, 'pg-storage');
+          processedUpdates.endDate = new Date(updates.endDate);
+        } else if (updates.endDate instanceof Date) {
+          log(`Using existing Date object for endDate`, 'pg-storage');
+          processedUpdates.endDate = updates.endDate;
+        } else {
+          log(`Unknown endDate format, using as is: ${typeof updates.endDate}`, 'pg-storage');
+        }
       }
+      
+      // Log the processed updates before database operation
+      log(`Updating event ${id} with processed data: ${JSON.stringify(processedUpdates)}`, 'pg-storage');
       
       const result = await db.update(events)
         .set(processedUpdates)
         .where(eq(events.id, id))
         .returning();
+      
+      if (result.length === 0) {
+        throw new Error(`Event with ID ${id} not found`);
+      }
+      
+      log(`Event updated successfully: ${JSON.stringify(result[0])}`, 'pg-storage');
       return result[0];
     } catch (error) {
       log(`Error updating event: ${error}`, 'pg-storage');
+      console.error('Full error:', error);
       throw error;
     }
   }
