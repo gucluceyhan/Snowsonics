@@ -4,20 +4,12 @@ import { Upload, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ImageUploadProps {
-  onChange: (files: File[] | File | null) => void;
-  onDelete?: () => void;
-  preview?: string | string[] | null;
-  acceptedTypes?: string;
+  value: string[];
+  onChange: (urls: string[]) => void;
   maxFiles?: number;
 }
 
-export function ImageUpload({ 
-  onChange,
-  onDelete,
-  preview,
-  acceptedTypes = "image/*",
-  maxFiles = 1
-}: ImageUploadProps) {
+export function ImageUpload({ value = [], onChange, maxFiles = 5 }: ImageUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -35,23 +27,36 @@ export function ImageUpload({
     setIsDragging(false);
 
     const files = Array.from(e.dataTransfer.files);
-    if (files.length > maxFiles) {
-      alert(`En fazla ${maxFiles} dosya yükleyebilirsiniz`);
+    if (files.length + value.length > maxFiles) {
+      alert(`En fazla ${maxFiles} fotoğraf yükleyebilirsiniz.`);
       return;
     }
 
-    onChange(maxFiles === 1 ? files[0] : files);
-  }, [onChange, maxFiles]);
+    handleFiles(files);
+  }, [value, maxFiles]);
 
   const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    if (files.length > maxFiles) {
-      alert(`En fazla ${maxFiles} dosya yükleyebilirsiniz`);
+    if (files.length + value.length > maxFiles) {
+      alert(`En fazla ${maxFiles} fotoğraf yükleyebilirsiniz.`);
       return;
     }
 
-    onChange(maxFiles === 1 ? files[0] : files);
-  }, [onChange, maxFiles]);
+    handleFiles(files);
+  }, [value, maxFiles]);
+
+  const handleFiles = async (files: File[]) => {
+    // For now, we'll just create object URLs
+    // In a real app, you'd upload these to a server
+    const urls = files.map(file => URL.createObjectURL(file));
+    onChange([...value, ...urls]);
+  };
+
+  const removeImage = (index: number) => {
+    const newUrls = [...value];
+    newUrls.splice(index, 1);
+    onChange(newUrls);
+  };
 
   return (
     <div className="space-y-4">
@@ -67,11 +72,11 @@ export function ImageUpload({
       >
         <input
           type="file"
-          accept={acceptedTypes}
+          accept="image/*"
+          multiple
           className="hidden"
           id="image-upload"
           onChange={handleFileSelect}
-          multiple={maxFiles > 1}
         />
         <label
           htmlFor="image-upload"
@@ -79,49 +84,33 @@ export function ImageUpload({
         >
           <Upload className="h-8 w-8 mb-2 text-muted-foreground" />
           <div className="text-sm text-muted-foreground">
-            {maxFiles === 1 
-              ? "Resim seçmek için tıklayın veya sürükleyin"
-              : `En fazla ${maxFiles} resim seçmek için tıklayın veya sürükleyin`
-            }
+            Fotoğrafları buraya sürükleyin veya seçmek için tıklayın
+          </div>
+          <div className="text-xs text-muted-foreground mt-1">
+            (Maksimum {maxFiles} fotoğraf)
           </div>
         </label>
       </div>
 
-      {preview && (
-        <div className={cn(
-          "relative grid gap-4",
-          maxFiles > 1 ? "grid-cols-2 md:grid-cols-3" : "place-items-center"
-        )}>
-          {Array.isArray(preview) ? (
-            preview.map((url, index) => (
-              <div key={index} className="relative">
-                <img
-                  src={url}
-                  alt={`Preview ${index + 1}`}
-                  className="w-full h-32 object-cover rounded-lg"
-                />
-              </div>
-            ))
-          ) : (
-            <div className="relative">
+      {value.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+          {value.map((url, index) => (
+            <div key={index} className="relative aspect-square group">
               <img
-                src={preview}
-                alt="Preview"
-                className="h-20 w-auto"
+                src={url}
+                alt={`Uploaded ${index + 1}`}
+                className="w-full h-full object-cover rounded-lg"
               />
-              {onDelete && (
-                <Button
-                  variant="destructive"
-                  size="icon"
-                  className="absolute -top-2 -right-2"
-                  onClick={onDelete}
-                  type="button"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              )}
+              <Button
+                variant="destructive"
+                size="icon"
+                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={() => removeImage(index)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
             </div>
-          )}
+          ))}
         </div>
       )}
     </div>

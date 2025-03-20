@@ -10,15 +10,14 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { User, Instagram } from "lucide-react";
-import { importInstagramProfilePicture } from "@/lib/instagram";
+import { User } from "lucide-react";
 
 export default function ProfilePage() {
   const { user } = useAuth();
   const { toast } = useToast();
 
   const form = useForm<InsertUser>({
-    resolver: zodResolver(insertUserSchema.partial()),
+    resolver: zodResolver(insertUserSchema),
     defaultValues: {
       username: user?.username || "",
       firstName: user?.firstName || "",
@@ -33,15 +32,10 @@ export default function ProfilePage() {
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data: Partial<InsertUser>) => {
-      const response = await apiRequest("PUT", "/api/user/profile", data);
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Profil güncellenirken bir hata oluştu");
-      }
-      return await response.json();
+      await apiRequest("PUT", "/api/user/profile", data);
     },
-    onSuccess: (updatedUser) => {
-      queryClient.setQueryData(["/api/user"], updatedUser);
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       toast({
         title: "Profil güncellendi",
         description: "Bilgileriniz başarıyla güncellendi.",
@@ -56,29 +50,8 @@ export default function ProfilePage() {
     },
   });
 
-  const importInstagramPhotoMutation = useMutation({
-    mutationFn: importInstagramProfilePicture,
-    onSuccess: (updatedUser) => {
-      queryClient.setQueryData(["/api/user"], updatedUser);
-      toast({
-        title: "Başarılı",
-        description: "Profil fotoğrafınız başarıyla güncellendi.",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Hata",
-        description: "Profil fotoğrafı güncellenemedi. Şu anda Gravatar profil fotoğrafınız kullanılacak.",
-        variant: "destructive",
-      });
-    },
-  });
-
   const onSubmit = (data: InsertUser) => {
-    const formData = Object.fromEntries(
-      Object.entries(data).map(([key, value]) => [key, value === "" ? null : value])
-    );
-    updateProfileMutation.mutate(formData);
+    updateProfileMutation.mutate(data);
   };
 
   return (
@@ -88,37 +61,16 @@ export default function ProfilePage() {
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto space-y-8">
           <div className="flex items-center gap-6">
-            <div className="relative">
-              <Avatar className="h-24 w-24">
-                {user?.avatarUrl ? (
-                  <AvatarImage src={user.avatarUrl} alt={user.username} />
-                ) : (
-                  <AvatarFallback>
-                    <User className="h-12 w-12" />
-                  </AvatarFallback>
-                )}
-              </Avatar>
-              {user?.instagram && (
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  className="absolute -bottom-2 -right-2"
-                  onClick={() => importInstagramPhotoMutation.mutate()}
-                  disabled={importInstagramPhotoMutation.isPending}
-                >
-                  <Instagram className="h-4 w-4 mr-1" />
-                  {importInstagramPhotoMutation.isPending ? (
-                    <>
-                      <span className="animate-spin mr-1">⏳</span>
-                      Yükleniyor...
-                    </>
-                  ) : (
-                    "Profil Fotoğrafını Güncelle"
-                  )}
-                </Button>
+            <Avatar className="h-24 w-24">
+              {user?.avatarUrl ? (
+                <AvatarImage src={user.avatarUrl} alt={user.username} />
+              ) : (
+                <AvatarFallback>
+                  <User className="h-12 w-12" />
+                </AvatarFallback>
               )}
-            </div>
-
+            </Avatar>
+            
             <div>
               <h1 className="text-2xl font-bold">Profil Bilgilerim</h1>
               <p className="text-muted-foreground">
@@ -136,7 +88,7 @@ export default function ProfilePage() {
                   <FormItem>
                     <FormLabel>Kullanıcı Adı</FormLabel>
                     <FormControl>
-                      <Input {...field} value={field.value || ""} />
+                      <Input {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -151,7 +103,7 @@ export default function ProfilePage() {
                     <FormItem>
                       <FormLabel>Ad</FormLabel>
                       <FormControl>
-                        <Input {...field} value={field.value || ""} />
+                        <Input {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -165,7 +117,7 @@ export default function ProfilePage() {
                     <FormItem>
                       <FormLabel>Soyad</FormLabel>
                       <FormControl>
-                        <Input {...field} value={field.value || ""} />
+                        <Input {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -180,7 +132,7 @@ export default function ProfilePage() {
                   <FormItem>
                     <FormLabel>E-posta</FormLabel>
                     <FormControl>
-                      <Input {...field} type="email" value={field.value || ""} />
+                      <Input {...field} type="email" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -194,7 +146,7 @@ export default function ProfilePage() {
                   <FormItem>
                     <FormLabel>Telefon</FormLabel>
                     <FormControl>
-                      <Input {...field} value={field.value || ""} />
+                      <Input {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -209,7 +161,7 @@ export default function ProfilePage() {
                     <FormItem>
                       <FormLabel>Şehir</FormLabel>
                       <FormControl>
-                        <Input {...field} value={field.value || ""} />
+                        <Input {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -223,7 +175,7 @@ export default function ProfilePage() {
                     <FormItem>
                       <FormLabel>Meslek</FormLabel>
                       <FormControl>
-                        <Input {...field} value={field.value || ""} />
+                        <Input {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -238,7 +190,7 @@ export default function ProfilePage() {
                   <FormItem>
                     <FormLabel>Instagram Kullanıcı Adı</FormLabel>
                     <FormControl>
-                      <Input {...field} value={field.value || ""} />
+                      <Input {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -250,7 +202,7 @@ export default function ProfilePage() {
                 className="w-full"
                 disabled={updateProfileMutation.isPending}
               >
-                {updateProfileMutation.isPending ? "Kaydediliyor..." : "Değişiklikleri Kaydet"}
+                Değişiklikleri Kaydet
               </Button>
             </form>
           </Form>

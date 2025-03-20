@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { Event, SiteSettings } from "@shared/schema";
+import { Event } from "@shared/schema";
 import EventCard from "@/components/events/event-card";
 import { useAuth } from "@/hooks/use-auth";
 import { Navbar } from "@/components/layout/navbar";
@@ -7,17 +7,12 @@ import { Calendar } from "@/components/ui/calendar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format, isWithinInterval } from "date-fns";
 import { useState } from "react";
-import { ImageLogo } from "@/components/ui/image-logo";
 
 export default function HomePage() {
   const { user } = useAuth();
   const [selectedDate, setSelectedDate] = useState<Date>();
   const { data: events = [] } = useQuery<Event[]>({ 
     queryKey: ["/api/events"]
-  });
-
-  const { data: settings } = useQuery<SiteSettings>({
-    queryKey: ["/api/admin/site-settings"],
   });
 
   // Filter future events and sort by date
@@ -58,9 +53,9 @@ export default function HomePage() {
       <main className="container mx-auto px-4 py-8">
         <div className="space-y-8">
           <div className="text-center max-w-2xl mx-auto">
-            <div className="w-40 h-40 mx-auto mb-6">
-              <ImageLogo 
-                src={settings?.logoUrl}
+            <div className="w-40 h-40 mx-auto mb-6 bg-background rounded-full">
+              <img 
+                src="/assets/new_whatsapp_image.jpg"
                 alt="Logo" 
                 className="h-40 w-40 rounded-full"
               />

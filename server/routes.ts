@@ -1,45 +1,28 @@
-import express, { type Express } from "express";
+import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
-import { insertEventSchema, insertUserSchema, insertSiteSettingsSchema } from "@shared/schema";
+import { insertEventSchema, insertSiteSettingsSchema } from "@shared/schema";
 import { z } from "zod";
-import { createHash, randomBytes } from "crypto";
-import axios from "axios";
-import multer from 'multer';
-import path from 'path';
-import fs from 'fs/promises';
+import {insertUserSchema} from "@shared/schema" // Assuming this schema exists
 
-// Configure multer for file uploads
-const upload = multer({
-  storage: multer.diskStorage({
-    destination: async function (req, file, cb) {
-      // Create uploads directory if it doesn't exist
-      const uploadDir = path.join(process.cwd(), 'public', 'uploads');
-      await fs.mkdir(uploadDir, { recursive: true });
-      cb(null, uploadDir);
-    },
-    filename: function (req, file, cb) {
-      // Generate unique filename
-      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-      const ext = path.extname(file.originalname);
-      cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
-    }
-  }),
-  limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB limit
+
+function requireAuth(req: Express.Request, res: Express.Response, next: Express.NextFunction) {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: "Unauthorized" });
   }
-});
+  next();
+}
+
+function requireAdmin(req: Express.Request, res: Express.Response, next: Express.NextFunction) {
+  if (!req.isAuthenticated() || req.user.role !== "admin") {
+    return res.status(403).json({ message: "Forbidden" });
+  }
+  next();
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
-
-  // Create uploads directory if it doesn't exist
-  const uploadDir = path.join(process.cwd(), 'public', 'uploads');
-  await fs.mkdir(uploadDir, { recursive: true });
-
-  // Make sure the uploads directory is properly served
-  app.use('/uploads', express.static(path.join(process.cwd(), 'public', 'uploads')));
 
   // Site settings routes
   app.get("/api/admin/site-settings", requireAdmin, async (req, res) => {
@@ -47,42 +30,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(settings);
   });
 
-  app.put("/api/admin/site-settings", requireAdmin, upload.single('logo'), async (req, res) => {
-    try {
-      const updateData = {
-        primaryColor: req.body.primaryColor,
-        secondaryColor: req.body.secondaryColor,
-      };
-
-      if (req.file) {
-        // Delete old logo if exists
-        const currentSettings = await storage.getSiteSettings();
-        if (currentSettings?.logoUrl) {
-          try {
-            const oldLogoPath = path.join(process.cwd(), 'public', currentSettings.logoUrl.replace(/^\/uploads\//, ''));
-            await fs.unlink(oldLogoPath);
-          } catch (error) {
-            console.error('Error deleting old logo:', error);
-          }
-        }
-
-        updateData.logoUrl = `/uploads/${req.file.filename}`;
-      }
-
-      const settings = await storage.updateSiteSettings(updateData);
-      res.json(settings);
-    } catch (error) {
-      console.error("Error updating site settings:", error);
-      res.status(500).json({
-        message: error.message || "Site ayarları güncellenirken bir hata oluştu"
-      });
+  app.put("/api/admin/site-settings", requireAdmin, async (req, res) => {
+    const result = insertSiteSettingsSchema.partial().safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({ message: "Invalid settings data" });
     }
+    const settings = await storage.updateSiteSettings(result.data);
+    res.json(settings);
   });
 
   // Admin routes
   app.get("/api/admin/users", requireAdmin, async (req, res) => {
     const users = await storage.getAllUsers();
-    res.json(users);
+    const approvedUsers = users.filter(user => user.isApproved);
+    res.json(approvedUsers);
   });
 
   app.post("/api/admin/users/:id/approve", requireAdmin, async (req, res) => {
@@ -141,51 +102,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(event);
   });
 
-  app.post("/api/events", requireAuth, upload.array('images', 5), async (req, res) => {
-    try {
-      const eventData = req.body;
-      const result = insertEventSchema.safeParse({
-        ...eventData,
-        images: req.files ? (req.files as Express.Multer.File[]).map(file => `/uploads/${file.filename}`) : []
-      });
-
-      if (!result.success) {
-        return res.status(400).json({ message: "Invalid event data" });
-      }
-
-      const event = await storage.createEvent({
-        ...result.data,
-        createdById: req.user!.id,
-      });
-
-      res.status(201).json(event);
-    } catch (error) {
-      console.error("Error creating event:", error);
-      res.status(500).json({ message: "Error creating event" });
+  app.post("/api/events", requireAuth, async (req, res) => {
+    const result = insertEventSchema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({ message: "Invalid event data" });
     }
+    const event = await storage.createEvent({
+      ...result.data,
+      createdById: req.user.id,
+    });
+    res.status(201).json(event);
   });
 
-  app.put("/api/events/:id", requireAuth, upload.array('images', 5), async (req, res) => {
-    try {
-      const { id } = req.params;
-      const eventData = req.body;
-
-      let updateData = { ...eventData };
-      if (req.files && (req.files as Express.Multer.File[]).length > 0) {
-        updateData.images = (req.files as Express.Multer.File[]).map(file => `/uploads/${file.filename}`);
-      }
-
-      const result = insertEventSchema.partial().safeParse(updateData);
-      if (!result.success) {
-        return res.status(400).json({ message: "Invalid event data" });
-      }
-
-      const event = await storage.updateEvent(parseInt(id), result.data);
-      res.json(event);
-    } catch (error) {
-      console.error("Error updating event:", error);
-      res.status(500).json({ message: "Error updating event" });
+  app.put("/api/events/:id", requireAuth, async (req, res) => {
+    const { id } = req.params;
+    const result = insertEventSchema.partial().safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({ message: "Invalid event data" });
     }
+    const event = await storage.updateEvent(parseInt(id), result.data);
+    res.json(event);
   });
 
   app.delete("/api/events/:id", requireAuth, async (req, res) => {
@@ -342,189 +278,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/user/profile", requireAuth, async (req, res) => {
     const result = insertUserSchema.partial().safeParse(req.body);
     if (!result.success) {
-      return res.status(400).json({
-        message: "Geçersiz kullanıcı verisi",
-        errors: result.error.errors
-      });
+      return res.status(400).json({ message: "Invalid user data" });
     }
 
-    try {
-      // Gravatar URL'ini oluştur
-      let avatarUrl = undefined;
-      if (result.data.email) {
-        const md5 = createHash('md5').update(result.data.email.toLowerCase().trim()).digest('hex');
-        avatarUrl = `https://www.gravatar.com/avatar/${md5}?d=mp`;
-      }
-
-      const updatedUser = await storage.updateUser(req.user!.id, {
-        ...result.data,
-        avatarUrl: avatarUrl || result.data.avatarUrl
-      });
-
-      res.json(updatedUser);
-    } catch (error) {
-      console.error("Profile update error:", error);
-      res.status(500).json({
-        message: "Profil güncellenirken bir hata oluştu"
-      });
-    }
-  });
-
-  // Instagram profil fotoğrafı import endpoint'i
-  app.post("/api/user/import-instagram-photo", requireAuth, async (req, res) => {
-    try {
-      const user = await storage.getUser(req.user!.id);
-
-      if (!user?.instagram) {
-        return res.status(400).json({
-          message: "Instagram kullanıcı adı bulunamadı"
-        });
-      }
-
+    // Instagram profil fotoğrafını al
+    let avatarUrl = undefined;
+    if (result.data.instagram) {
       try {
-        // Instagram Basic Display API ile profil fotoğrafını al
-        const response = await axios.get(`https://graph.instagram.com/v12.0/me`, {
-          params: {
-            fields: 'id,username,profile_picture_url',
-            access_token: process.env.INSTAGRAM_CLIENT_ID
-          }
-        });
-
-        if (response.data?.profile_picture_url) {
-          const updatedUser = await storage.updateUser(user.id, {
-            avatarUrl: response.data.profile_picture_url
-          });
-
-          return res.json(updatedUser);
-        }
-
-        throw new Error("Profil fotoğrafı bulunamadı");
-
-      } catch (instagramError) {
-        console.error("Instagram API error:", instagramError);
-
-        // Instagram API başarısız olursa Gravatar'a dön
-        if (user.email) {
-          const md5 = createHash('md5').update(user.email.toLowerCase().trim()).digest('hex');
-          const gravatarUrl = `https://www.gravatar.com/avatar/${md5}?d=mp&s=200`;
-
-          const updatedUser = await storage.updateUser(user.id, {
-            avatarUrl: gravatarUrl
-          });
-
-          return res.json(updatedUser);
-        }
+        const response = await fetch(`https://www.instagram.com/${result.data.instagram}/?__a=1`);
+        const data = await response.json();
+        avatarUrl = data.graphql?.user?.profile_pic_url_hd;
+      } catch (error) {
+        console.error("Instagram profile photo fetch failed:", error);
       }
-
-      // Hiçbir şey çalışmazsa varsayılan avatar URL'sini kullan
-      const updatedUser = await storage.updateUser(user.id, {
-        avatarUrl: null // UI'da varsayılan avatar gösterilecek
-      });
-
-      return res.json(updatedUser);
-
-    } catch (error) {
-      console.error("Profile photo import error:", error);
-      res.status(500).json({
-        message: "Profil fotoğrafı içe aktarılırken bir hata oluştu"
-      });
     }
+
+    const updatedUser = await storage.updateUser(req.user!.id, {
+      ...result.data,
+      avatarUrl
+    });
+
+    res.json(updatedUser);
   });
 
-  // Şifre sıfırlama başlatma endpoint'i
-  app.post("/api/reset-password", async (req, res) => {
-    try {
-      const { email } = req.body;
-      const user = await storage.getUserByEmail(email);
-
-      if (!user) {
-        return res.status(400).json({
-          message: "Bu e-posta adresiyle kayıtlı bir kullanıcı bulunamadı."
-        });
-      }
-
-      // Sıfırlama tokeni oluştur
-      const resetToken = randomBytes(32).toString('hex');
-      const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 saat geçerli
-
-      // Tokeni kaydet
-      await storage.updateUser(user.id, {
-        resetToken,
-        resetTokenExpiry: resetTokenExpiry.toISOString()
-      });
-
-      // TODO: E-posta gönderme işlemi eklenecek
-      // Şimdilik sadece başarılı yanıt dönüyoruz
-      res.json({
-        message: "Şifre sıfırlama bağlantısı e-posta adresinize gönderildi."
-      });
-    } catch (error) {
-      console.error("Password reset error:", error);
-      res.status(500).json({
-        message: "Şifre sıfırlama işlemi sırasında bir hata oluştu."
-      });
-    }
-  });
-
-  // Şifre sıfırlama doğrulama ve güncelleme endpoint'i
-  app.post("/api/reset-password/:token", async (req, res) => {
-    try {
-      const { token } = req.params;
-      const { password } = req.body;
-
-      const user = await storage.getUserByResetToken(token);
-
-      if (!user) {
-        return res.status(400).json({
-          message: "Geçersiz veya süresi dolmuş şifre sıfırlama bağlantısı."
-        });
-      }
-
-      // Token süresini kontrol et
-      if (new Date(user.resetTokenExpiry) < new Date()) {
-        return res.status(400).json({
-          message: "Şifre sıfırlama bağlantısının süresi dolmuş."
-        });
-      }
-
-      // Yeni şifreyi hashle ve güncelle
-      const hashedPassword = await hashPassword(password);
-      await storage.updateUser(user.id, {
-        password: hashedPassword,
-        resetToken: null,
-        resetTokenExpiry: null
-      });
-
-      res.json({
-        message: "Şifreniz başarıyla güncellendi."
-      });
-    } catch (error) {
-      console.error("Password reset verification error:", error);
-      res.status(500).json({
-        message: "Şifre güncelleme işlemi sırasında bir hata oluştu."
-      });
-    }
-  });
-
-  function requireAuth(req: Express.Request, res: Express.Response, next: Express.NextFunction) {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-    next();
-  }
-
-  function requireAdmin(req: Express.Request, res: Express.Response, next: Express.NextFunction) {
-    if (!req.isAuthenticated() || req.user.role !== "admin") {
-      return res.status(403).json({ message: "Forbidden" });
-    }
-    next();
-  }
-
-  async function hashPassword(password: string): Promise<string> {
-    //Implementation of password hashing.  This is a placeholder.  Replace with your actual implementation.
-    const hash = createHash('sha256').update(password).digest('hex');
-    return hash;
-  }
 
   const httpServer = createServer(app);
   return httpServer;

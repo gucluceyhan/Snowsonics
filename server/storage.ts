@@ -50,9 +50,7 @@ export class MemStorage implements IStorage {
       instagram: null,
       avatarUrl: null,
       role: "admin",
-      isApproved: true,
-      resetToken: null,
-      resetTokenExpiry: null
+      isApproved: true
     };
     this.users.set(adminUser.id, adminUser);
 
@@ -69,9 +67,7 @@ export class MemStorage implements IStorage {
       instagram: null,
       avatarUrl: null,
       role: "user",
-      isApproved: true,
-      resetToken: null,
-      resetTokenExpiry: null
+      isApproved: true
     };
     this.users.set(testUser.id, testUser);
   }
@@ -97,11 +93,11 @@ export class MemStorage implements IStorage {
 <li>Üç kişilik odalar</li>
 <li>Dört kişilik odalar</li>
 </ul>`,
-      date: new Date("2025-04-15"),
-      endDate: new Date("2025-04-19"),
+      date: new Date("2025-04-15").toISOString(),
+      endDate: new Date("2025-04-19").toISOString(),
       location: "Kars, Sarıkamış",
       images: [
-        "/uploads/logo-1742467811175-337407209.png"
+        "/assets/new_whatsapp_image.jpg"
       ],
       createdById: 1
     };
@@ -112,7 +108,7 @@ export class MemStorage implements IStorage {
     if (!this.siteSettings) {
       this.siteSettings = {
         id: 1,
-        logoUrl: "uploads/logo-1742467811175-337407209.png",
+        logoUrl: "/assets/new_whatsapp_image.jpg",
         primaryColor: "#914199",
         secondaryColor: "#F7E15C",
         updatedAt: new Date(),
@@ -140,9 +136,7 @@ export class MemStorage implements IStorage {
       role: isFirstUser ? "admin" : "user", 
       isApproved: isFirstUser,
       instagram: insertUser.instagram || null,
-      avatarUrl: null,
-      resetToken: null,
-      resetTokenExpiry: null
+      avatarUrl: null
     };
     this.users.set(id, user);
     return user;
@@ -160,27 +154,12 @@ export class MemStorage implements IStorage {
     return Array.from(this.users.values());
   }
 
-  async getUserByEmail(email: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.email === email,
-    );
-  }
-
-  async getUserByResetToken(token: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.resetToken === token && user.resetTokenExpiry && new Date(user.resetTokenExpiry) > new Date(),
-    );
-  }
-
-
   // Event methods
   async createEvent(event: InsertEvent & { createdById: number }): Promise<Event> {
     const id = this.currentId.events++;
     const newEvent: Event = { 
       ...event, 
       id,
-      date: new Date(event.date),
-      endDate: new Date(event.endDate),
       images: event.images || []
     };
     this.events.set(id, newEvent);

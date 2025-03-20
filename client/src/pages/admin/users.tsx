@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { User } from "@shared/schema";
 import { Navbar } from "@/components/layout/navbar";
 import {
@@ -9,87 +9,73 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { Shield, MoreVertical, CheckCircle } from "lucide-react";
 
 export default function UsersPage() {
+  const { toast } = useToast();
   const { data: users = [] } = useQuery<User[]>({ 
     queryKey: ["/api/admin/users"]
   });
 
-  const exportToExcel = () => {
-    let excelContent = `<?xml version="1.0"?>
-<?mso-application progid="Excel.Sheet"?>
-<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
-xmlns:o="urn:schemas-microsoft-com:office:office"
-xmlns:x="urn:schemas-microsoft-com:office:excel"
-xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
-xmlns:html="http://www.w3.org/TR/REC-html40">
-<Worksheet ss:Name="Kullanıcılar">
-<Table>
-<Row>
-<Cell><Data ss:Type="String">Ad</Data></Cell>
-<Cell><Data ss:Type="String">Soyad</Data></Cell>
-<Cell><Data ss:Type="String">Telefon</Data></Cell>
-<Cell><Data ss:Type="String">E-posta</Data></Cell>
-<Cell><Data ss:Type="String">Şehir</Data></Cell>
-<Cell><Data ss:Type="String">Meslek</Data></Cell>
-</Row>`;
+  const approveMutation = useMutation({
+    mutationFn: async (userId: number) => {
+      await apiRequest("POST", `/api/admin/users/${userId}/approve`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      toast({
+        title: "User approved",
+        description: "The user can now participate in events",
+      });
+    },
+  });
 
-    users.forEach(user => {
-      excelContent += `
-<Row>
-<Cell><Data ss:Type="String">${user.firstName || ""}</Data></Cell>
-<Cell><Data ss:Type="String">${user.lastName || ""}</Data></Cell>
-<Cell><Data ss:Type="String">${user.phone || ""}</Data></Cell>
-<Cell><Data ss:Type="String">${user.email || ""}</Data></Cell>
-<Cell><Data ss:Type="String">${user.city || ""}</Data></Cell>
-<Cell><Data ss:Type="String">${user.occupation || ""}</Data></Cell>
-</Row>`;
-    });
-
-    excelContent += `
-</Table>
-</Worksheet>
-</Workbook>`;
-
-    const blob = new Blob([excelContent], { type: 'application/vnd.ms-excel' });
-    const link = document.createElement('a');
-    link.href = window.URL.createObjectURL(blob);
-    link.download = 'kullanicilar.xls';
-    link.click();
-  };
+  const roleUpdateMutation = useMutation({
+    mutationFn: async ({ userId, role }: { userId: number; role: string }) => {
+      await apiRequest("POST", `/api/admin/users/${userId}/role`, { role });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      toast({
+        title: "Role updated",
+        description: "User role has been updated successfully",
+      });
+    },
+  });
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-
+      
       <main className="container mx-auto px-4 py-8">
         <div className="space-y-8">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-4xl font-bold">Kullanıcı Yönetimi</h1>
-              <p className="text-muted-foreground mt-2">
-                Onaylı kullanıcıların listesi
-              </p>
-            </div>
-
-            <Button onClick={exportToExcel}>
-              <Download className="mr-2 h-4 w-4" />
-              Excel'e Aktar
-            </Button>
+          <div>
+            <h1 className="text-4xl font-bold">User Management</h1>
+            <p className="text-muted-foreground mt-2">
+              Approve new users and manage user roles
+            </p>
           </div>
 
           <div className="rounded-md border">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Kullanıcı Adı</TableHead>
-                  <TableHead>Ad Soyad</TableHead>
-                  <TableHead>İletişim</TableHead>
-                  <TableHead>Şehir</TableHead>
-                  <TableHead>Meslek</TableHead>
+                  <TableHead>Username</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead className="w-[50px]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -97,14 +83,51 @@ xmlns:html="http://www.w3.org/TR/REC-html40">
                   <TableRow key={user.id}>
                     <TableCell>{user.username}</TableCell>
                     <TableCell>{user.firstName} {user.lastName}</TableCell>
+                    <TableCell>{user.email}</TableCell>
                     <TableCell>
-                      <div className="text-sm">
-                        <div>{user.phone}</div>
-                        <div className="text-muted-foreground">{user.email}</div>
-                      </div>
+                      {user.isApproved ? (
+                        <Badge variant="default">Approved</Badge>
+                      ) : (
+                        <Badge variant="secondary">Pending</Badge>
+                      )}
                     </TableCell>
-                    <TableCell>{user.city || "-"}</TableCell>
-                    <TableCell>{user.occupation || "-"}</TableCell>
+                    <TableCell>
+                      <Badge 
+                        variant={user.role === "admin" ? "destructive" : "outline"}
+                      >
+                        {user.role}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {!user.isApproved && (
+                            <DropdownMenuItem
+                              onClick={() => approveMutation.mutate(user.id)}
+                              disabled={approveMutation.isPending}
+                            >
+                              <CheckCircle className="mr-2 h-4 w-4" />
+                              Approve User
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuItem
+                            onClick={() => roleUpdateMutation.mutate({
+                              userId: user.id,
+                              role: user.role === "admin" ? "user" : "admin"
+                            })}
+                            disabled={roleUpdateMutation.isPending}
+                          >
+                            <Shield className="mr-2 h-4 w-4" />
+                            Toggle Admin Role
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>

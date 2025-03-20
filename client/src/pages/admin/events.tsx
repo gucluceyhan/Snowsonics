@@ -32,9 +32,8 @@ import { ParticipantList } from "@/components/admin/participant-list";
 
 export default function EventsPage() {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   const [showParticipants, setShowParticipants] = useState(false);
   const { toast } = useToast();
 
@@ -75,7 +74,7 @@ export default function EventsPage() {
               </p>
             </div>
 
-            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <Dialog open={isOpen} onOpenChange={setIsOpen}>
               <DialogTrigger asChild>
                 <Button>
                   <Plus className="mr-2 h-4 w-4" />
@@ -89,7 +88,7 @@ export default function EventsPage() {
                 <EventForm 
                   onSuccess={() => {
                     queryClient.invalidateQueries({ queryKey: ["/api/events"] });
-                    setIsCreateDialogOpen(false);
+                    setIsOpen(false);
                   }} 
                 />
               </DialogContent>
@@ -125,14 +124,14 @@ export default function EventsPage() {
                           <Users className="h-4 w-4" />
                         </Button>
 
-                        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+                        <Dialog open={isOpen} onOpenChange={setIsOpen}>
                           <DialogTrigger asChild>
                             <Button 
                               variant="ghost" 
                               size="icon"
                               onClick={() => {
                                 setSelectedEvent(event);
-                                setIsEditDialogOpen(true);
+                                setIsOpen(true);
                               }}
                             >
                               <Edit className="h-4 w-4" />
@@ -143,10 +142,10 @@ export default function EventsPage() {
                               <DialogTitle>Edit Event</DialogTitle>
                             </DialogHeader>
                             <EventForm 
-                              event={selectedEvent}
+                              event={event}
                               onSuccess={() => {
                                 queryClient.invalidateQueries({ queryKey: ["/api/events"] });
-                                setIsEditDialogOpen(false);
+                                setIsOpen(false);
                               }} 
                             />
                           </DialogContent>

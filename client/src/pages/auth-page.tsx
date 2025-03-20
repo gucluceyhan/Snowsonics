@@ -6,21 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertUserSchema, type InsertUser, type SiteSettings } from "@shared/schema";
+import { insertUserSchema, type InsertUser } from "@shared/schema";
 import { Redirect } from "wouter";
 import { Loader2 } from "lucide-react";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
-import { ImageLogo } from "@/components/ui/image-logo";
 
 export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
-  const { toast } = useToast();
-
-  const { data: settings } = useQuery<SiteSettings>({
-    queryKey: ["/api/admin/site-settings"],
-  });
 
   const loginForm = useForm({
     defaultValues: {
@@ -44,32 +35,6 @@ export default function AuthPage() {
     },
   });
 
-  const resetPasswordForm = useForm({
-    defaultValues: {
-      email: "",
-    },
-  });
-
-  const resetPasswordMutation = useMutation({
-    mutationFn: async (data: { email: string }) => {
-      const res = await apiRequest("POST", "/api/reset-password", data);
-      return await res.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Şifre sıfırlama bağlantısı gönderildi",
-        description: "E-posta adresinize şifre sıfırlama bağlantısı gönderdik.",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Hata",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
   if (user) {
     return <Redirect to="/" />;
   }
@@ -79,8 +44,8 @@ export default function AuthPage() {
       <div className="container mx-auto grid gap-8 lg:grid-cols-2 lg:gap-12 items-center">
         <div className="space-y-6">
           <div className="flex flex-col items-center mb-8">
-            <ImageLogo 
-              src={settings?.logoUrl}
+            <img 
+              src="/assets/new_whatsapp_image.jpg"
               alt="Logo" 
               className="h-40 w-40 rounded-full"
             />
@@ -99,10 +64,9 @@ export default function AuthPage() {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="login">
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="login">Giriş</TabsTrigger>
                 <TabsTrigger value="register">Kayıt</TabsTrigger>
-                <TabsTrigger value="reset">Şifremi Unuttum</TabsTrigger>
               </TabsList>
 
               <TabsContent value="login">
@@ -137,30 +101,6 @@ export default function AuthPage() {
                     <Button type="submit" className="w-full" disabled={loginMutation.isPending}>
                       {loginMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                       Giriş Yap
-                    </Button>
-                  </form>
-                </Form>
-              </TabsContent>
-
-              <TabsContent value="reset">
-                <Form {...resetPasswordForm}>
-                  <form onSubmit={resetPasswordForm.handleSubmit((data) => resetPasswordMutation.mutate(data))} className="space-y-4">
-                    <FormField
-                      control={resetPasswordForm.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>E-posta</FormLabel>
-                          <FormControl>
-                            <Input type="email" {...field} placeholder="E-posta adresinizi girin" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <Button type="submit" className="w-full" disabled={resetPasswordMutation.isPending}>
-                      {resetPasswordMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      Şifre Sıfırlama Bağlantısı Gönder
                     </Button>
                   </form>
                 </Form>

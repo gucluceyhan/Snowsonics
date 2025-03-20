@@ -24,6 +24,7 @@ import { format } from "date-fns";
 import { CalendarIcon, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 interface EventFormProps {
@@ -54,37 +55,11 @@ export default function EventForm({ event, onSuccess }: EventFormProps) {
 
   const mutation = useMutation({
     mutationFn: async (data: InsertEvent) => {
-      const formData = new FormData();
-
-      // Event data'yı ekle
-      formData.append('title', data.title);
-      formData.append('description', data.description);
-      formData.append('content', data.content);
-      formData.append('date', data.date);
-      formData.append('endDate', data.endDate);
-      formData.append('location', data.location);
-
-      // Dosyaları ekle
-      if (data.images) {
-        const images = Array.isArray(data.images) ? data.images : [data.images];
-        images.forEach(image => {
-          if (image instanceof File) {
-            formData.append('images', image);
-          }
-        });
+      if (event) {
+        await apiRequest("PUT", `/api/events/${event.id}`, data);
+      } else {
+        await apiRequest("POST", "/api/events", data);
       }
-
-      const response = await fetch(event ? `/api/events/${event.id}` : '/api/events', {
-        method: event ? 'PUT' : 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Etkinlik işlemi başarısız oldu');
-      }
-
-      return await response.json();
     },
     onSuccess: () => {
       toast({
@@ -93,13 +68,6 @@ export default function EventForm({ event, onSuccess }: EventFormProps) {
       });
       onSuccess?.();
     },
-    onError: (error: Error) => {
-      toast({
-        title: "Hata",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
   });
 
   return (
@@ -107,7 +75,6 @@ export default function EventForm({ event, onSuccess }: EventFormProps) {
       <form 
         onSubmit={form.handleSubmit((data) => mutation.mutate(data))}
         className="space-y-4"
-        encType="multipart/form-data"
       >
         <FormField
           control={form.control}
@@ -261,11 +228,9 @@ export default function EventForm({ event, onSuccess }: EventFormProps) {
               <FormLabel>Fotoğraflar</FormLabel>
               <FormControl>
                 <ImageUpload
-                  onChange={(files) => {
-                    field.onChange(files);
-                  }}
+                  value={field.value}
+                  onChange={field.onChange}
                   maxFiles={5}
-                  preview={Array.isArray(field.value) ? field.value : []}
                 />
               </FormControl>
               <FormMessage />

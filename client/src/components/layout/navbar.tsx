@@ -8,25 +8,21 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { User, LogOut } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import { SiteSettings } from "@shared/schema";
-import { ImageLogo } from "@/components/ui/image-logo";
 
 export function Navbar() {
   const { user, logoutMutation } = useAuth();
-  const { data: settings } = useQuery<SiteSettings>({
-    queryKey: ["/api/admin/site-settings"],
-  });
 
   return (
     <nav className="border-b bg-background">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <Link href="/">
-          <ImageLogo
-            src={settings?.logoUrl}
-            alt="Logo"
-            className="h-10 w-auto cursor-pointer"
-          />
+          <a className="flex items-center">
+            <img
+              src="/assets/new_whatsapp_image.jpg"
+              alt="Logo"
+              className="h-10 w-auto"
+            />
+          </a>
         </Link>
 
         <div className="flex items-center gap-4">
