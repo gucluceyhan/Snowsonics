@@ -25,16 +25,25 @@ export async function apiRequest(
     credentials: "include", // Bu çerezlerin gönderilmesini sağlar
   };
   
-  console.log(`API Request: ${method} ${url}`);
-  const res = await fetch(url, options);
+  console.log(`API Request: ${method} ${url}`, data ? `Data: ${JSON.stringify(data)}` : 'No data');
+  
+  try {
+    const res = await fetch(url, options);
 
-  // Hata durumunu kontrol et
-  if (!res.ok) {
-    console.error(`API Error: ${res.status} ${res.statusText}`);
+    // Hata durumunu kontrol et
+    if (!res.ok) {
+      console.error(`API Error: ${res.status} ${res.statusText}`);
+      // Tam yanıt içeriğini görmek için
+      const errorText = await res.clone().text();
+      console.error(`API Error response: ${errorText}`);
+    }
+
+    await throwIfResNotOk(res);
+    return res;
+  } catch (error) {
+    console.error('API Request error:', error);
+    throw error;
   }
-
-  await throwIfResNotOk(res);
-  return res;
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";

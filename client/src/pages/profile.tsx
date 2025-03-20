@@ -47,7 +47,8 @@ export default function ProfilePage() {
       });
       
       console.log('Değişen alanlar:', changedFields);
-      return await apiRequest("PUT", "/api/user/profile", changedFields);
+      // PUT yerine POST kullan
+      return await apiRequest("POST", "/api/user/profile", changedFields);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });

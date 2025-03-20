@@ -354,8 +354,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(participationsWithEvents);
   });
 
-  // Profil güncelleme route'u
-  app.put("/api/user/profile", requireAuth, async (req, res) => {
+  // Profil güncelleme route'u - HTTP PUT değil POST kullan 
+  app.post("/api/user/profile", requireAuth, async (req, res) => {
     try {
       log(`Profil güncelleme isteği alındı, Kullanıcı: ${req.user?.username} (ID: ${req.user?.id}), Body: ${JSON.stringify(req.body)}`, 'routes');
       
@@ -388,6 +388,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Profil güncelleme hatası (tam hata):', error);
       log(`Profil güncellemesi sırasında hata: ${error}`, 'routes');
+      res.status(500).json({ 
+        message: "Profil güncellenirken hata oluştu", 
+        error: error instanceof Error ? error.message : String(error) 
+      });
+    }
+  });
+  
+  // PUT metodu için eski endpoint'i de destekleyelim (geriye dönük uyumluluk için)
+  app.put("/api/user/profile", requireAuth, async (req, res) => {
+    log(`PUT metodu ile profil güncelleme isteği alındı, POST metodu kullanılması önerilir`, 'routes');
+    try {
+      if (!req.isAuthenticated() || !req.user) {
+        return res.status(401).json({ message: "Unauthorized - Kimlik doğrulama gerekiyor" });
+      }
+      
+      const result = insertUserSchema.partial().safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ message: "Invalid user data", errors: result.error.issues });
+      }
+      
+      const updatedUser = await global.appStorage.updateUser(req.user.id, {
+        ...result.data
+      });
+      
+      res.json(updatedUser);
+    } catch (error) {
+      console.error('PUT profil güncelleme hatası:', error);
       res.status(500).json({ 
         message: "Profil güncellenirken hata oluştu", 
         error: error instanceof Error ? error.message : String(error) 
