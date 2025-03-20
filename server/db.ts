@@ -1,213 +1,37 @@
-import mysql from 'mysql2/promise';
-import { drizzle } from 'drizzle-orm/mysql2';
+import { drizzle } from 'drizzle-orm/node-postgres';
+import { Pool } from 'pg';
 import * as schema from '../shared/schema';
 import { log } from './vite';
 
-// We'll use the PostgreSQL connection string but connect using MySQL drivers
-// This approach allows us to work with the existing PostgreSQL database
-// while using MySQL syntax in our application
-const DB_URL = process.env.DATABASE_URL;
-
-if (!DB_URL) {
-  console.error('DATABASE_URL is not defined');
-  process.exit(1);
-}
-
-let pool: mysql.Pool;
-let db: ReturnType<typeof drizzle>;
-
-// Create a MySQL connection pool
-async function createPool() {
-  try {
-    log('Creating database connection pool', 'db');
-    
-    // Extract connection info from PostgreSQL URL to format for MySQL
-    const matches = DB_URL.match(/postgres:\/\/([^:]+):([^@]+)@([^:]+):(\d+)\/(.+)/);
-    
-    if (!matches) {
-      throw new Error('Invalid DATABASE_URL format');
-    }
-    
-    const [, user, password, host, port, database] = matches;
-    
-    pool = mysql.createPool({
-      host,
-      port: parseInt(port),
-      user,
-      password,
-      database,
-      waitForConnections: true,
-      connectionLimit: 10,
-      queueLimit: 0
-    });
-    
-    // Test the connection
-    const connection = await pool.getConnection();
-    connection.release();
-    
-    // Create the Drizzle instance
-    db = drizzle(pool, { schema, mode: 'default' });
-    
-    log('Database connection successful', 'db');
-    return db;
-  } catch (error) {
-    console.error('Failed to create database connection:', error);
-    throw error;
+// Create PostgreSQL connection pool
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false // This is necessary for connecting to Neon DB
   }
-}
+});
 
-// Migrate database schema
-async function migrate() {
-  try {
-    log('Running database migrations', 'db');
-    
-    const connection = await pool.getConnection();
-    
-    // Create tables if they don't exist - using MySQL syntax
-    await connection.execute(`
-      CREATE TABLE IF NOT EXISTS site_settings (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        logo_url TEXT,
-        primary_color VARCHAR(20) NOT NULL,
-        secondary_color VARCHAR(20) NOT NULL,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-      
-      CREATE TABLE IF NOT EXISTS users (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        username VARCHAR(100) NOT NULL UNIQUE,
-        password VARCHAR(200) NOT NULL,
-        first_name VARCHAR(100) NOT NULL,
-        last_name VARCHAR(100) NOT NULL,
-        email VARCHAR(150) NOT NULL,
-        phone VARCHAR(20) NOT NULL,
-        city VARCHAR(100) NOT NULL,
-        occupation VARCHAR(100) NOT NULL,
-        instagram VARCHAR(100),
-        avatar_url TEXT,
-        role VARCHAR(20) NOT NULL DEFAULT 'user',
-        is_approved BOOLEAN NOT NULL DEFAULT FALSE
-      );
-      
-      CREATE TABLE IF NOT EXISTS events (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        title VARCHAR(200) NOT NULL,
-        description TEXT NOT NULL,
-        content TEXT NOT NULL,
-        date TIMESTAMP NOT NULL,
-        end_date TIMESTAMP NOT NULL,
-        location VARCHAR(200) NOT NULL,
-        images JSON NOT NULL,
-        created_by_id INT NOT NULL,
-        FOREIGN KEY (created_by_id) REFERENCES users(id) ON DELETE CASCADE
-      );
-      
-      CREATE TABLE IF NOT EXISTS event_participants (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        event_id INT NOT NULL,
-        user_id INT NOT NULL,
-        status VARCHAR(20) NOT NULL,
-        is_approved BOOLEAN NOT NULL DEFAULT FALSE,
-        room_type VARCHAR(20),
-        room_occupancy INT,
-        payment_status VARCHAR(20) DEFAULT 'pending',
-        old_values JSON,
-        FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE,
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-        UNIQUE (event_id, user_id)
-      );
-      
-      CREATE TABLE IF NOT EXISTS sessions (
-        session_id VARCHAR(128) NOT NULL,
-        expires INT UNSIGNED NOT NULL,
-        data TEXT,
-        PRIMARY KEY (session_id)
-      );
-    `);
-    
-    // Check if the admin user already exists
-    const [adminRows] = await connection.execute(
-      'SELECT * FROM users WHERE username = ?',
-      ['admin']
-    );
-    
-    if (!Array.isArray(adminRows) || adminRows.length === 0) {
-      // Insert a default admin user
-      await connection.execute(
-        'INSERT INTO users (username, password, first_name, last_name, email, phone, city, occupation, role, is_approved) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-        [
-          'admin',
-          'd9b0636fc082c9db1a63dac05e129eb7cfd968c3de1611d1a5b9e9bccba92d1f', // 'admin123' - Only for development
-          'Admin',
-          'User',
-          'admin@example.com',
-          '5551234567',
-          'Default City',
-          'Administrator',
-          'admin',
-          true
-        ]
-      );
-      log('Created default admin user', 'db');
-    }
-    
-    // Check if site settings exist
-    const [settingsRows] = await connection.execute('SELECT * FROM site_settings LIMIT 1');
-    
-    if (!Array.isArray(settingsRows) || settingsRows.length === 0) {
-      // Insert default site settings
-      await connection.execute(
-        'INSERT INTO site_settings (logo_url, primary_color, secondary_color) VALUES (?, ?, ?)',
-        ['/assets/new_whatsons_logo.png', '#4F45E4', '#171717']
-      );
-      log('Created default site settings', 'db');
-    }
-    
-    // Create a test event if none exist
-    const [eventsRows] = await connection.execute('SELECT * FROM events LIMIT 1');
-    
-    if (!Array.isArray(eventsRows) || eventsRows.length === 0) {
-      const [adminUserRows] = await connection.execute(
-        'SELECT id FROM users WHERE username = ?',
-        ['admin']
-      );
-      
-      if (Array.isArray(adminUserRows) && adminUserRows.length > 0) {
-        const adminId = (adminUserRows[0] as any).id;
-        const futureDate = new Date();
-        futureDate.setDate(futureDate.getDate() + 30);
-        
-        await connection.execute(
-          'INSERT INTO events (title, description, content, date, end_date, location, images, created_by_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-          [
-            '15-19 Nisan 2025 Kars Sarıkamış Turu',
-            'Katılımcıların kendilerini zorlayacakları, doğa ile iç içe olacakları, günlük şehir hayatından uzaklaşarak kendilerini keşfedebilecekleri ve unutulmaz anılar biriktirebilecekleri bir macera!',
-            'Detaylı içerik buraya gelecek',
-            new Date(),
-            futureDate,
-            'Kars, Türkiye',
-            JSON.stringify(['/assets/kars-event.jpg']),
-            adminId
-          ]
-        );
-        log('Created sample event', 'db');
-      }
-    }
-    
-    connection.release();
-    log('Database migrations completed successfully', 'db');
-  } catch (error) {
-    console.error('Error during database migrations:', error);
-    throw error;
-  }
-}
+// Create Drizzle instance
+export const db = drizzle(pool, { schema });
 
-// Initialize database
+// Test database connection
 export async function initializeDb() {
-  await createPool();
-  await migrate();
-  return db;
+  try {
+    log('Initializing PostgreSQL database connection...', 'pg-db');
+    
+    // Test connection by querying database
+    const client = await pool.connect();
+    try {
+      const result = await client.query('SELECT 1 as test');
+      if (result.rows[0].test === 1) {
+        log('PostgreSQL connection test successful', 'pg-db');
+        return true;
+      }
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    log(`PostgreSQL database initialization failed: ${error}`, 'pg-db');
+    throw error;
+  }
 }
-
-// Export database instance
-export { db };
