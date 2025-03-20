@@ -357,17 +357,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Profil güncelleme route'u
   app.put("/api/user/profile", requireAuth, async (req, res) => {
     try {
+      log(`Profil güncelleme isteği alındı, Kullanıcı: ${req.user?.username} (ID: ${req.user?.id}), Body: ${JSON.stringify(req.body)}`, 'routes');
+      
+      // Oturum durumunu daha ayrıntılı kontrol et
+      if (!req.isAuthenticated() || !req.user) {
+        log(`Kullanıcı kimliği doğrulanamadı veya oturum geçersiz`, 'routes');
+        return res.status(401).json({ message: "Unauthorized - Kimlik doğrulama gerekiyor" });
+      }
+      
       const result = insertUserSchema.partial().safeParse(req.body);
       if (!result.success) {
+        log(`Geçersiz kullanıcı verisi: ${JSON.stringify(result.error.issues)}`, 'routes');
         return res.status(400).json({ message: "Invalid user data", errors: result.error.issues });
       }
 
-      // Instagram artık doğrudan API kullanımını engellediği için avatarUrl'i güncellemiyoruz
-      // Sadece kullanıcı tarafından sağlanan diğer bilgileri güncelliyoruz
+      // Güncellenecek alanları logla
+      log(`Güncellenecek alanlar: ${JSON.stringify(result.data)}`, 'routes');
       
-      log(`Profil güncellemesi: Kullanıcı ID ${req.user!.id}`, 'routes');
-      
-      const updatedUser = await global.appStorage.updateUser(req.user!.id, {
+      // Sadece kullanıcının gönderdiği verileri güncelle
+      const updatedUser = await global.appStorage.updateUser(req.user.id, {
         ...result.data
       });
 
@@ -378,8 +386,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(updatedUser);
     } catch (error) {
+      console.error('Profil güncelleme hatası (tam hata):', error);
       log(`Profil güncellemesi sırasında hata: ${error}`, 'routes');
-      res.status(500).json({ message: "Profil güncellenirken hata oluştu", error: error.message });
+      res.status(500).json({ 
+        message: "Profil güncellenirken hata oluştu", 
+        error: error instanceof Error ? error.message : String(error) 
+      });
     }
   });
   

@@ -32,7 +32,22 @@ export default function ProfilePage() {
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data: Partial<InsertUser>) => {
-      await apiRequest("PUT", "/api/user/profile", data);
+      console.log('Profil güncelleme isteği gönderiliyor:', data);
+      // Parola alanını gönderme (güvenlik için)
+      const updatedData = { ...data };
+      delete updatedData.password;
+      
+      // Sadece değişen alanları gönder
+      const changedFields: Partial<InsertUser> = {};
+      Object.keys(updatedData).forEach(key => {
+        const typedKey = key as keyof InsertUser;
+        if (updatedData[typedKey] !== user?.[typedKey]) {
+          changedFields[typedKey] = updatedData[typedKey];
+        }
+      });
+      
+      console.log('Değişen alanlar:', changedFields);
+      return await apiRequest("PUT", "/api/user/profile", changedFields);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
@@ -42,9 +57,10 @@ export default function ProfilePage() {
       });
     },
     onError: (error: Error) => {
+      console.error('Profil güncelleme hatası:', error);
       toast({
         title: "Hata",
-        description: error.message,
+        description: error.message || "Profil güncellenirken bir hata oluştu.",
         variant: "destructive",
       });
     },

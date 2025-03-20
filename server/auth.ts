@@ -64,16 +64,25 @@ export function setupAuth(app: Express) {
     }),
   );
 
-  passport.serializeUser((user, done) => done(null, user.id));
+  passport.serializeUser((user, done) => {
+    console.log(`Kullanıcı oturumu serileştiriliyor, ID: ${user.id}, Username: ${user.username}`);
+    done(null, user.id);
+  });
+  
   passport.deserializeUser(async (id: number, done) => {
     try {
+      console.log(`Kullanıcı oturumu deserileştiriliyor, ID: ${id}`);
       const user = await global.appStorage.getUser(id);
       if (!user) {
+        console.log(`Deserileştirme sırasında kullanıcı bulunamadı, ID: ${id}`);
         // Kullanıcı bulunamadıysa null döndür (oturum geçersiz)
         return done(null, null);
       }
+      
+      console.log(`Kullanıcı deserileştirildi: ${user.username} (ID: ${user.id})`);
       return done(null, user);
     } catch (err) {
+      console.error(`Deserileştirme hatası: ${err}`);
       return done(err, null);
     }
   });
@@ -107,7 +116,13 @@ export function setupAuth(app: Express) {
   });
 
   app.get("/api/user", (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    res.json(req.user);
+    console.log(`/api/user isteği, isAuthenticated: ${req.isAuthenticated()}`);
+    if (req.isAuthenticated()) {
+      console.log(`Kullanıcı bilgileri gönderiliyor: ${req.user?.username} (ID: ${req.user?.id})`);
+      return res.json(req.user);
+    } else {
+      console.log(`Oturum açılmamış, 401 Unauthorized yanıtı gönderiliyor`);
+      return res.sendStatus(401);
+    }
   });
 }
