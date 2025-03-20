@@ -65,9 +65,10 @@ export default function EventForm({ event, onSuccess }: EventFormProps) {
       formData.append('location', data.location);
 
       // Dosyaları ayrı ayrı ekle
-      if (data.images && Array.isArray(data.images)) {
-        data.images.forEach(image => {
-          if (image instanceof File) {
+      if (data.images) {
+        const images = Array.isArray(data.images) ? data.images : [data.images];
+        images.forEach((image: File | string) => {
+          if (typeof image !== 'string') {
             formData.append('images', image);
           }
         });
@@ -261,13 +262,7 @@ export default function EventForm({ event, onSuccess }: EventFormProps) {
               <FormControl>
                 <ImageUpload
                   onChange={(files) => {
-                    if (Array.isArray(files)) {
-                      field.onChange(files);
-                    } else if (files instanceof File) {
-                      field.onChange([files]);
-                    } else {
-                      field.onChange([]);
-                    }
+                    field.onChange(files);
                   }}
                   maxFiles={5}
                   preview={Array.isArray(field.value) ? field.value : []}
