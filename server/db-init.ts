@@ -1,65 +1,35 @@
 import mysql from 'mysql2/promise';
-import { drizzle } from 'drizzle-orm/mysql2';
-import * as schema from '../shared/schema';
 import { log } from './vite';
+import { MySQLStorage } from './mysql-storage';
+import { IStorage } from './types';
+import { MemStorage } from './storage';
 
-// We'll use the PostgreSQL connection string but connect using MySQL drivers
-// This approach allows us to work with the existing PostgreSQL database
-// while using MySQL syntax in our application
-const DB_URL = process.env.DATABASE_URL;
-
-if (!DB_URL) {
-  console.error('DATABASE_URL is not defined');
-  process.exit(1);
-}
-
-let pool: mysql.Pool;
-let db: ReturnType<typeof drizzle>;
-
-// Create a MySQL connection pool
-async function createPool() {
-  try {
-    log('Creating database connection pool', 'db');
-    
-    // Extract connection info from PostgreSQL URL to format for MySQL
-    const matches = DB_URL.match(/postgres:\/\/([^:]+):([^@]+)@([^:]+):(\d+)\/(.+)/);
-    
-    if (!matches) {
-      throw new Error('Invalid DATABASE_URL format');
-    }
-    
-    const [, user, password, host, port, database] = matches;
-    
-    pool = mysql.createPool({
-      host,
-      port: parseInt(port),
-      user,
-      password,
-      database,
-      waitForConnections: true,
-      connectionLimit: 10,
-      queueLimit: 0
-    });
-    
-    // Test the connection
-    const connection = await pool.getConnection();
-    connection.release();
-    
-    // Create the Drizzle instance
-    db = drizzle(pool, { schema, mode: 'default' });
-    
-    log('Database connection successful', 'db');
-    return db;
-  } catch (error) {
-    console.error('Failed to create database connection:', error);
-    throw error;
+// Function to extract connection parameters from PostgreSQL URL 
+function parseDbUrl(url: string): mysql.PoolOptions {
+  const matches = url.match(/postgres:\/\/([^:]+):([^@]+)@([^:]+):(\d+)\/(.+)/);
+  
+  if (!matches) {
+    throw new Error('Invalid DATABASE_URL format');
   }
+  
+  const [, user, password, host, port, database] = matches;
+  
+  return {
+    host,
+    port: parseInt(port),
+    user,
+    password,
+    database,
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
+  };
 }
 
-// Migrate database schema
-async function migrate() {
+// Initialize database tables
+async function initializeTables(pool: mysql.Pool): Promise<void> {
   try {
-    log('Running database migrations', 'db');
+    log('Creating database tables if they don\'t exist', 'db-init');
     
     const connection = await pool.getConnection();
     
@@ -125,6 +95,19 @@ async function migrate() {
       );
     `);
     
+    connection.release();
+    log('Database tables created successfully', 'db-init');
+  } catch (error) {
+    console.error('Error initializing database tables:', error);
+    throw error;
+  }
+}
+
+// Insert test data if tables are empty
+async function seedTestData(pool: mysql.Pool): Promise<void> {
+  try {
+    const connection = await pool.getConnection();
+    
     // Check if the admin user already exists
     const [adminRows] = await connection.execute(
       'SELECT * FROM users WHERE username = ?',
@@ -148,7 +131,7 @@ async function migrate() {
           true
         ]
       );
-      log('Created default admin user', 'db');
+      log('Created default admin user', 'db-init');
     }
     
     // Check if site settings exist
@@ -160,7 +143,7 @@ async function migrate() {
         'INSERT INTO site_settings (logo_url, primary_color, secondary_color) VALUES (?, ?, ?)',
         ['/assets/new_whatsons_logo.png', '#4F45E4', '#171717']
       );
-      log('Created default site settings', 'db');
+      log('Created default site settings', 'db-init');
     }
     
     // Create a test event if none exist
@@ -190,24 +173,51 @@ async function migrate() {
             adminId
           ]
         );
-        log('Created sample event', 'db');
+        log('Created sample event', 'db-init');
       }
     }
     
     connection.release();
-    log('Database migrations completed successfully', 'db');
   } catch (error) {
-    console.error('Error during database migrations:', error);
+    console.error('Error seeding test data:', error);
     throw error;
   }
 }
 
-// Initialize database
-export async function initializeDb() {
-  await createPool();
-  await migrate();
-  return db;
+// Initialize storage based on environment
+export async function initializeStorage(): Promise<IStorage> {
+  const DB_URL = process.env.DATABASE_URL;
+  
+  if (DB_URL) {
+    try {
+      log('Initializing MySQL storage with PostgreSQL database', 'db-init');
+      
+      // Parse connection details
+      const dbConfig = parseDbUrl(DB_URL);
+      
+      // Create pool and test connection
+      const pool = mysql.createPool(dbConfig);
+      const connection = await pool.getConnection();
+      connection.release();
+      
+      // Initialize tables
+      await initializeTables(pool);
+      
+      // Seed test data
+      await seedTestData(pool);
+      
+      // Create MySQL storage
+      const mysqlStorage = new MySQLStorage(dbConfig);
+      
+      log('MySQL storage initialized successfully', 'db-init');
+      return mysqlStorage;
+    } catch (error) {
+      console.error('Failed to initialize MySQL storage:', error);
+      console.warn('Falling back to in-memory storage');
+      return new MemStorage();
+    }
+  } else {
+    log('No DATABASE_URL found, using in-memory storage', 'db-init');
+    return new MemStorage();
+  }
 }
-
-// Export database instance
-export { db };
