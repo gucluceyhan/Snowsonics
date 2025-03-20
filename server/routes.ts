@@ -34,7 +34,11 @@ const upload = multer({
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
 
-  // Serve static files from public directory
+  // Create uploads directory if it doesn't exist
+  const uploadDir = path.join(process.cwd(), 'public', 'uploads');
+  await fs.mkdir(uploadDir, { recursive: true });
+
+  // Make sure the uploads directory is properly served
   app.use('/uploads', express.static(path.join(process.cwd(), 'public', 'uploads')));
 
   // Site settings routes

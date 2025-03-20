@@ -55,7 +55,7 @@ export default function EventForm({ event, onSuccess }: EventFormProps) {
   const mutation = useMutation({
     mutationFn: async (data: InsertEvent) => {
       const formData = new FormData();
-      
+
       // Convert event data to JSON and append as a single field
       const eventData = {
         title: data.title,
@@ -265,6 +265,7 @@ export default function EventForm({ event, onSuccess }: EventFormProps) {
               <FormControl>
                 <ImageUpload
                   onChange={(files) => {
+                    // Handle both single file and multiple files
                     if (Array.isArray(files)) {
                       field.onChange(files);
                     } else if (files instanceof File) {
