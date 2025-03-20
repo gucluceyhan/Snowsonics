@@ -20,7 +20,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Shield, MoreVertical, CheckCircle, UserCheck, UserCog, AlertCircle, UserX, UserPlus } from "lucide-react";
+import { Shield, MoreVertical, CheckCircle, UserCheck, UserCog, AlertCircle, UserX, UserPlus, Download } from "lucide-react";
+import * as XLSX from "xlsx";
 
 export default function UsersPage() {
   const { toast } = useToast();
@@ -189,11 +190,67 @@ export default function UsersPage() {
       
       <main className="container mx-auto px-4 py-8">
         <div className="space-y-8">
-          <div>
-            <h1 className="text-4xl font-bold">Kullanıcı Yönetimi</h1>
-            <p className="text-muted-foreground mt-2">
-              Yeni kullanıcıları onaylayın ve kullanıcı rollerini yönetin
-            </p>
+          <div className="flex items-start justify-between">
+            <div>
+              <h1 className="text-4xl font-bold">Kullanıcı Yönetimi</h1>
+              <p className="text-muted-foreground mt-2">
+                Yeni kullanıcıları onaylayın ve kullanıcı rollerini yönetin
+              </p>
+            </div>
+            
+            <Button
+              variant="outline"
+              onClick={() => {
+                // Excel verileri için uygun formatta bir dizi oluştur
+                const excelData = [
+                  // Başlık satırı
+                  ['Ad', 'Soyad', 'Telefon Numarası', 'E-posta Adresi', 'Meslek', 'Yaşadığı İl', 'Durum']
+                ];
+                
+                // Kullanıcı verilerini ekle
+                users.forEach(user => {
+                  excelData.push([
+                    user.firstName || '',
+                    user.lastName || '',
+                    user.phone || '',
+                    user.email || '',
+                    user.occupation || '',
+                    user.city || '',
+                    user.isActive ? 'Aktif' : 'Pasif'
+                  ]);
+                });
+                
+                // XLSX Workbook oluştur
+                const wb = XLSX.utils.book_new();
+                const ws = XLSX.utils.aoa_to_sheet(excelData);
+                
+                // Sütun genişliklerini ayarla
+                const colWidths = [
+                  { wch: 15 }, // Ad
+                  { wch: 15 }, // Soyad
+                  { wch: 20 }, // Telefon
+                  { wch: 30 }, // E-posta
+                  { wch: 20 }, // Meslek
+                  { wch: 15 }, // Şehir
+                  { wch: 10 }  // Durum
+                ];
+                ws['!cols'] = colWidths;
+                
+                // Çalışma sayfasını workbook'a ekle
+                XLSX.utils.book_append_sheet(wb, ws, "Kullanıcılar");
+                
+                // Excel dosyasını indir
+                XLSX.writeFile(wb, "kullanicilar.xlsx");
+                
+                toast({
+                  title: "Excel dosyası oluşturuldu",
+                  description: "Kullanıcı listesi Excel dosyası olarak indirildi.",
+                });
+              }}
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Excel'e Aktar
+            </Button>
           </div>
 
           {pendingUsers.length > 0 && (
@@ -221,7 +278,7 @@ export default function UsersPage() {
               </div>
             </div>
           )}
-
+          
           <div className="space-y-2">
             <h3 className="text-lg font-semibold text-green-600 dark:text-green-400 flex items-center">
               <UserCheck className="mr-2 h-5 w-5" />
