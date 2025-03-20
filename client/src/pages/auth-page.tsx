@@ -8,16 +8,49 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertUserSchema, type InsertUser } from "@shared/schema";
 import { Redirect } from "wouter";
-import { Loader2 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { Loader2, Check, AlertCircle } from "lucide-react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import { useState } from "react";
+import { z } from "zod";
 
 export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
+  const { toast } = useToast();
+  const [resetStep, setResetStep] = useState<'email' | 'success'>('email');
   
   // Fetch site settings to get the logo
   const { data: settings } = useQuery({
     queryKey: ["/api/admin/site-settings"],
     enabled: true,
+  });
+  
+  // Form şeması şifre sıfırlama için
+  const forgotPasswordSchema = z.object({
+    email: z.string().email({ message: "Geçerli bir e-posta adresi girin" }),
+  });
+  
+  const forgotPasswordForm = useForm({
+    resolver: zodResolver(forgotPasswordSchema),
+    defaultValues: { email: "" },
+  });
+  
+  // Şifre sıfırlama mutasyonu
+  const resetPasswordMutation = useMutation({
+    mutationFn: async (data: { email: string }) => {
+      return await apiRequest("POST", "/api/reset-password", data);
+    },
+    onSuccess: () => {
+      setResetStep('success');
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Hata",
+        description: error.message || "Şifre sıfırlama işlemi sırasında bir hata oluştu",
+        variant: "destructive",
+      });
+    },
   });
 
   const loginForm = useForm({
@@ -77,9 +110,10 @@ export default function AuthPage() {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="login">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="login">Giriş</TabsTrigger>
                 <TabsTrigger value="register">Kayıt</TabsTrigger>
+                <TabsTrigger value="forgot-password">Şifremi Unuttum</TabsTrigger>
               </TabsList>
 
               <TabsContent value="login">
@@ -111,6 +145,19 @@ export default function AuthPage() {
                         </FormItem>
                       )}
                     />
+                    <div className="flex items-center justify-end">
+                      <Button 
+                        variant="link" 
+                        className="p-0 h-auto text-sm text-primary hover:text-primary/80"
+                        type="button"
+                        onClick={() => {
+                          // Tabs'teki değeri değiştirerek 'forgot-password' tabına geçiyoruz
+                          document.querySelector('[data-value="forgot-password"]')?.click();
+                        }}
+                      >
+                        Şifremi Unuttum
+                      </Button>
+                    </div>
                     <Button type="submit" className="w-full" disabled={loginMutation.isPending}>
                       {loginMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                       Giriş Yap
@@ -247,6 +294,84 @@ export default function AuthPage() {
                     </Button>
                   </form>
                 </Form>
+              </TabsContent>
+              
+              <TabsContent value="forgot-password">
+                {resetStep === 'email' ? (
+                  <Form {...forgotPasswordForm}>
+                    <form 
+                      onSubmit={forgotPasswordForm.handleSubmit((data) => resetPasswordMutation.mutate(data))} 
+                      className="space-y-4"
+                    >
+                      <div className="mb-4 text-center">
+                        <h3 className="text-lg font-medium">Şifrenizi mi unuttunuz?</h3>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Hesabınızla ilişkili e-posta adresinizi girin. Size şifre sıfırlama talimatlarını göndereceğiz.
+                        </p>
+                      </div>
+                      
+                      <FormField
+                        control={forgotPasswordForm.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>E-posta</FormLabel>
+                            <FormControl>
+                              <Input type="email" {...field} placeholder="ornek@email.com" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <Button 
+                        type="submit" 
+                        className="w-full" 
+                        disabled={resetPasswordMutation.isPending}
+                      >
+                        {resetPasswordMutation.isPending && (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        )}
+                        Şifre Sıfırlama Bağlantısı Gönder
+                      </Button>
+                      
+                      <div className="text-center mt-4">
+                        <Button
+                          variant="link"
+                          type="button"
+                          onClick={() => {
+                            document.querySelector('[data-value="login"]')?.dispatchEvent(
+                              new MouseEvent('click', { bubbles: true })
+                            );
+                          }}
+                        >
+                          Giriş sayfasına dön
+                        </Button>
+                      </div>
+                    </form>
+                  </Form>
+                ) : (
+                  <div className="py-8 text-center space-y-4">
+                    <div className="mx-auto w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
+                      <Check className="h-6 w-6 text-green-600" />
+                    </div>
+                    <h3 className="text-xl font-medium">Kontrol Edin</h3>
+                    <p className="text-muted-foreground">
+                      Şifre sıfırlama talimatlarını içeren bir e-posta gönderdik. Lütfen gelen kutunuzu kontrol edin.
+                    </p>
+                    <Button
+                      onClick={() => {
+                        setResetStep('email');
+                        document.querySelector('[data-value="login"]')?.dispatchEvent(
+                          new MouseEvent('click', { bubbles: true })
+                        );
+                      }}
+                      className="mt-4"
+                    >
+                      Giriş sayfasına dön
+                    </Button>
+                  </div>
+                )}
               </TabsContent>
             </Tabs>
           </CardContent>

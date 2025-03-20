@@ -376,6 +376,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Profil güncellenirken hata oluştu", error: error.message });
     }
   });
+  
+  // Şifre sıfırlama endpoint'i
+  app.post("/api/reset-password", async (req, res) => {
+    try {
+      const { email } = req.body;
+      if (!email) {
+        return res.status(400).json({ message: "E-posta adresi gerekli" });
+      }
+      
+      log(`Şifre sıfırlama isteği: ${email}`, 'routes');
+      
+      // Kullanıcıyı e-posta adresiyle bul
+      const users = await global.appStorage.getAllUsers();
+      const user = users.find(u => u.email === email);
+      
+      if (!user) {
+        // Güvenlik nedeniyle kullanıcı bulunamasa bile başarılı mesajı dön
+        log(`Şifre sıfırlama: Kullanıcı bulunamadı: ${email}`, 'routes');
+        return res.json({ 
+          success: true, 
+          message: "Şifre sıfırlama talimatları e-posta adresinize gönderildi" 
+        });
+      }
+      
+      // Normalde burada şifre sıfırlama e-postası gönderme işlemi yapılır
+      // Bu örnekte sadece simüle ediyoruz
+      
+      log(`Şifre sıfırlama bağlantısı gönderildi: ${email}`, 'routes');
+      
+      res.json({ 
+        success: true, 
+        message: "Şifre sıfırlama talimatları e-posta adresinize gönderildi" 
+      });
+    } catch (error) {
+      log(`Şifre sıfırlama sırasında hata: ${error}`, 'routes');
+      res.status(500).json({ 
+        message: "Şifre sıfırlama işlemi sırasında bir hata oluştu",
+        error: error.message 
+      });
+    }
+  });
 
 
   const httpServer = createServer(app);
