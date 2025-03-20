@@ -33,6 +33,11 @@ export function setupAuth(app: Express) {
     resave: false,
     saveUninitialized: false,
     store: global.appStorage.sessionStore,
+    cookie: {
+      secure: process.env.NODE_ENV === 'production',
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000 // 24 saat
+    }
   };
 
   app.set("trust proxy", 1);
@@ -61,8 +66,16 @@ export function setupAuth(app: Express) {
 
   passport.serializeUser((user, done) => done(null, user.id));
   passport.deserializeUser(async (id: number, done) => {
-    const user = await global.appStorage.getUser(id);
-    done(null, user);
+    try {
+      const user = await global.appStorage.getUser(id);
+      if (!user) {
+        // Kullanıcı bulunamadıysa null döndür (oturum geçersiz)
+        return done(null, null);
+      }
+      return done(null, user);
+    } catch (err) {
+      return done(err, null);
+    }
   });
 
   app.post("/api/register", async (req, res, next) => {

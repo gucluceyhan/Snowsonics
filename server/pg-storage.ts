@@ -26,7 +26,9 @@ export class PostgresStorage implements IStorage {
     this.sessionStore = new PostgresqlStore({
       pool: this.pool,
       tableName: 'session',
-      createTableIfMissing: true
+      createTableIfMissing: true,
+      ttl: 86400, // 24 saat (saniye cinsinden)
+      pruneSessionInterval: 60 // Her dakika eski oturumları temizle
     });
     
     log('PostgreSQL storage initialized', 'pg-storage');

@@ -12,12 +12,26 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const res = await fetch(url, {
+  // Oturum çerezlerinin gönderildiğinden emin olmak için credentials ayarını include olarak belirtin
+  const options: RequestInit = {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
+    headers: data ? { 
+      "Content-Type": "application/json",
+      "Accept": "application/json"
+    } : {
+      "Accept": "application/json"
+    },
     body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
-  });
+    credentials: "include", // Bu çerezlerin gönderilmesini sağlar
+  };
+  
+  console.log(`API Request: ${method} ${url}`);
+  const res = await fetch(url, options);
+
+  // Hata durumunu kontrol et
+  if (!res.ok) {
+    console.error(`API Error: ${res.status} ${res.statusText}`);
+  }
 
   await throwIfResNotOk(res);
   return res;
@@ -29,11 +43,21 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
+    console.log(`Query Request: GET ${queryKey[0]}`);
     const res = await fetch(queryKey[0] as string, {
       credentials: "include",
+      headers: {
+        "Accept": "application/json"
+      }
     });
+    
+    // Hata durumunu kontrol et
+    if (!res.ok) {
+      console.error(`Query Error: ${res.status} ${res.statusText}`);
+    }
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {
+      console.log(`Unauthorized request to ${queryKey[0]}, returning null as configured`);
       return null;
     }
 
