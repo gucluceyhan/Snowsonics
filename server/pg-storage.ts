@@ -116,8 +116,19 @@ export class PostgresStorage implements IStorage {
 
   async updateEvent(id: number, updates: Partial<Event>): Promise<Event> {
     try {
+      // Process date fields if they exist and are strings
+      const processedUpdates = { ...updates };
+      
+      if (updates.date && typeof updates.date === 'string') {
+        processedUpdates.date = new Date(updates.date);
+      }
+      
+      if (updates.endDate && typeof updates.endDate === 'string') {
+        processedUpdates.endDate = new Date(updates.endDate);
+      }
+      
       const result = await db.update(events)
-        .set(updates)
+        .set(processedUpdates)
         .where(eq(events.id, id))
         .returning();
       return result[0];
