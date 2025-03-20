@@ -14,7 +14,7 @@ export class PostgresStorage implements IStorage {
 
   constructor() {
     // Create a connection pool for the session store
-    this.pool = new Pool({
+    this.pool = new pg.Pool({
       connectionString: process.env.DATABASE_URL,
       ssl: {
         rejectUnauthorized: false // Required for Neon DB
@@ -86,7 +86,8 @@ export class PostgresStorage implements IStorage {
 
   async createEvent(event: InsertEvent & { createdById: number }): Promise<Event> {
     try {
-      const result = await db.insert(events).values(event).returning();
+      // Need to cast as array to fix type issue with drizzle-orm
+      const result = await db.insert(events).values([event as any]).returning();
       return result[0];
     } catch (error) {
       log(`Error creating event: ${error}`, 'pg-storage');
@@ -137,7 +138,7 @@ export class PostgresStorage implements IStorage {
 
   async addEventParticipant(participant: InsertEventParticipant): Promise<EventParticipant> {
     try {
-      const result = await db.insert(eventParticipants).values(participant).returning();
+      const result = await db.insert(eventParticipants).values([participant as any]).returning();
       return result[0];
     } catch (error) {
       log(`Error adding event participant: ${error}`, 'pg-storage');
@@ -236,7 +237,7 @@ export class PostgresStorage implements IStorage {
         return result[0];
       } else {
         // Create new settings if none exist
-        const result = await db.insert(siteSettings).values(settings).returning();
+        const result = await db.insert(siteSettings).values([settings as any]).returning();
         return result[0];
       }
     } catch (error) {
