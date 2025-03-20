@@ -6,24 +6,46 @@ import { MemStorage } from './storage';
 
 // Function to extract connection parameters from PostgreSQL URL 
 function parseDbUrl(url: string): mysql.PoolOptions {
-  const matches = url.match(/postgres:\/\/([^:]+):([^@]+)@([^:]+):(\d+)\/(.+)/);
-  
-  if (!matches) {
-    throw new Error('Invalid DATABASE_URL format');
+  try {
+    // Try the standard URL format first
+    const pgUrl = new URL(url);
+    
+    // Extract database name from pathname (remove leading slash)
+    const database = pgUrl.pathname.substring(1);
+    
+    return {
+      host: pgUrl.hostname,
+      port: parseInt(pgUrl.port || '5432'),
+      user: pgUrl.username,
+      password: pgUrl.password,
+      database: database,
+      waitForConnections: true,
+      connectionLimit: 10,
+      queueLimit: 0
+    };
+  } catch (error) {
+    console.error('Error parsing DATABASE_URL:', error);
+    
+    // Fallback to regex pattern matching for non-standard URLs
+    const matches = url.match(/postgres(?:ql)?:\/\/([^:]+):([^@]+)@([^:]+):(\d+)\/(.+)/);
+    
+    if (!matches) {
+      throw new Error('Invalid DATABASE_URL format. Expected format: postgres://user:password@host:port/database');
+    }
+    
+    const [, user, password, host, port, database] = matches;
+    
+    return {
+      host,
+      port: parseInt(port),
+      user,
+      password,
+      database,
+      waitForConnections: true,
+      connectionLimit: 10,
+      queueLimit: 0
+    };
   }
-  
-  const [, user, password, host, port, database] = matches;
-  
-  return {
-    host,
-    port: parseInt(port),
-    user,
-    password,
-    database,
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
-  };
 }
 
 // Initialize database tables

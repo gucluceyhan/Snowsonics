@@ -1,7 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
-import { storage } from "./storage";
 import { insertEventSchema, insertSiteSettingsSchema } from "@shared/schema";
 import { z } from "zod";
 import {insertUserSchema} from "@shared/schema" // Assuming this schema exists
@@ -26,7 +25,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Site settings routes
   app.get("/api/admin/site-settings", requireAdmin, async (req, res) => {
-    const settings = await storage.getSiteSettings();
+    const settings = await global.appStorage.getSiteSettings();
     res.json(settings);
   });
 
@@ -35,20 +34,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!result.success) {
       return res.status(400).json({ message: "Invalid settings data" });
     }
-    const settings = await storage.updateSiteSettings(result.data);
+    const settings = await global.appStorage.updateSiteSettings(result.data);
     res.json(settings);
   });
 
   // Admin routes
   app.get("/api/admin/users", requireAdmin, async (req, res) => {
-    const users = await storage.getAllUsers();
+    const users = await global.appStorage.getAllUsers();
     const approvedUsers = users.filter(user => user.isApproved);
     res.json(approvedUsers);
   });
 
   app.post("/api/admin/users/:id/approve", requireAdmin, async (req, res) => {
     const { id } = req.params;
-    const user = await storage.updateUser(parseInt(id), { isApproved: true });
+    const user = await global.appStorage.updateUser(parseInt(id), { isApproved: true });
     res.json(user);
   });
 
@@ -58,14 +57,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!["admin", "user"].includes(role)) {
       return res.status(400).json({ message: "Invalid role" });
     }
-    const user = await storage.updateUser(parseInt(id), { role });
+    const user = await global.appStorage.updateUser(parseInt(id), { role });
     res.json(user);
   });
 
   // Admin participant approval route
   app.post("/api/admin/events/:eventId/participants/:participantId/approve", requireAdmin, async (req, res) => {
     const { eventId, participantId } = req.params;
-    const participant = await storage.updateEventParticipant(parseInt(participantId), {
+    const participant = await global.appStorage.updateEventParticipant(parseInt(participantId), {
       isApproved: true
     });
     res.json(participant);
@@ -80,7 +79,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(400).json({ message: "Invalid payment status" });
     }
 
-    const participant = await storage.updateEventParticipant(parseInt(participantId), {
+    const participant = await global.appStorage.updateEventParticipant(parseInt(participantId), {
       paymentStatus: status
     });
     res.json(participant);
@@ -89,13 +88,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Event routes
   app.get("/api/events", requireAuth, async (req, res) => {
-    const events = await storage.getAllEvents();
+    const events = await global.appStorage.getAllEvents();
     res.json(events);
   });
 
   app.get("/api/events/:id", requireAuth, async (req, res) => {
     const { id } = req.params;
-    const event = await storage.getEvent(parseInt(id));
+    const event = await global.appStorage.getEvent(parseInt(id));
     if (!event) {
       return res.status(404).json({ message: "Event not found" });
     }
@@ -107,9 +106,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!result.success) {
       return res.status(400).json({ message: "Invalid event data" });
     }
-    const event = await storage.createEvent({
+    const event = await global.appStorage.createEvent({
       ...result.data,
-      createdById: req.user.id,
+      createdById: req.user!.id,
     });
     res.status(201).json(event);
   });
@@ -120,20 +119,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!result.success) {
       return res.status(400).json({ message: "Invalid event data" });
     }
-    const event = await storage.updateEvent(parseInt(id), result.data);
+    const event = await global.appStorage.updateEvent(parseInt(id), result.data);
     res.json(event);
   });
 
   app.delete("/api/events/:id", requireAuth, async (req, res) => {
     const { id } = req.params;
-    await storage.deleteEvent(parseInt(id));
+    await global.appStorage.deleteEvent(parseInt(id));
     res.sendStatus(204);
   });
 
   // Event participation routes
   app.get("/api/events/:id/my-participation", requireAuth, async (req, res) => {
     const { id } = req.params;
-    const participation = await storage.getUserEventParticipation(req.user!.id, parseInt(id));
+    const participation = await global.appStorage.getUserEventParticipation(req.user!.id, parseInt(id));
     res.json(participation);
   });
 
@@ -151,12 +150,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     // Check if user already has a participation request
-    const existingParticipation = await storage.getUserEventParticipation(req.user!.id, parseInt(id));
+    const existingParticipation = await global.appStorage.getUserEventParticipation(req.user!.id, parseInt(id));
     if (existingParticipation) {
       return res.status(400).json({ message: "Katılım talebiniz zaten bulunmakta" });
     }
 
-    const participant = await storage.addEventParticipant({
+    const participant = await global.appStorage.addEventParticipant({
       eventId: parseInt(id),
       userId: req.user!.id,
       ...result.data,
@@ -176,7 +175,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(400).json({ message: "Invalid update data" });
     }
 
-    const existingParticipation = await storage.getUserEventParticipation(req.user!.id, parseInt(id));
+    const existingParticipation = await global.appStorage.getUserEventParticipation(req.user!.id, parseInt(id));
     if (!existingParticipation) {
       return res.status(404).json({ message: "Katılım bulunamadı" });
     }
@@ -189,7 +188,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     };
 
     // Update with new values, set isApproved to false
-    const participant = await storage.updateEventParticipant(existingParticipation.id, {
+    const participant = await global.appStorage.updateEventParticipant(existingParticipation.id, {
       ...result.data,
       isApproved: false,
       oldValues: oldValues // Save old values for potential rollback
@@ -201,7 +200,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin routes for handling participation updates
   app.post("/api/admin/events/:eventId/participants/:participantId/approve", requireAdmin, async (req, res) => {
     const { participantId } = req.params;
-    const participant = await storage.updateEventParticipant(parseInt(participantId), {
+    const participant = await global.appStorage.updateEventParticipant(parseInt(participantId), {
       isApproved: true,
       oldValues: null // Clear old values on approval
     });
@@ -210,14 +209,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/admin/events/:eventId/participants/:participantId/reject", requireAdmin, async (req, res) => {
     const { participantId } = req.params;
-    const participant = await storage.getEventParticipant(parseInt(participantId));
+    const participant = await global.appStorage.getEventParticipant(parseInt(participantId));
 
     if (!participant || !participant.oldValues) {
       return res.status(404).json({ message: "Katılım veya eski değerler bulunamadı" });
     }
 
     // Restore old values
-    const updatedParticipant = await storage.updateEventParticipant(parseInt(participantId), {
+    const updatedParticipant = await global.appStorage.updateEventParticipant(parseInt(participantId), {
       roomType: participant.oldValues.roomType,
       roomOccupancy: participant.oldValues.roomOccupancy,
       isApproved: participant.oldValues.isApproved,
@@ -229,13 +228,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/events/:id/participants", requireAuth, async (req, res) => {
     const { id } = req.params;
-    const participants = await storage.getEventParticipants(parseInt(id));
+    const participants = await global.appStorage.getEventParticipants(parseInt(id));
 
-    if (req.user.role === "admin") {
+    if (req.user!.role === "admin") {
       // For admin, include user details
       const participantsWithDetails = await Promise.all(
         participants.map(async (p) => {
-          const user = await storage.getUser(p.userId);
+          const user = await global.appStorage.getUser(p.userId);
           return {
             id: p.id,
             eventId: p.eventId,
@@ -264,10 +263,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // User participation history
   app.get("/api/user/participations", requireAuth, async (req, res) => {
-    const participants = await storage.getUserParticipations(req.user.id);
+    const participants = await global.appStorage.getUserParticipations(req.user!.id);
     const participationsWithEvents = await Promise.all(
       participants.map(async (p) => {
-        const event = await storage.getEvent(p.eventId);
+        const event = await global.appStorage.getEvent(p.eventId);
         return { ...p, event };
       })
     );
@@ -293,7 +292,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     }
 
-    const updatedUser = await storage.updateUser(req.user!.id, {
+    const updatedUser = await global.appStorage.updateUser(req.user!.id, {
       ...result.data,
       avatarUrl
     });
