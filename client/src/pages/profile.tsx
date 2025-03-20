@@ -15,6 +15,8 @@ import { User } from "lucide-react";
 export default function ProfilePage() {
   const { user } = useAuth();
   const { toast } = useToast();
+  
+  console.log("Profil sayfası yükleniyor, mevcut kullanıcı bilgileri:", user);
 
   const form = useForm<InsertUser>({
     resolver: zodResolver(insertUserSchema),

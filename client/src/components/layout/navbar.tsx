@@ -26,7 +26,7 @@ export function Navbar() {
     <nav className="border-b bg-background">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <Link href="/">
-          <a className="flex items-center">
+          <div className="flex items-center cursor-pointer">
             <img
               src={logoUrl}
               alt="Logo"
@@ -38,7 +38,7 @@ export function Navbar() {
                 console.log("Logo image failed to load, falling back to default");
               }}
             />
-          </a>
+          </div>
         </Link>
 
         <div className="flex items-center gap-4">
