@@ -1,0 +1,121 @@
+2025-03-20 12:15:23.93
+64ca774c
+User
+npm notice
+2025-03-20 12:15:23.93
+64ca774c
+User
+npm notice New major version of npm available! 10.8.2 -> 11.2.0
+2025-03-20 12:15:23.93
+64ca774c
+User
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.2.0
+2025-03-20 12:15:23.93
+64ca774c
+User
+npm notice To update run: npm install -g npm@11.2.0
+2025-03-20 12:15:23.93
+64ca774c
+User
+npm notice
+2025-03-20 12:15:23.93
+64ca774c
+System
+command finished with error [sh -c npm run dev]: exit status 1
+2025-03-20 12:18:40.77
+64ca774c
+User
+/home/runner/workspace/server/routes.ts:340
+2025-03-20 12:18:40.77
+64ca774c
+User
+const result = insertUserSchema.partial().safeParse(req.body);
+2025-03-20 12:18:40.77
+64ca774c
+User
+^
+2025-03-20 12:18:40.77
+64ca774c
+User
+2025-03-20 12:18:40.77
+64ca774c
+User
+2025-03-20 12:18:40.77
+64ca774c
+User
+ReferenceError: insertUserSchema is not defined
+2025-03-20 12:18:40.77
+64ca774c
+User
+at (/home/runner/workspace/server/routes.ts:340:20)
+2025-03-20 12:18:40.77
+64ca774c
+User
+at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+2025-03-20 12:18:40.77
+64ca774c
+User
+at next (/home/runner/workspace/node_modules/express/lib/router/route.js:149:13)
+2025-03-20 12:18:40.77
+64ca774c
+User
+at requireAuth (/home/runner/workspace/server/routes.ts:510:5)
+2025-03-20 12:18:40.77
+64ca774c
+User
+at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+2025-03-20 12:18:40.77
+64ca774c
+User
+at next (/home/runner/workspace/node_modules/express/lib/router/route.js:149:13)
+2025-03-20 12:18:40.77
+64ca774c
+User
+at Route.dispatch (/home/runner/workspace/node_modules/express/lib/router/route.js:119:3)
+2025-03-20 12:18:40.77
+64ca774c
+User
+at Layer.handle [as handle_request] (/home/runner/workspace/node_modules/express/lib/router/layer.js:95:5)
+2025-03-20 12:18:40.77
+64ca774c
+User
+at /home/runner/workspace/node_modules/express/lib/router/index.js:284:15
+2025-03-20 12:18:40.77
+64ca774c
+User
+at Function.process_params (/home/runner/workspace/node_modules/express/lib/router/index.js:346:12)
+2025-03-20 12:18:40.77
+64ca774c
+User
+at next (/home/runner/workspace/node_modules/express/lib/router/index.js:280:10)
+2025-03-20 12:18:40.77
+64ca774c
+User
+at strategy.pass (/home/runner/workspace/node_modules/passport/lib/middleware/authenticate.js:355:9)
+2025-03-20 12:18:40.77
+64ca774c
+User
+at /home/runner/workspace/node_modules/passport/lib/strategies/session.js:120:12
+2025-03-20 12:18:40.77
+64ca774c
+User
+at pass (/home/runner/workspace/node_modules/passport/lib/authenticator.js:352:31)
+2025-03-20 12:18:40.77
+64ca774c
+User
+at deserialized (/home/runner/workspace/node_modules/passport/lib/authenticator.js:364:7)
+2025-03-20 12:18:40.77
+64ca774c
+User
+at (/home/runner/workspace/server/auth.ts:58:5)
+2025-03-20 12:18:40.77
+64ca774c
+User
+2025-03-20 12:18:40.77
+64ca774c
+User
+Node.js v20.18.1
+2025-03-20 12:18:40.83
+64ca774c
+System
+command finished with error [sh -c npm run dev]: exit status 1

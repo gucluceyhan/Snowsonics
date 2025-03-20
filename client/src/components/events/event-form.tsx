@@ -68,12 +68,12 @@ export default function EventForm({ event, onSuccess }: EventFormProps) {
       formData.append('data', JSON.stringify(eventData));
 
       // Handle file uploads
-      if (data.images) {
-        for (const image of data.images) {
+      if (data.images && Array.isArray(data.images)) {
+        data.images.forEach(image => {
           if (image instanceof File) {
             formData.append('images', image);
           }
-        }
+        });
       }
 
       const response = await fetch(event ? `/api/events/${event.id}` : '/api/events', {

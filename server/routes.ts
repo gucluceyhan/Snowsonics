@@ -2,7 +2,7 @@ import express, { type Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
-import { insertEventSchema, insertSiteSettingsSchema } from "@shared/schema";
+import { insertEventSchema, insertUserSchema, insertSiteSettingsSchema } from "@shared/schema";
 import { z } from "zod";
 import { createHash, randomBytes } from "crypto";
 import axios from "axios";
@@ -144,14 +144,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/events", requireAuth, upload.array('images', 5), async (req, res) => {
     try {
-      const eventData = JSON.parse(req.body.data);
+      // Parse the event data from the form
+      let eventData;
+      try {
+        eventData = JSON.parse(req.body.data);
+      } catch (err) {
+        // If parsing fails, use the body directly
+        eventData = req.body;
+      }
+
+      // Add image paths if files were uploaded
       const result = insertEventSchema.safeParse({
         ...eventData,
         images: req.files ? (req.files as Express.Multer.File[]).map(file => `/uploads/${file.filename}`) : []
       });
 
       if (!result.success) {
-        return res.status(400).json({ message: "Invalid event data" });
+        return res.status(400).json({ 
+          message: "Invalid event data",
+          errors: result.error.errors
+        });
       }
 
       const event = await storage.createEvent({
@@ -169,7 +181,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/events/:id", requireAuth, upload.array('images', 5), async (req, res) => {
     try {
       const { id } = req.params;
-      const eventData = JSON.parse(req.body.data);
+
+      // Parse the event data from the form
+      let eventData;
+      try {
+        eventData = JSON.parse(req.body.data);
+      } catch (err) {
+        // If parsing fails, use the body directly
+        eventData = req.body;
+      }
 
       let updateData = { ...eventData };
       if (req.files && (req.files as Express.Multer.File[]).length > 0) {
@@ -178,7 +198,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const result = insertEventSchema.partial().safeParse(updateData);
       if (!result.success) {
-        return res.status(400).json({ message: "Invalid event data" });
+        return res.status(400).json({ 
+          message: "Invalid event data",
+          errors: result.error.errors 
+        });
       }
 
       const event = await storage.updateEvent(parseInt(id), result.data);
