@@ -57,15 +57,12 @@ export default function EventForm({ event, onSuccess }: EventFormProps) {
       const formData = new FormData();
 
       // Event data'yı tek bir field olarak gönder
-      const eventData = {
-        title: data.title,
-        description: data.description,
-        content: data.content,
-        date: data.date,
-        endDate: data.endDate,
-        location: data.location,
-      };
-      formData.append('data', JSON.stringify(eventData));
+      formData.append('title', data.title);
+      formData.append('description', data.description);
+      formData.append('content', data.content);
+      formData.append('date', data.date);
+      formData.append('endDate', data.endDate);
+      formData.append('location', data.location);
 
       // Dosyaları ayrı ayrı ekle
       if (data.images && Array.isArray(data.images)) {

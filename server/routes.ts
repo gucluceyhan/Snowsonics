@@ -143,26 +143,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/events", requireAuth, upload.array('images', 5), async (req, res) => {
     try {
-      // Parse the event data from the form
-      let eventData;
-      try {
-        eventData = JSON.parse(req.body.data);
-      } catch (err) {
-        // If parsing fails, use the body directly
-        eventData = req.body;
-      }
-
-      // Add image paths if files were uploaded
+      const eventData = req.body;
       const result = insertEventSchema.safeParse({
         ...eventData,
         images: req.files ? (req.files as Express.Multer.File[]).map(file => `/uploads/${file.filename}`) : []
       });
 
       if (!result.success) {
-        return res.status(400).json({ 
-          message: "Invalid event data",
-          errors: result.error.errors
-        });
+        return res.status(400).json({ message: "Invalid event data" });
       }
 
       const event = await storage.createEvent({
@@ -180,15 +168,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/events/:id", requireAuth, upload.array('images', 5), async (req, res) => {
     try {
       const { id } = req.params;
-
-      // Parse the event data from the form
-      let eventData;
-      try {
-        eventData = JSON.parse(req.body.data);
-      } catch (err) {
-        // If parsing fails, use the body directly
-        eventData = req.body;
-      }
+      const eventData = req.body;
 
       let updateData = { ...eventData };
       if (req.files && (req.files as Express.Multer.File[]).length > 0) {
@@ -197,10 +177,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const result = insertEventSchema.partial().safeParse(updateData);
       if (!result.success) {
-        return res.status(400).json({ 
-          message: "Invalid event data",
-          errors: result.error.errors 
-        });
+        return res.status(400).json({ message: "Invalid event data" });
       }
 
       const event = await storage.updateEvent(parseInt(id), result.data);
