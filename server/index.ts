@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { initializeStorage } from "./db-init";
+import { seedDatabase } from "./db-seed";
 
 const app = express();
 app.use(express.json());
@@ -44,6 +45,14 @@ app.use((req, res, next) => {
     
     // Set global storage for route handlers
     global.appStorage = dbStorage;
+    
+    // Seed the database with test data
+    try {
+      await seedDatabase();
+      log('Database seeded successfully', 'index');
+    } catch (error) {
+      log(`Error seeding database: ${error}`, 'index');
+    }
     
     const server = await registerRoutes(app);
 
