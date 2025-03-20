@@ -24,7 +24,13 @@ function requireAdmin(req: Express.Request, res: Express.Response, next: Express
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
 
-  // Site settings routes
+  // Site settings routes - Herkesin erişebileceği genel site ayarları
+  app.get("/api/site-settings", async (req, res) => {
+    const settings = await global.appStorage.getSiteSettings();
+    res.json(settings);
+  });
+  
+  // Admin için site ayarları - aynı endpoint ama admin gerektirir
   app.get("/api/admin/site-settings", requireAdmin, async (req, res) => {
     const settings = await global.appStorage.getSiteSettings();
     res.json(settings);

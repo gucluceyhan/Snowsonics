@@ -22,7 +22,7 @@ export default function AuthPage() {
   
   // Fetch site settings to get the logo
   const { data: settings } = useQuery({
-    queryKey: ["/api/admin/site-settings"],
+    queryKey: ["/api/site-settings"],
     enabled: true,
   });
   
