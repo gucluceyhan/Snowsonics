@@ -56,7 +56,7 @@ export default function EventForm({ event, onSuccess }: EventFormProps) {
     mutationFn: async (data: InsertEvent) => {
       const formData = new FormData();
 
-      // Event data'yı tek bir field olarak gönder
+      // Event data'yı ekle
       formData.append('title', data.title);
       formData.append('description', data.description);
       formData.append('content', data.content);
@@ -64,11 +64,11 @@ export default function EventForm({ event, onSuccess }: EventFormProps) {
       formData.append('endDate', data.endDate);
       formData.append('location', data.location);
 
-      // Dosyaları ayrı ayrı ekle
+      // Dosyaları ekle
       if (data.images) {
         const images = Array.isArray(data.images) ? data.images : [data.images];
-        images.forEach((image: File | string) => {
-          if (typeof image !== 'string') {
+        images.forEach(image => {
+          if (image instanceof File) {
             formData.append('images', image);
           }
         });
