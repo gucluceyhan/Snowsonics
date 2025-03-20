@@ -68,13 +68,12 @@ export default function EventForm({ event, onSuccess }: EventFormProps) {
       formData.append('data', JSON.stringify(eventData));
 
       // Handle file uploads
-      const images = data.images || [];
-      if (Array.isArray(images)) {
-        images.forEach((image) => {
+      if (data.images) {
+        for (const image of data.images) {
           if (image instanceof File) {
             formData.append('images', image);
           }
-        });
+        }
       }
 
       const response = await fetch(event ? `/api/events/${event.id}` : '/api/events', {
@@ -265,7 +264,6 @@ export default function EventForm({ event, onSuccess }: EventFormProps) {
               <FormControl>
                 <ImageUpload
                   onChange={(files) => {
-                    // Handle both single file and multiple files
                     if (Array.isArray(files)) {
                       field.onChange(files);
                     } else if (files instanceof File) {
