@@ -4,6 +4,7 @@ import { setupAuth } from "./auth";
 import { insertEventSchema, insertSiteSettingsSchema } from "@shared/schema";
 import { z } from "zod";
 import {insertUserSchema} from "@shared/schema" // Assuming this schema exists
+import { log } from "./vite";
 
 
 function requireAuth(req: Express.Request, res: Express.Response, next: Express.NextFunction) {
