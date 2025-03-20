@@ -66,12 +66,37 @@ export class PostgresStorage implements IStorage {
 
   async updateUser(id: number, updates: Partial<User>): Promise<User> {
     try {
+      console.log(`PostgreSQL Storage: Updating user with ID ${id}, updates:`, updates);
+      
+      // Güvenlik için password alanını temizle (hash'lenmemiş şifreyi kabul etme)
+      if (updates.password) {
+        delete updates.password;
+      }
+      
+      // Boş nesneler PostgreSQL'de hata oluşturabilir
+      if (Object.keys(updates).length === 0) {
+        log(`No valid fields to update for user ${id}`, 'pg-storage');
+        // Güncelleyecek bir şey yoksa mevcut kullanıcıyı döndür
+        const currentUser = await this.getUser(id);
+        if (!currentUser) {
+          throw new Error(`User with ID ${id} not found`);
+        }
+        return currentUser;
+      }
+      
       const result = await db.update(users)
         .set(updates)
         .where(eq(users.id, id))
         .returning();
+      
+      if (!result.length) {
+        throw new Error(`User with ID ${id} not found or could not be updated`);
+      }
+      
+      console.log(`User updated successfully:`, result[0]);
       return result[0];
     } catch (error) {
+      console.error(`PostgreSQL Storage: Error updating user with ID ${id}:`, error);
       log(`Error updating user: ${error}`, 'pg-storage');
       throw error;
     }
