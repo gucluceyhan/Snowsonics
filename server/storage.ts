@@ -101,7 +101,7 @@ export class MemStorage implements IStorage {
       endDate: new Date("2025-04-19"),
       location: "Kars, Sarıkamış",
       images: [
-        "/assets/new_whatsapp_image.jpg"
+        "/uploads/logo-1742467811175-337407209.png.jpg"
       ],
       createdById: 1
     };
@@ -112,7 +112,7 @@ export class MemStorage implements IStorage {
     if (!this.siteSettings) {
       this.siteSettings = {
         id: 1,
-        logoUrl: "/assets/new_whatsapp_image.jpg",
+        logoUrl: "uploads/logo-1742467811175-337407209.pngg",
         primaryColor: "#914199",
         secondaryColor: "#F7E15C",
         updatedAt: new Date(),
