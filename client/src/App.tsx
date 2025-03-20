@@ -12,6 +12,7 @@ import AdminEventsPage from "@/pages/admin/events";
 import EventDetailPage from "@/pages/events/[id]";
 import ParticipationsPage from "@/pages/participations";
 import AdminSiteSettingsPage from "@/pages/admin/site-settings";
+import ProfilePage from "@/pages/profile";
 
 function Router() {
   return (
@@ -19,6 +20,7 @@ function Router() {
       <ProtectedRoute path="/" component={HomePage} />
       <ProtectedRoute path="/events/:id" component={EventDetailPage} />
       <ProtectedRoute path="/participations" component={ParticipationsPage} />
+      <ProtectedRoute path="/profile" component={ProfilePage} />
       <ProtectedRoute path="/admin/users" component={AdminUsersPage} requireAdmin />
       <ProtectedRoute path="/admin/events" component={AdminEventsPage} requireAdmin />
       <ProtectedRoute path="/admin/site-settings" component={AdminSiteSettingsPage} requireAdmin />
