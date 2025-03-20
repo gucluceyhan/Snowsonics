@@ -26,6 +26,7 @@ import { cn } from "@/lib/utils";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useEffect } from "react";
 
 interface EventFormProps {
   event?: Event;
@@ -55,19 +56,36 @@ export default function EventForm({ event, onSuccess }: EventFormProps) {
 
   const mutation = useMutation({
     mutationFn: async (data: InsertEvent) => {
-      if (event) {
-        await apiRequest("PUT", `/api/events/${event.id}`, data);
-      } else {
-        await apiRequest("POST", "/api/events", data);
+      console.log("Event form submitted with data:", data);
+      try {
+        if (event) {
+          console.log("Updating existing event with ID:", event.id);
+          return await apiRequest("PUT", `/api/events/${event.id}`, data);
+        } else {
+          console.log("Creating new event");
+          return await apiRequest("POST", "/api/events", data);
+        }
+      } catch (error) {
+        console.error("Error submitting event:", error);
+        throw error;
       }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("Event saved successfully:", data);
       toast({
         title: `Etkinlik ${event ? "güncellendi" : "oluşturuldu"}`,
         description: `Etkinlik başarıyla ${event ? "güncellendi" : "oluşturuldu"}`,
       });
       onSuccess?.();
     },
+    onError: (error) => {
+      console.error("Mutation error:", error);
+      toast({
+        title: "Hata",
+        description: `Etkinlik ${event ? "güncellenirken" : "oluşturulurken"} bir hata oluştu: ${error.message}`,
+        variant: "destructive",
+      });
+    }
   });
 
   return (

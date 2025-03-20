@@ -75,7 +75,12 @@ export default function EventsPage() {
               </p>
             </div>
 
-            <Button onClick={() => setIsNewEventDialogOpen(true)}>
+            <Button 
+              onClick={() => {
+                console.log("Add Event button clicked");
+                setIsNewEventDialogOpen(true);
+              }}
+            >
               <Plus className="mr-2 h-4 w-4" />
               Add Event
             </Button>

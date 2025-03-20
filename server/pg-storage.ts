@@ -86,11 +86,30 @@ export class PostgresStorage implements IStorage {
 
   async createEvent(event: InsertEvent & { createdById: number }): Promise<Event> {
     try {
+      // Process date fields
+      const processedEvent = { ...event };
+      
+      // Handle date conversion
+      if (typeof event.date === 'string') {
+        log(`Converting date string to Date object: ${event.date}`, 'pg-storage');
+        processedEvent.date = new Date(event.date);
+      }
+      
+      // Handle endDate conversion
+      if (typeof event.endDate === 'string') {
+        log(`Converting endDate string to Date object: ${event.endDate}`, 'pg-storage');
+        processedEvent.endDate = new Date(event.endDate);
+      }
+      
+      log(`Creating event with processed data: ${JSON.stringify(processedEvent)}`, 'pg-storage');
+      
       // Need to cast as array to fix type issue with drizzle-orm
-      const result = await db.insert(events).values([event as any]).returning();
+      const result = await db.insert(events).values([processedEvent as any]).returning();
+      log(`Event created successfully: ${JSON.stringify(result[0])}`, 'pg-storage');
       return result[0];
     } catch (error) {
       log(`Error creating event: ${error}`, 'pg-storage');
+      console.error('Full error:', error);
       throw error;
     }
   }
