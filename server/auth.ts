@@ -43,11 +43,19 @@ export function setupAuth(app: Express) {
   passport.use(
     new LocalStrategy(async (username, password, done) => {
       const user = await global.appStorage.getUserByUsername(username);
+      
+      // Kullanıcı bulunamadıysa veya şifre eşleşmiyorsa
       if (!user || !(await comparePasswords(password, user.password))) {
         return done(null, false);
-      } else {
-        return done(null, user);
       }
+      
+      // Kullanıcı pasif durumda ise giriş engelle
+      if (user.isApproved && user.isActive === false) {
+        return done(null, false, { message: "Hesabınız pasif durumda. Lütfen yönetici ile iletişime geçin." });
+      }
+      
+      // Tüm kontroller geçildi, kullanıcı giriş yapabilir
+      return done(null, user);
     }),
   );
 

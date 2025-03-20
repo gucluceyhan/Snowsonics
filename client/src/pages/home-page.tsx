@@ -53,13 +53,6 @@ export default function HomePage() {
       <main className="container mx-auto px-4 py-8">
         <div className="space-y-8">
           <div className="text-center max-w-2xl mx-auto">
-            <div className="w-40 h-40 mx-auto mb-6 bg-background rounded-full">
-              <img 
-                src="/assets/new_whatsapp_image.jpg"
-                alt="Logo" 
-                className="h-40 w-40 rounded-full"
-              />
-            </div>
             <h1 className="text-4xl font-bold text-[#914199]">
               Hoş geldin, {user?.firstName}!
             </h1>
