@@ -8,19 +8,35 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { User, LogOut } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
 export function Navbar() {
   const { user, logoutMutation } = useAuth();
+  
+  // Fetch site settings to get the logo
+  const { data: settings } = useQuery({
+    queryKey: ["/api/admin/site-settings"],
+    enabled: true,
+  });
 
+  // Determine which logo to use
+  const logoUrl = settings?.logoUrl || "/assets/new_whatsapp_image.jpg";
+  
   return (
     <nav className="border-b bg-background">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <Link href="/">
           <a className="flex items-center">
             <img
-              src="/assets/new_whatsapp_image.jpg"
+              src={logoUrl}
               alt="Logo"
               className="h-10 w-auto"
+              onError={(e) => {
+                // If the logo fails to load, fall back to the default
+                const target = e.target as HTMLImageElement;
+                target.src = "/assets/new_whatsapp_image.jpg";
+                console.log("Logo image failed to load, falling back to default");
+              }}
             />
           </a>
         </Link>

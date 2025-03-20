@@ -9,9 +9,16 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertUserSchema, type InsertUser } from "@shared/schema";
 import { Redirect } from "wouter";
 import { Loader2 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
 export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
+  
+  // Fetch site settings to get the logo
+  const { data: settings } = useQuery({
+    queryKey: ["/api/admin/site-settings"],
+    enabled: true,
+  });
 
   const loginForm = useForm({
     defaultValues: {
@@ -45,9 +52,15 @@ export default function AuthPage() {
         <div className="space-y-6">
           <div className="flex flex-col items-center mb-8">
             <img 
-              src="/assets/new_whatsapp_image.jpg"
+              src={settings?.logoUrl || "/assets/new_whatsapp_image.jpg"}
               alt="Logo" 
               className="h-40 w-40 rounded-full"
+              onError={(e) => {
+                // If the logo fails to load, fall back to the default
+                const target = e.target as HTMLImageElement;
+                target.src = "/assets/new_whatsapp_image.jpg";
+                console.log("Logo image failed to load, falling back to default");
+              }}
             />
           </div>
           <h1 className="text-4xl font-bold text-[#914199]">
