@@ -82,8 +82,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin routes
   app.get("/api/admin/users", requireAdmin, async (req, res) => {
     const users = await storage.getAllUsers();
-    const approvedUsers = users.filter(user => user.isApproved);
-    res.json(approvedUsers);
+    res.json(users);
   });
 
   app.post("/api/admin/users/:id/approve", requireAdmin, async (req, res) => {
