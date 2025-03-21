@@ -7,80 +7,117 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { User, LogOut } from "lucide-react";
+import { User, LogOut, Home, Menu } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { useState } from "react";
 
 export function Navbar() {
   const { user, logoutMutation } = useAuth();
-  
-  // Fetch site settings to get the logo
-  const { data: settings } = useQuery({
-    queryKey: ["/api/site-settings"],
-    enabled: true,
-  });
-
-  // Determine which logo to use
-  const logoUrl = settings?.logoUrl || "/assets/new_whatsapp_image.jpg";
+  const isMobile = useIsMobile();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
   return (
-    <nav className="border-b bg-background">
+    <nav className="border-b bg-background sticky top-0 z-50">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <Link href="/">
           <div className="flex items-center cursor-pointer">
-            <img
-              src={logoUrl}
-              alt="Logo"
-              className="h-10 w-auto"
-              onError={(e) => {
-                // If the logo fails to load, fall back to the default
-                const target = e.target as HTMLImageElement;
-                target.src = "/assets/new_whatsapp_image.jpg";
-                console.log("Logo image failed to load, falling back to default");
-              }}
-            />
+            <Button variant="ghost" size="icon" className="p-0">
+              <Home className="h-6 w-6 text-primary" />
+            </Button>
           </div>
         </Link>
 
-        <div className="flex items-center gap-4">
-          {user?.role === "admin" && (
-            <div className="flex gap-2">
-              <Link href="/admin/site-settings">
-                <Button variant="outline">Site Ayarları</Button>
-              </Link>
-              <Link href="/admin/users">
-                <Button variant="outline">Kullanıcı Yönetimi</Button>
-              </Link>
-              <Link href="/admin/events">
-                <Button variant="outline">Etkinlik Yönetimi</Button>
-              </Link>
-            </div>
-          )}
+        {/* Mobile menu button */}
+        {isMobile && (
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="md:hidden" 
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          >
+            <Menu className="h-6 w-6" />
+          </Button>
+        )}
 
-          <Link href="/participations">
-            <Button variant="outline">Katılımlarım</Button>
-          </Link>
+        {/* Desktop navigation */}
+        {!isMobile && (
+          <div className="flex items-center gap-2">
+            {user?.role === "admin" && (
+              <>
+                <Link href="/admin/site-settings">
+                  <Button variant="outline" size="sm">Site Ayarları</Button>
+                </Link>
+                <Link href="/admin/users">
+                  <Button variant="outline" size="sm">Kullanıcı Yönetimi</Button>
+                </Link>
+                <Link href="/admin/events">
+                  <Button variant="outline" size="sm">Etkinlik Yönetimi</Button>
+                </Link>
+              </>
+            )}
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <User className="h-5 w-5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <Link href="/profile">
-                <DropdownMenuItem>
-                  <User className="mr-2 h-4 w-4" />
-                  Profil
+            <Link href="/participations">
+              <Button variant="outline" size="sm">Katılımlarım</Button>
+            </Link>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <User className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <Link href="/profile">
+                  <DropdownMenuItem>
+                    <User className="mr-2 h-4 w-4" />
+                    Profil
+                  </DropdownMenuItem>
+                </Link>
+                <DropdownMenuItem onClick={() => logoutMutation.mutate()}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Çıkış Yap
                 </DropdownMenuItem>
-              </Link>
-              <DropdownMenuItem onClick={() => logoutMutation.mutate()}>
-                <LogOut className="mr-2 h-4 w-4" />
-                Çıkış Yap
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        )}
       </div>
+
+      {/* Mobile navigation menu */}
+      {isMobile && mobileMenuOpen && (
+        <div className="px-4 py-2 bg-background border-t flex overflow-x-auto no-scrollbar">
+          <div className="flex space-x-2 items-center">
+            {user?.role === "admin" && (
+              <>
+                <Link href="/admin/site-settings">
+                  <Button variant="outline" size="sm">Site Ayarları</Button>
+                </Link>
+                <Link href="/admin/users">
+                  <Button variant="outline" size="sm">Kullanıcı Yönetimi</Button>
+                </Link>
+                <Link href="/admin/events">
+                  <Button variant="outline" size="sm">Etkinlik Yönetimi</Button>
+                </Link>
+              </>
+            )}
+            <Link href="/participations">
+              <Button variant="outline" size="sm">Katılımlarım</Button>
+            </Link>
+            <Link href="/profile">
+              <Button variant="outline" size="sm">Profil</Button>
+            </Link>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => logoutMutation.mutate()}
+              className="whitespace-nowrap"
+            >
+              Çıkış Yap
+            </Button>
+          </div>
+        </div>
+      )}
     </nav>
   );
 }

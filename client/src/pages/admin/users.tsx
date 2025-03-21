@@ -190,7 +190,7 @@ export default function UsersPage() {
       
       <main className="container mx-auto px-4 py-8">
         <div className="space-y-8">
-          <div className="flex items-start justify-between">
+          <div className="flex items-center justify-between">
             <div>
               <h1 className="text-4xl font-bold">Kullanıcı Yönetimi</h1>
               <p className="text-muted-foreground mt-2">
