@@ -17,6 +17,7 @@ import { ImageUpload } from "@/components/ui/image-upload";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import { useLanguage } from "@/hooks/use-language";
 
 function rgbToHex(r: number, g: number, b: number) {
   return "#" + [r, g, b].map(x => {
@@ -36,6 +37,7 @@ function hexToRgb(hex: string) {
 
 export default function SiteSettingsPage() {
   const { toast } = useToast();
+  const { t } = useLanguage();
   const { data: settings } = useQuery<SiteSettings>({
     queryKey: ["/api/admin/site-settings"],
   });
@@ -69,15 +71,15 @@ export default function SiteSettingsPage() {
       console.log("Site settings updated successfully:", data);
       queryClient.invalidateQueries({ queryKey: ["/api/admin/site-settings"] });
       toast({
-        title: "Ayarlar güncellendi",
-        description: "Site ayarları başarıyla güncellendi",
+        title: t.common.success,
+        description: t.siteSettings.settingsSaved,
       });
     },
     onError: (error) => {
       console.error("Error updating site settings:", error);
       toast({
-        title: "Hata",
-        description: `Ayarlar güncellenirken bir hata oluştu: ${error.message}`,
+        title: t.common.error,
+        description: `${t.errors.genericError}: ${error.message}`,
         variant: "destructive",
       });
     }
@@ -93,9 +95,9 @@ export default function SiteSettingsPage() {
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto space-y-8">
           <div>
-            <h1 className="text-4xl font-bold">Site Ayarları</h1>
+            <h1 className="text-4xl font-bold">{t.siteSettings.title}</h1>
             <p className="text-muted-foreground mt-2">
-              Site görünümünü ve renklerini buradan yönetebilirsiniz
+              {t.siteSettings.subtitle}
             </p>
           </div>
 
@@ -106,7 +108,7 @@ export default function SiteSettingsPage() {
                 name="logoUrl"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Logo</FormLabel>
+                    <FormLabel>{t.siteSettings.logoUrl}</FormLabel>
                     <FormControl>
                       <ImageUpload
                         value={field.value ? [field.value] : []}
@@ -125,7 +127,7 @@ export default function SiteSettingsPage() {
                   name="primaryColor"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Ana Renk (RGB: {primaryRgb?.r}, {primaryRgb?.g}, {primaryRgb?.b})</FormLabel>
+                      <FormLabel>{t.siteSettings.primaryColor} (RGB: {primaryRgb?.r}, {primaryRgb?.g}, {primaryRgb?.b})</FormLabel>
                       <FormControl>
                         <div className="flex gap-2">
                           <Input type="color" {...field} />
@@ -142,7 +144,7 @@ export default function SiteSettingsPage() {
                   name="secondaryColor"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>İkincil Renk (RGB: {secondaryRgb?.r}, {secondaryRgb?.g}, {secondaryRgb?.b})</FormLabel>
+                      <FormLabel>{t.siteSettings.secondaryColor || "İkincil Renk"} (RGB: {secondaryRgb?.r}, {secondaryRgb?.g}, {secondaryRgb?.b})</FormLabel>
                       <FormControl>
                         <div className="flex gap-2">
                           <Input type="color" {...field} />
@@ -156,7 +158,7 @@ export default function SiteSettingsPage() {
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Önizleme</h3>
+                <h3 className="text-lg font-semibold">{t.common.preview || "Önizleme"}</h3>
                 <div className="p-6 border rounded-lg space-y-4">
                   <div className="flex items-center justify-center">
                     <img 
@@ -182,7 +184,7 @@ export default function SiteSettingsPage() {
                 {mutation.isPending && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
-                Ayarları Kaydet
+                {t.common.save}
               </Button>
             </form>
           </Form>
