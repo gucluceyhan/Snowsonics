@@ -18,6 +18,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { useLanguage } from "@/hooks/use-language";
+import { ContextualTooltip } from "@/components/ui/contextual-tooltip";
 
 function rgbToHex(r: number, g: number, b: number) {
   return "#" + [r, g, b].map(x => {

@@ -9,11 +9,13 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { User, LogOut, Home, Menu, Globe } from "lucide-react";
+import { User, LogOut, Home, Menu, Globe, HelpCircle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useState } from "react";
 import { Language } from "@/i18n";
+import { ContextualTooltip } from "@/components/ui/contextual-tooltip";
+import { TooltipResetButton } from "@/components/ui/tooltip-reset-button";
 
 export function Navbar() {
   const { user, logoutMutation } = useAuth();
@@ -68,17 +70,26 @@ export function Navbar() {
             <Link href="/participations">
               <Button variant="outline" size="sm">{t.nav.participations}</Button>
             </Link>
+            
+            <TooltipResetButton />
 
             {/* Language toggle button */}
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={toggleLanguage}
-              className="mr-1"
+            <ContextualTooltip 
+              id="language-switcher" 
+              content={t.tooltips.languageSwitcher}
+              position="bottom"
+              showOnce={true}
             >
-              <Globe className="h-5 w-5" />
-              <span className="ml-1 text-xs font-medium">{language.toUpperCase()}</span>
-            </Button>
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={toggleLanguage}
+                className="mr-1"
+              >
+                <Globe className="h-5 w-5" />
+                <span className="ml-1 text-xs font-medium">{language.toUpperCase()}</span>
+              </Button>
+            </ContextualTooltip>
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
