@@ -1,4 +1,5 @@
 import { useAuth } from "@/hooks/use-auth";
+import { useLanguage } from "@/hooks/use-language";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import {
@@ -6,16 +7,23 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { User, LogOut, Home, Menu } from "lucide-react";
+import { User, LogOut, Home, Menu, Globe } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useState } from "react";
+import { Language } from "@/i18n";
 
 export function Navbar() {
   const { user, logoutMutation } = useAuth();
+  const { language, setLanguage, t } = useLanguage();
   const isMobile = useIsMobile();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const toggleLanguage = () => {
+    setLanguage(language === 'tr' ? 'en' : 'tr');
+  };
   
   return (
     <nav className="border-b bg-background sticky top-0 z-50">
@@ -46,20 +54,31 @@ export function Navbar() {
             {user?.role === "admin" && (
               <>
                 <Link href="/admin/site-settings">
-                  <Button variant="outline" size="sm">Site Ayarları</Button>
+                  <Button variant="outline" size="sm">{t.nav.siteSettings}</Button>
                 </Link>
                 <Link href="/admin/users">
-                  <Button variant="outline" size="sm">Kullanıcı Yönetimi</Button>
+                  <Button variant="outline" size="sm">{t.nav.users}</Button>
                 </Link>
                 <Link href="/admin/events">
-                  <Button variant="outline" size="sm">Etkinlik Yönetimi</Button>
+                  <Button variant="outline" size="sm">{t.nav.events}</Button>
                 </Link>
               </>
             )}
 
             <Link href="/participations">
-              <Button variant="outline" size="sm">Katılımlarım</Button>
+              <Button variant="outline" size="sm">{t.nav.participations}</Button>
             </Link>
+
+            {/* Language toggle button */}
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={toggleLanguage}
+              className="mr-1"
+            >
+              <Globe className="h-5 w-5" />
+              <span className="ml-1 text-xs font-medium">{language.toUpperCase()}</span>
+            </Button>
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -71,12 +90,18 @@ export function Navbar() {
                 <Link href="/profile">
                   <DropdownMenuItem>
                     <User className="mr-2 h-4 w-4" />
-                    Profil
+                    {t.nav.myProfile}
                   </DropdownMenuItem>
                 </Link>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={toggleLanguage}>
+                  <Globe className="mr-2 h-4 w-4" />
+                  {language === 'tr' ? 'English' : 'Türkçe'}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => logoutMutation.mutate()}>
                   <LogOut className="mr-2 h-4 w-4" />
-                  Çıkış Yap
+                  {t.auth.logout}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -91,29 +116,37 @@ export function Navbar() {
             {user?.role === "admin" && (
               <>
                 <Link href="/admin/site-settings">
-                  <Button variant="outline" size="sm">Site Ayarları</Button>
+                  <Button variant="outline" size="sm">{t.nav.siteSettings}</Button>
                 </Link>
                 <Link href="/admin/users">
-                  <Button variant="outline" size="sm">Kullanıcı Yönetimi</Button>
+                  <Button variant="outline" size="sm">{t.nav.users}</Button>
                 </Link>
                 <Link href="/admin/events">
-                  <Button variant="outline" size="sm">Etkinlik Yönetimi</Button>
+                  <Button variant="outline" size="sm">{t.nav.events}</Button>
                 </Link>
               </>
             )}
             <Link href="/participations">
-              <Button variant="outline" size="sm">Katılımlarım</Button>
+              <Button variant="outline" size="sm">{t.nav.participations}</Button>
             </Link>
             <Link href="/profile">
-              <Button variant="outline" size="sm">Profil</Button>
+              <Button variant="outline" size="sm">{t.nav.myProfile}</Button>
             </Link>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={toggleLanguage}
+              className="whitespace-nowrap"
+            >
+              {language === 'tr' ? 'EN' : 'TR'}
+            </Button>
             <Button 
               variant="outline" 
               size="sm"
               onClick={() => logoutMutation.mutate()}
               className="whitespace-nowrap"
             >
-              Çıkış Yap
+              {t.auth.logout}
             </Button>
           </div>
         </div>
