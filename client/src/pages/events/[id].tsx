@@ -13,6 +13,10 @@ import cn from 'classnames';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { Container } from "@/components/ui/container";
+import { Section } from "@/components/ui/section";
+import { Grid, GridItem } from "@/components/ui/grid";
+import { Spacer } from "@/components/ui/spacer";
 
 export default function EventDetailPage() {
   const { id } = useParams();
@@ -89,47 +93,47 @@ export default function EventDetailPage() {
     <div className="min-h-screen bg-background">
       <Navbar />
 
-      <main className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto space-y-8">
+      <Container>
+        <Section size="md" className="max-w-4xl mx-auto">
           {event.images?.length > 0 && (
-            <div className="grid grid-cols-1 gap-4">
-              <div className="aspect-video overflow-hidden rounded-lg bg-muted">
-                <img 
-                  src={event.images[0]}
-                  alt={event.title}
-                  className="object-cover w-full h-full"
-                />
-              </div>
+            <div className="aspect-video overflow-hidden rounded-lg bg-muted mb-8">
+              <img 
+                src={event.images[0]}
+                alt={event.title}
+                className="object-cover w-full h-full"
+              />
             </div>
           )}
 
-          <div className="space-y-4">
+          <div className="space-y-4 mb-8">
             <h1 className="text-4xl font-bold">{event.title}</h1>
 
-            <div className="flex flex-wrap gap-4 text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <Calendar className="h-5 w-5" />
-                {format(new Date(event.date), "PPP")} - {format(new Date(event.endDate), "PPP")}
-              </div>
+            <Grid cols={1} colsMd={2} colsLg={3} gap={4} className="text-muted-foreground">
+              <GridItem className="flex items-center gap-2">
+                <Calendar className="h-5 w-5 flex-shrink-0" />
+                <span>{format(new Date(event.date), "PPP")} - {format(new Date(event.endDate), "PPP")}</span>
+              </GridItem>
 
-              <div className="flex items-center gap-2">
-                <MapPin className="h-5 w-5" />
-                {event.location || "Konum belirtilmemiş"}
-              </div>
+              <GridItem className="flex items-center gap-2">
+                <MapPin className="h-5 w-5 flex-shrink-0" />
+                <span>{event.location || "Konum belirtilmemiş"}</span>
+              </GridItem>
 
               {myParticipation && (
-                <div className="flex items-center gap-2">
-                  <AlertCircle className="h-5 w-5" />
+                <GridItem className="flex items-center gap-2">
+                  <AlertCircle className="h-5 w-5 flex-shrink-0" />
                   <span>
                     Durum:{" "}
                     <Badge variant={myParticipation.isApproved ? "default" : "secondary"}>
                       {myParticipation.isApproved ? "Onaylandı" : "Admin Onayı Bekliyor"}
                     </Badge>
                   </span>
-                </div>
+                </GridItem>
               )}
-            </div>
+            </Grid>
 
+            <Spacer size="md" />
+            
             <div 
               className="prose prose-gray dark:prose-invert max-w-none"
               dangerouslySetInnerHTML={{ __html: event.content as string }}
@@ -137,9 +141,9 @@ export default function EventDetailPage() {
           </div>
 
           {user?.isApproved && (
-            <div className="flex flex-col gap-4 pt-8 border-t">
+            <div className="pt-8 border-t">
               {myParticipation?.isApproved && !isEditing ? (
-                <div className="space-y-4">
+                <div className="space-y-6">
                   <div className="flex items-center justify-between">
                     <Badge variant="default">Katılımınız Onaylandı</Badge>
                     <Button
@@ -151,55 +155,60 @@ export default function EventDetailPage() {
                       Düzenle
                     </Button>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <span className="text-sm text-muted-foreground">Oda Tipi</span>
+                  
+                  <Grid cols={1} colsMd={2} gap={4}>
+                    <GridItem>
+                      <span className="text-sm text-muted-foreground block">Oda Tipi</span>
                       <p>{myParticipation.roomType === 'single' ? 'Tek Kişilik' : 
                         myParticipation.roomType === 'double' ? 'İki Kişilik' : 
                         myParticipation.roomType === 'triple' ? 'Üç Kişilik' : 
                         'Dört Kişilik'} Oda</p>
-                    </div>
-                    <div>
-                      <span className="text-sm text-muted-foreground">Kişi Sayısı</span>
+                    </GridItem>
+                    <GridItem>
+                      <span className="text-sm text-muted-foreground block">Kişi Sayısı</span>
                       <p>{myParticipation.roomOccupancy} Kişi</p>
-                    </div>
-                  </div>
+                    </GridItem>
+                  </Grid>
                 </div>
               ) : (
-                <>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Select 
-                      value={roomType || ''} 
-                      onValueChange={(value) => setRoomType(value)}
-                      disabled={myParticipation?.isApproved && !isEditing}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Oda tipi seçin" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="single">Tek Kişilik Oda</SelectItem>
-                        <SelectItem value="double">İki Kişilik Oda</SelectItem>
-                        <SelectItem value="triple">Üç Kişilik Oda</SelectItem>
-                        <SelectItem value="quad">Dört Kişilik Oda</SelectItem>
-                      </SelectContent>
-                    </Select>
+                <div className="space-y-6">
+                  <Grid cols={1} colsMd={2} gap={4}>
+                    <GridItem>
+                      <Select 
+                        value={roomType || ''} 
+                        onValueChange={(value) => setRoomType(value)}
+                        disabled={myParticipation?.isApproved && !isEditing}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Oda tipi seçin" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="single">Tek Kişilik Oda</SelectItem>
+                          <SelectItem value="double">İki Kişilik Oda</SelectItem>
+                          <SelectItem value="triple">Üç Kişilik Oda</SelectItem>
+                          <SelectItem value="quad">Dört Kişilik Oda</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </GridItem>
 
-                    <Select 
-                      value={roomOccupancy?.toString() || ''} 
-                      onValueChange={(value) => setRoomOccupancy(parseInt(value))}
-                      disabled={myParticipation?.isApproved && !isEditing}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Kişi sayısı seçin" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="1">1 Kişi</SelectItem>
-                        <SelectItem value="2">2 Kişi</SelectItem>
-                        <SelectItem value="3">3 Kişi</SelectItem>
-                        <SelectItem value="4">4 Kişi</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                    <GridItem>
+                      <Select 
+                        value={roomOccupancy?.toString() || ''} 
+                        onValueChange={(value) => setRoomOccupancy(parseInt(value))}
+                        disabled={myParticipation?.isApproved && !isEditing}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Kişi sayısı seçin" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">1 Kişi</SelectItem>
+                          <SelectItem value="2">2 Kişi</SelectItem>
+                          <SelectItem value="3">3 Kişi</SelectItem>
+                          <SelectItem value="4">4 Kişi</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </GridItem>
+                  </Grid>
 
                   <Button
                     className="w-full"
@@ -222,12 +231,12 @@ export default function EventDetailPage() {
                   >
                     {isEditing ? "Değişiklikleri Kaydet" : "Katılıyorum"}
                   </Button>
-                </>
+                </div>
               )}
             </div>
           )}
-        </div>
-      </main>
+        </Section>
+      </Container>
     </div>
   );
 }

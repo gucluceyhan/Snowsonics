@@ -54,9 +54,9 @@ export default function HomePage() {
     <div className="min-h-screen bg-background">
       <Navbar />
 
-      <main className="container mx-auto px-4 py-8">
-        <div className="space-y-8">
-          <div className="text-center max-w-2xl mx-auto">
+      <Container>
+        <Section size="md">
+          <div className="text-center">
             <h1 className="text-4xl font-bold text-[#914199]">
               Hoş geldin, {user?.firstName}!
             </h1>
@@ -67,6 +67,8 @@ export default function HomePage() {
             </p>
           </div>
 
+          <Spacer size="lg" />
+
           <Tabs defaultValue="list" className="space-y-4">
             <TabsList className="mx-auto">
               <TabsTrigger value="list">Liste Görünümü</TabsTrigger>
@@ -74,26 +76,33 @@ export default function HomePage() {
             </TabsList>
 
             <TabsContent value="list">
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              <Grid cols={1} colsSm={2} colsLg={3} gap={6}>
                 {futureEvents.map((event) => (
-                  <EventCard key={event.id} event={event} />
+                  <GridItem key={event.id}>
+                    <EventCard event={event} />
+                  </GridItem>
                 ))}
-              </div>
+                {futureEvents.length === 0 && (
+                  <GridItem className="col-span-full text-center p-8">
+                    <p className="text-muted-foreground">Yaklaşan etkinlik bulunmamaktadır.</p>
+                  </GridItem>
+                )}
+              </Grid>
             </TabsContent>
 
             <TabsContent value="calendar">
-              <div className="flex flex-col lg:flex-row gap-8">
-                <div className="lg:w-1/2">
+              <Grid cols={1} colsLg={2} gap={8}>
+                <GridItem>
                   <Calendar
                     mode="single"
                     selected={selectedDate}
                     onSelect={setSelectedDate}
-                    className="rounded-md border"
+                    className="rounded-md border mx-auto max-w-full"
                     modifiers={modifiers}
                     modifiersStyles={modifiersStyles}
                   />
-                </div>
-                <div className="lg:w-1/2">
+                </GridItem>
+                <GridItem>
                   <h2 className="text-xl font-semibold mb-4">
                     {selectedDate ? format(selectedDate, "PPP") : "Seçili tarihte"} etkinlikler
                   </h2>
@@ -111,13 +120,20 @@ export default function HomePage() {
                         <EventCard key={event.id} event={event} variant="horizontal" />
                       ))
                     }
+                    {(selectedDate && futureEvents.filter(event => 
+                      isWithinInterval(selectedDate, {
+                        start: new Date(event.date),
+                        end: new Date(event.endDate)
+                      })).length === 0) && (
+                      <p className="text-muted-foreground">Bu tarihte etkinlik bulunmamaktadır.</p>
+                    )}
                   </div>
-                </div>
-              </div>
+                </GridItem>
+              </Grid>
             </TabsContent>
           </Tabs>
-        </div>
-      </main>
+        </Section>
+      </Container>
     </div>
   );
 }
