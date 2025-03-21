@@ -77,6 +77,10 @@ export interface Translations {
     admin: string;
     user: string;
     approveUser: string;
+    approvedMessage: string;
+    roleUpdated: string;
+    activatedMessage: string;
+    deactivatedMessage: string;
     makeAdmin: string;
     makeUser: string;
     deactivateUser: string;

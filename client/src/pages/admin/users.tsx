@@ -22,9 +22,13 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Shield, MoreVertical, CheckCircle, UserCheck, UserCog, AlertCircle, UserX, UserPlus, Download } from "lucide-react";
 import * as XLSX from "xlsx";
+import { useLanguage } from "@/hooks/use-language";
+import { Container } from "@/components/ui/container";
+import { Section } from "@/components/ui/section";
 
 export default function UsersPage() {
   const { toast } = useToast();
+  const { t } = useLanguage();
   const { data: users = [] } = useQuery<User[]>({ 
     queryKey: ["/api/admin/users"]
   });
@@ -40,8 +44,8 @@ export default function UsersPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       toast({
-        title: "Kullanıcı onaylandı",
-        description: "Kullanıcı artık etkinliklere katılabilir",
+        title: t.users.approveUser,
+        description: t.users.approvedMessage,
       });
     },
   });
@@ -53,8 +57,8 @@ export default function UsersPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       toast({
-        title: "Rol güncellendi",
-        description: "Kullanıcı rolü başarıyla güncellendi",
+        title: t.common.success,
+        description: t.users.roleUpdated || "Kullanıcı rolü başarıyla güncellendi",
       });
     },
   });
@@ -71,10 +75,10 @@ export default function UsersPage() {
       const isNowActive = user ? !user.isActive : false;
       
       toast({
-        title: isNowActive ? "Kullanıcı aktifleştirildi" : "Kullanıcı pasifleştirildi",
+        title: isNowActive ? t.users.activateUser : t.users.deactivateUser,
         description: isNowActive 
-          ? "Kullanıcı artık sisteme giriş yapabilir" 
-          : "Kullanıcı artık sisteme giriş yapamaz, admin ile iletişime geçmelidir",
+          ? t.users.activatedMessage || "Kullanıcı artık sisteme giriş yapabilir" 
+          : t.users.deactivatedMessage || "Kullanıcı artık sisteme giriş yapamaz, admin ile iletişime geçmelidir",
       });
     },
   });
@@ -94,12 +98,12 @@ export default function UsersPage() {
         {user.isApproved ? (
           <Badge className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200">
             <UserCheck className="w-3 h-3 mr-1" />
-            Onaylandı
+            {t.users.approved}
           </Badge>
         ) : (
           <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200">
             <UserCog className="w-3 h-3 mr-1" />
-            Onay Bekliyor
+            {t.users.pending}
           </Badge>
         )}
         
@@ -109,12 +113,12 @@ export default function UsersPage() {
             {user.isActive ? (
               <Badge variant="outline" className="bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-300 border-green-200 dark:border-green-800">
                 <UserPlus className="w-3 h-3 mr-1" />
-                Aktif
+                {t.users.active}
               </Badge>
             ) : (
               <Badge variant="outline" className="bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-300 border-red-200 dark:border-red-800">
                 <UserX className="w-3 h-3 mr-1" />
-                Pasif
+                {t.users.inactive}
               </Badge>
             )}
           </div>
@@ -124,7 +128,7 @@ export default function UsersPage() {
         <Badge 
           variant={user.role === "admin" ? "destructive" : "outline"}
         >
-          {user.role === "admin" ? "Yönetici" : "Kullanıcı"}
+          {user.role === "admin" ? t.users.admin : t.users.user}
         </Badge>
       </TableCell>
       <TableCell>
