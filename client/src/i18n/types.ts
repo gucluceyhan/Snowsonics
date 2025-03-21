@@ -132,6 +132,12 @@ export interface Translations {
     participationUpdated: string;
     selectRoomType: string;
     selectOccupancy: string;
+    yourParticipations: string;
+    upcomingEvents: string;
+    pastEvents: string;
+    noUpcomingParticipations: string;
+    noPastParticipations: string;
+    locationNotSpecified: string;
   };
 
   // Profile

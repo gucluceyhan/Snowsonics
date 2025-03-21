@@ -126,6 +126,12 @@ export const tr: Translations = {
     participationUpdated: 'Güncelleme talebi gönderildi',
     selectRoomType: 'Oda tipi seçin',
     selectOccupancy: 'Kişi sayısı seçin',
+    yourParticipations: 'Katıldığınız ve katılmayı planladığınız etkinlikler',
+    upcomingEvents: 'Yaklaşan Etkinlikler',
+    pastEvents: 'Geçmiş Etkinlikler',
+    noUpcomingParticipations: 'Yaklaşan etkinlik katılımınız bulunmamaktadır.',
+    noPastParticipations: 'Geçmiş etkinlik katılımınız bulunmamaktadır.',
+    locationNotSpecified: 'Konum belirtilmemiş',
   },
 
   profile: {

@@ -126,6 +126,12 @@ export const en: Translations = {
     participationUpdated: 'Update request submitted',
     selectRoomType: 'Select room type',
     selectOccupancy: 'Select number of people',
+    yourParticipations: 'Your current and planned event participations',
+    upcomingEvents: 'Upcoming Events',
+    pastEvents: 'Past Events',
+    noUpcomingParticipations: 'You have no upcoming event participations.',
+    noPastParticipations: 'You have no past event participations.',
+    locationNotSpecified: 'Location not specified',
   },
 
   profile: {

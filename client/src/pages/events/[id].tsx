@@ -17,6 +17,7 @@ import { Container } from "@/components/ui/container";
 import { Section } from "@/components/ui/section";
 import { Grid, GridItem } from "@/components/ui/grid";
 import { Spacer } from "@/components/ui/spacer";
+import { useLanguage } from "@/hooks/use-language";
 
 export default function EventDetailPage() {
   const { id } = useParams();
