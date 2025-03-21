@@ -41,6 +41,7 @@ export const tr: Translations = {
     gotIt: 'Anladım',
     resetTooltips: 'Tüm ipuçlarını sıfırla',
     tooltipName: 'İpucu',
+    showHelpTips: 'Yardım İpuçlarını Göster',
   },
 
   auth: {

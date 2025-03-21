@@ -43,6 +43,7 @@ export interface Translations {
     gotIt: string;
     resetTooltips: string;
     tooltipName: string;
+    showHelpTips: string;
   };
 
   // Authentication

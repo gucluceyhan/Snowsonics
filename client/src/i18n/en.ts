@@ -41,6 +41,7 @@ export const en: Translations = {
     gotIt: 'Got it',
     resetTooltips: 'Reset all tooltips',
     tooltipName: 'Tooltip',
+    showHelpTips: 'Show Help Tips',
   },
 
   auth: {

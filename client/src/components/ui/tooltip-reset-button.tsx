@@ -27,7 +27,7 @@ export function TooltipResetButton({ className }: { className?: string }) {
       onClick={handleReset}
     >
       <HelpCircle className="mr-2 h-4 w-4" />
-      <span>Show Help Tips</span>
+      <span>{t.tooltips.showHelpTips}</span>
     </Button>
   );
 }

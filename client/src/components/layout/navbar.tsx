@@ -71,8 +71,6 @@ export function Navbar() {
               <Button variant="outline" size="sm">{t.nav.participations}</Button>
             </Link>
             
-            <TooltipResetButton />
-
             {/* Language toggle button */}
             <ContextualTooltip 
               id="language-switcher" 
