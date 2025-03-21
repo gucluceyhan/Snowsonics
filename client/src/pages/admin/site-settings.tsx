@@ -122,41 +122,48 @@ export default function SiteSettingsPage() {
                 )}
               />
 
-              <div className="grid gap-4 sm:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name="primaryColor"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t.siteSettings.primaryColor} (RGB: {primaryRgb?.r}, {primaryRgb?.g}, {primaryRgb?.b})</FormLabel>
-                      <FormControl>
-                        <div className="flex gap-2">
-                          <Input type="color" {...field} />
-                          <Input {...field} />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <ContextualTooltip
+                id="site-settings-color"
+                content={t.tooltips.siteSettingsColor}
+                position="top"
+                showOnce={true}
+              >
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <FormField
+                    control={form.control}
+                    name="primaryColor"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t.siteSettings.primaryColor} (RGB: {primaryRgb?.r}, {primaryRgb?.g}, {primaryRgb?.b})</FormLabel>
+                        <FormControl>
+                          <div className="flex gap-2">
+                            <Input type="color" {...field} />
+                            <Input {...field} />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                <FormField
-                  control={form.control}
-                  name="secondaryColor"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t.siteSettings.secondaryColor} (RGB: {secondaryRgb?.r}, {secondaryRgb?.g}, {secondaryRgb?.b})</FormLabel>
-                      <FormControl>
-                        <div className="flex gap-2">
-                          <Input type="color" {...field} />
-                          <Input {...field} />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+                  <FormField
+                    control={form.control}
+                    name="secondaryColor"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t.siteSettings.secondaryColor} (RGB: {secondaryRgb?.r}, {secondaryRgb?.g}, {secondaryRgb?.b})</FormLabel>
+                        <FormControl>
+                          <div className="flex gap-2">
+                            <Input type="color" {...field} />
+                            <Input {...field} />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </ContextualTooltip>
 
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">{t.common.preview}</h3>
