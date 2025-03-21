@@ -134,7 +134,7 @@ export default function EventForm({ event, onSuccess }: EventFormProps) {
                 <RichTextEditor
                   value={field.value}
                   onChange={field.onChange}
-                  placeholder="Etkinlik içeriğini giriniz..."
+                  placeholder={t.events.content}
                 />
               </FormControl>
               <FormMessage />
@@ -162,7 +162,7 @@ export default function EventForm({ event, onSuccess }: EventFormProps) {
                         {field.value ? (
                           format(new Date(field.value), "PPP")
                         ) : (
-                          <span>Tarih seçin</span>
+                          <span>{t.common.selectDate}</span>
                         )}
                         <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                       </Button>
@@ -203,7 +203,7 @@ export default function EventForm({ event, onSuccess }: EventFormProps) {
                         {field.value ? (
                           format(new Date(field.value), "PPP")
                         ) : (
-                          <span>Tarih seçin</span>
+                          <span>{t.common.selectDate}</span>
                         )}
                         <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                       </Button>
@@ -245,7 +245,7 @@ export default function EventForm({ event, onSuccess }: EventFormProps) {
           name="images"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t.events.images || "Fotoğraflar"}</FormLabel>
+              <FormLabel>{t.events.images}</FormLabel>
               <FormControl>
                 <ImageUpload
                   value={field.value}
@@ -266,7 +266,7 @@ export default function EventForm({ event, onSuccess }: EventFormProps) {
           {mutation.isPending && (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           )}
-          {event ? "Etkinliği Güncelle" : "Etkinlik Oluştur"}
+          {event ? t.events.editEvent : t.events.addEvent}
         </Button>
       </form>
     </Form>
