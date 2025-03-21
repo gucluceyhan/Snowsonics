@@ -46,7 +46,7 @@ export function Navbar() {
         <Link href="/">
           <div className="flex items-center cursor-pointer">
             <Button variant="ghost" size="icon" className="p-0">
-              <Home className="h-6 w-6 text-primary" />
+              <Home className="h-8 w-8 text-primary" />
             </Button>
           </div>
         </Link>
