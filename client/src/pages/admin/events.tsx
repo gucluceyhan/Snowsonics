@@ -39,6 +39,7 @@ export default function EventsPage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [showParticipants, setShowParticipants] = useState(false);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const { data: events = [] } = useQuery<Event[]>({ 
     queryKey: ["/api/events"]
@@ -51,11 +52,18 @@ export default function EventsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/events"] });
       toast({
-        title: "Event deleted",
-        description: "The event has been deleted successfully",
+        title: t.events.eventDeleted,
+        description: t.events.eventDeleted,
       });
       setIsDeleteDialogOpen(false);
     },
+    onError: (error: Error) => {
+      toast({
+        title: t.errors.genericError,
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   });
 
   const confirmDelete = (event: Event) => {
@@ -71,32 +79,39 @@ export default function EventsPage() {
         <div className="space-y-8">
           <div className="md:flex md:items-center md:justify-between block">
             <div className="mb-4 md:mb-0">
-              <h1 className="text-4xl font-bold">Event Management</h1>
+              <h1 className="text-4xl font-bold">{t.events.title}</h1>
               <p className="text-muted-foreground mt-2">
-                Create and manage organization events
+                {t.events.subtitle}
               </p>
             </div>
 
-            <Button 
-              onClick={() => {
-                console.log("Add Event button clicked");
-                setIsNewEventDialogOpen(true);
-              }}
-              className="w-full md:w-auto"
+            <ContextualTooltip
+              id="add-event-button"
+              content="Yeni etkinlik oluşturmak için tıklayın"
+              position="left"
+              showOnce={true}
             >
-              <Plus className="mr-2 h-4 w-4" />
-              Add Event
-            </Button>
+              <Button 
+                onClick={() => {
+                  console.log("Add Event button clicked");
+                  setIsNewEventDialogOpen(true);
+                }}
+                className="w-full md:w-auto"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                {t.events.addEvent}
+              </Button>
+            </ContextualTooltip>
           </div>
 
           <div className="rounded-md border">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Title</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Location</TableHead>
-                  <TableHead className="w-[150px]">Actions</TableHead>
+                  <TableHead>{t.events.eventTitle}</TableHead>
+                  <TableHead>{t.events.eventDate}</TableHead>
+                  <TableHead>{t.events.location}</TableHead>
+                  <TableHead className="w-[150px]">{t.users.actions}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -107,35 +122,56 @@ export default function EventsPage() {
                     <TableCell>{event.location}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            setSelectedEvent(event);
-                            setShowParticipants(true);
-                          }}
+                        <ContextualTooltip
+                          id="view-participants-button"
+                          content="Katılımcı listesini görüntüle"
+                          position="top"
+                          showOnce={true}
                         >
-                          <Users className="h-4 w-4" />
-                        </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              setSelectedEvent(event);
+                              setShowParticipants(true);
+                            }}
+                          >
+                            <Users className="h-4 w-4" />
+                          </Button>
+                        </ContextualTooltip>
 
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          onClick={() => {
-                            setSelectedEvent(event);
-                            setIsEditDialogOpen(true);
-                          }}
+                        <ContextualTooltip
+                          id="edit-event-button"
+                          content="Etkinlik bilgilerini düzenle"
+                          position="top"
+                          showOnce={true}
                         >
-                          <Edit className="h-4 w-4" />
-                        </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => {
+                              setSelectedEvent(event);
+                              setIsEditDialogOpen(true);
+                            }}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </ContextualTooltip>
 
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          onClick={() => confirmDelete(event)}
+                        <ContextualTooltip
+                          id="delete-event-button"
+                          content="Etkinliği sil"
+                          position="top"
+                          showOnce={true}
                         >
-                          <Trash className="h-4 w-4" />
-                        </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={() => confirmDelete(event)}
+                          >
+                            <Trash className="h-4 w-4" />
+                          </Button>
+                        </ContextualTooltip>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -149,7 +185,7 @@ export default function EventsPage() {
         <Dialog open={isNewEventDialogOpen} onOpenChange={setIsNewEventDialogOpen}>
           <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Create New Event</DialogTitle>
+              <DialogTitle>{t.events.addEvent}</DialogTitle>
             </DialogHeader>
             <EventForm 
               onSuccess={() => {
@@ -165,7 +201,7 @@ export default function EventsPage() {
           <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
             <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Edit Event</DialogTitle>
+                <DialogTitle>{t.events.editEvent}</DialogTitle>
               </DialogHeader>
               <EventForm 
                 event={selectedEvent}
@@ -182,7 +218,7 @@ export default function EventsPage() {
         <Dialog open={showParticipants} onOpenChange={setShowParticipants}>
           <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Participants - {selectedEvent?.title}</DialogTitle>
+              <DialogTitle>{t.events.participants} - {selectedEvent?.title}</DialogTitle>
             </DialogHeader>
             {selectedEvent && <ParticipantList eventId={selectedEvent.id} />}
           </DialogContent>
@@ -192,14 +228,13 @@ export default function EventsPage() {
         <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+              <AlertDialogTitle>{t.events.confirmDeleteTitle}</AlertDialogTitle>
               <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete the event
-                and remove it from our servers.
+                {t.events.confirmDeleteMessage}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogCancel>{t.common.cancel}</AlertDialogCancel>
               <AlertDialogAction
                 onClick={() => {
                   if (selectedEvent) {
@@ -207,7 +242,7 @@ export default function EventsPage() {
                   }
                 }}
               >
-                Delete
+                {t.common.delete}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
