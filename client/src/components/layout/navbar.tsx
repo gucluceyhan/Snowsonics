@@ -108,6 +108,20 @@ export function Navbar() {
                   {language === 'tr' ? 'English' : 'Türkçe'}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => {
+                  const { resetTooltips } = require('@/hooks/use-tooltips').useTooltips();
+                  const { toast } = require('@/hooks/use-toast').useToast();
+                  resetTooltips();
+                  toast({
+                    title: t.common.success,
+                    description: t.tooltips.gotIt,
+                    duration: 3000,
+                  });
+                }}>
+                  <HelpCircle className="mr-2 h-4 w-4" />
+                  {t.tooltips.showHelpTips}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => logoutMutation.mutate()}>
                   <LogOut className="mr-2 h-4 w-4" />
                   {t.auth.logout}
@@ -148,6 +162,23 @@ export function Navbar() {
               className="whitespace-nowrap"
             >
               {language === 'tr' ? 'EN' : 'TR'}
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => {
+                const { resetTooltips } = require('@/hooks/use-tooltips').useTooltips();
+                const { toast } = require('@/hooks/use-toast').useToast();
+                resetTooltips();
+                toast({
+                  title: t.common.success,
+                  description: t.tooltips.gotIt,
+                  duration: 3000,
+                });
+              }}
+              className="whitespace-nowrap"
+            >
+              {t.tooltips.showHelpTips}
             </Button>
             <Button 
               variant="outline" 
