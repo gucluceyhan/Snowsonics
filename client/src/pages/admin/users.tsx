@@ -190,8 +190,8 @@ export default function UsersPage() {
       
       <main className="container mx-auto px-4 py-8">
         <div className="space-y-8">
-          <div className="flex items-center justify-between">
-            <div>
+          <div className="md:flex md:items-center md:justify-between block">
+            <div className="mb-4 md:mb-0">
               <h1 className="text-4xl font-bold">Kullanıcı Yönetimi</h1>
               <p className="text-muted-foreground mt-2">
                 Yeni kullanıcıları onaylayın ve kullanıcı rollerini yönetin
@@ -200,7 +200,7 @@ export default function UsersPage() {
             
             <Button
               variant="default"
-              className="bg-primary hover:bg-primary/90"
+              className="bg-primary hover:bg-primary/90 w-full md:w-auto"
               onClick={() => {
                 // Excel verileri için uygun formatta bir dizi oluştur
                 const excelData = [

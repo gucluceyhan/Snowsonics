@@ -67,8 +67,8 @@ export default function EventsPage() {
 
       <main className="container mx-auto px-4 py-8">
         <div className="space-y-8">
-          <div className="flex items-center justify-between">
-            <div>
+          <div className="md:flex md:items-center md:justify-between block">
+            <div className="mb-4 md:mb-0">
               <h1 className="text-4xl font-bold">Event Management</h1>
               <p className="text-muted-foreground mt-2">
                 Create and manage organization events
@@ -80,6 +80,7 @@ export default function EventsPage() {
                 console.log("Add Event button clicked");
                 setIsNewEventDialogOpen(true);
               }}
+              className="w-full md:w-auto"
             >
               <Plus className="mr-2 h-4 w-4" />
               Add Event
