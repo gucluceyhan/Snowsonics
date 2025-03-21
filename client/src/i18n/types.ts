@@ -23,6 +23,7 @@ export interface Translations {
     welcome: string;
     selectedDate: string;
     noEventsOnDate: string;
+    selectDate: string;
   };
 
   // Authentication
@@ -96,6 +97,7 @@ export interface Translations {
     location: string;
     content: string;
     description: string;
+    images: string;
     listView: string;
     calendarView: string;
     eventsOn: string;

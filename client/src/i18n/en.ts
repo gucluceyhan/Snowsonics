@@ -22,6 +22,7 @@ export const en: Translations = {
     welcome: 'Welcome',
     selectedDate: 'Selected date',
     noEventsOnDate: 'No events on this date.',
+    selectDate: 'Select date',
   },
 
   auth: {
@@ -91,6 +92,7 @@ export const en: Translations = {
     location: 'Location',
     content: 'Content',
     description: 'Short Description',
+    images: 'Images',
     listView: 'List View',
     calendarView: 'Calendar View',
     eventsOn: 'events on',

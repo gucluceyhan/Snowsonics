@@ -245,7 +245,7 @@ export default function EventForm({ event, onSuccess }: EventFormProps) {
           name="images"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Fotoğraflar</FormLabel>
+              <FormLabel>{t.events.images || "Fotoğraflar"}</FormLabel>
               <FormControl>
                 <ImageUpload
                   value={field.value}

@@ -22,6 +22,7 @@ export const tr: Translations = {
     welcome: 'Hoş geldin',
     selectedDate: 'Seçili tarihte',
     noEventsOnDate: 'Bu tarihte etkinlik bulunmamaktadır.',
+    selectDate: 'Tarih seçin',
   },
 
   auth: {
@@ -91,6 +92,7 @@ export const tr: Translations = {
     location: 'Konum',
     content: 'İçerik',
     description: 'Kısa Açıklama',
+    images: 'Fotoğraflar',
     listView: 'Liste Görünümü',
     calendarView: 'Takvim Görünümü',
     eventsOn: 'etkinlikler',
