@@ -7,6 +7,10 @@ import { Calendar } from "@/components/ui/calendar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format, isWithinInterval } from "date-fns";
 import { useState } from "react";
+import { Container } from "@/components/ui/container";
+import { Section } from "@/components/ui/section";
+import { Grid, GridItem } from "@/components/ui/grid";
+import { Spacer } from "@/components/ui/spacer";
 
 export default function HomePage() {
   const { user } = useAuth();

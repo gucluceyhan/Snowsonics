@@ -13,6 +13,7 @@ import EventDetailPage from "@/pages/events/[id]";
 import ParticipationsPage from "@/pages/participations";
 import AdminSiteSettingsPage from "@/pages/admin/site-settings";
 import ProfilePage from "@/pages/profile";
+import GridDemo from "@/pages/grid-demo";
 
 function Router() {
   return (
@@ -25,6 +26,7 @@ function Router() {
       <ProtectedRoute path="/admin/events" component={AdminEventsPage} requireAdmin />
       <ProtectedRoute path="/admin/site-settings" component={AdminSiteSettingsPage} requireAdmin />
       <Route path="/auth" component={AuthPage} />
+      <Route path="/grid-demo" component={GridDemo} />
       <Route component={NotFound} />
     </Switch>
   );
