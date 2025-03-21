@@ -262,17 +262,17 @@ export default function UsersPage() {
             <div className="space-y-2">
               <h3 className="text-lg font-semibold text-yellow-600 dark:text-yellow-400 flex items-center">
                 <AlertCircle className="mr-2 h-5 w-5" />
-                Onay Bekleyen Kullanıcılar ({pendingUsers.length})
+                {t.users.pendingUsers} ({pendingUsers.length})
               </h3>
               <div className="rounded-md border border-yellow-200 dark:border-yellow-900 overflow-hidden">
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-yellow-50 dark:bg-yellow-950/40">
-                      <TableHead>Kullanıcı Adı</TableHead>
-                      <TableHead>İsim</TableHead>
-                      <TableHead>E-posta</TableHead>
-                      <TableHead>Durum</TableHead>
-                      <TableHead>Rol</TableHead>
+                      <TableHead>{t.users.username}</TableHead>
+                      <TableHead>{t.users.fullName}</TableHead>
+                      <TableHead>{t.users.email}</TableHead>
+                      <TableHead>{t.users.status}</TableHead>
+                      <TableHead>{t.users.role}</TableHead>
                       <TableHead className="w-[50px]"></TableHead>
                     </TableRow>
                   </TableHeader>
@@ -287,17 +287,17 @@ export default function UsersPage() {
           <div className="space-y-2">
             <h3 className="text-lg font-semibold text-green-600 dark:text-green-400 flex items-center">
               <UserCheck className="mr-2 h-5 w-5" />
-              Onaylanmış Kullanıcılar ({approvedUsers.length})
+              {t.users.approvedUsers} ({approvedUsers.length})
             </h3>
             <div className="rounded-md border overflow-hidden">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Kullanıcı Adı</TableHead>
-                    <TableHead>İsim</TableHead>
-                    <TableHead>E-posta</TableHead>
-                    <TableHead>Durum</TableHead>
-                    <TableHead>Rol</TableHead>
+                    <TableHead>{t.users.username}</TableHead>
+                    <TableHead>{t.users.fullName}</TableHead>
+                    <TableHead>{t.users.email}</TableHead>
+                    <TableHead>{t.users.status}</TableHead>
+                    <TableHead>{t.users.role}</TableHead>
                     <TableHead className="w-[50px]"></TableHead>
                   </TableRow>
                 </TableHeader>
