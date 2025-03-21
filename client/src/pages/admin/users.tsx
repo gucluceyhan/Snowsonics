@@ -25,6 +25,7 @@ import * as XLSX from "xlsx";
 import { useLanguage } from "@/hooks/use-language";
 import { Container } from "@/components/ui/container";
 import { Section } from "@/components/ui/section";
+import { ContextualTooltip } from "@/components/ui/contextual-tooltip";
 
 export default function UsersPage() {
   const { toast } = useToast();
@@ -140,25 +141,39 @@ export default function UsersPage() {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             {!user.isApproved && (
-              <DropdownMenuItem
-                onClick={() => approveMutation.mutate(user.id)}
-                disabled={approveMutation.isPending}
+              <ContextualTooltip
+                id="admin-approve-user"
+                content={t.tooltips.adminApproveUser}
+                position="left"
+                showOnce={true}
               >
-                <CheckCircle className="mr-2 h-4 w-4" />
-                {t.users.approveUser}
-              </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => approveMutation.mutate(user.id)}
+                  disabled={approveMutation.isPending}
+                >
+                  <CheckCircle className="mr-2 h-4 w-4" />
+                  {t.users.approveUser}
+                </DropdownMenuItem>
+              </ContextualTooltip>
             )}
             
-            <DropdownMenuItem
-              onClick={() => roleUpdateMutation.mutate({
-                userId: user.id,
-                role: user.role === "admin" ? "user" : "admin"
-              })}
-              disabled={roleUpdateMutation.isPending}
+            <ContextualTooltip
+              id="admin-user-role"
+              content={t.tooltips.adminUserRole}
+              position="left"
+              showOnce={true}
             >
-              <Shield className="mr-2 h-4 w-4" />
-              {user.role === "admin" ? t.users.makeUser : t.users.makeAdmin}
-            </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => roleUpdateMutation.mutate({
+                  userId: user.id,
+                  role: user.role === "admin" ? "user" : "admin"
+                })}
+                disabled={roleUpdateMutation.isPending}
+              >
+                <Shield className="mr-2 h-4 w-4" />
+                {user.role === "admin" ? t.users.makeUser : t.users.makeAdmin}
+              </DropdownMenuItem>
+            </ContextualTooltip>
             
             {user.isApproved && (
               <>
