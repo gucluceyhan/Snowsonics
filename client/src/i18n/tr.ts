@@ -23,6 +23,7 @@ export const tr: Translations = {
     selectedDate: 'Seçili tarihte',
     noEventsOnDate: 'Bu tarihte etkinlik bulunmamaktadır.',
     selectDate: 'Tarih seçin',
+    preview: 'Önizleme',
   },
 
   auth: {
@@ -174,10 +175,12 @@ export const tr: Translations = {
     generalSettings: 'Genel Ayarlar',
     logoUrl: 'Logo URL',
     primaryColor: 'Ana Renk',
+    secondaryColor: 'İkincil Renk',
     settingsSaved: 'Ayarlar kaydedildi',
     dragAndDrop: 'Sürükleyip bırakın veya tıklayın',
     chooseFile: 'Dosya Seç',
     uploadLogo: 'Logo Yükle',
+    preview: 'Önizleme',
   },
 
   validation: {

@@ -23,6 +23,7 @@ export const en: Translations = {
     selectedDate: 'Selected date',
     noEventsOnDate: 'No events on this date.',
     selectDate: 'Select date',
+    preview: 'Preview',
   },
 
   auth: {

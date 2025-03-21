@@ -24,6 +24,7 @@ export interface Translations {
     selectedDate: string;
     noEventsOnDate: string;
     selectDate: string;
+    preview: string;
   };
 
   // Authentication
@@ -182,10 +183,12 @@ export interface Translations {
     generalSettings: string;
     logoUrl: string;
     primaryColor: string;
+    secondaryColor: string;
     settingsSaved: string;
     dragAndDrop: string;
     chooseFile: string;
     uploadLogo: string;
+    preview: string;
   };
 
   // Validation
