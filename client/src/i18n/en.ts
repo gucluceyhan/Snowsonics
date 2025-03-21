@@ -25,6 +25,21 @@ export const en: Translations = {
     selectDate: 'Select date',
     preview: 'Preview',
   },
+  
+  tooltips: {
+    languageSwitcher: 'Change the interface language between Turkish and English',
+    calendarNavigation: 'Use the calendar to navigate between different dates and see events for each day',
+    eventJoin: 'Click here to join this event. You will need to select your room type preferences',
+    profileEdit: 'Update your profile information including contact details and preferences',
+    adminApproveUser: 'Approve this user to allow them to participate in events',
+    adminUserRole: 'Change user role to grant or remove administrative privileges',
+    siteSettingsColor: 'Choose brand colors for the application interface',
+    participationsList: 'View your upcoming and past event participations here',
+    eventStatusPending: 'Your participation is pending administrator approval',
+    eventStatusApproved: 'Your participation has been approved',
+    roomTypeSelect: 'Select your preferred room type and occupancy for this event',
+    gotIt: 'Got it',
+  },
 
   auth: {
     login: 'Login',

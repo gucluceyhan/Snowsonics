@@ -25,6 +25,21 @@ export const tr: Translations = {
     selectDate: 'Tarih seçin',
     preview: 'Önizleme',
   },
+  
+  tooltips: {
+    languageSwitcher: 'Arayüz dilini Türkçe ve İngilizce arasında değiştirin',
+    calendarNavigation: 'Takvimi kullanarak farklı tarihler arasında gezinin ve her gün için etkinlikleri görün',
+    eventJoin: 'Bu etkinliğe katılmak için tıklayın. Oda tipi tercihlerinizi seçmeniz gerekecek',
+    profileEdit: 'İletişim bilgileri ve tercihler dahil olmak üzere profil bilgilerinizi güncelleyin',
+    adminApproveUser: 'Kullanıcının etkinliklere katılabilmesi için onaylayın',
+    adminUserRole: 'Yönetici ayrıcalıklarını vermek veya kaldırmak için kullanıcı rolünü değiştirin',
+    siteSettingsColor: 'Uygulama arayüzü için marka renklerini seçin',
+    participationsList: 'Yaklaşan ve geçmiş etkinlik katılımlarınızı burada görüntüleyin',
+    eventStatusPending: 'Katılımınız yönetici onayı bekliyor',
+    eventStatusApproved: 'Katılımınız onaylandı',
+    roomTypeSelect: 'Bu etkinlik için tercih ettiğiniz oda tipini ve doluluk oranını seçin',
+    gotIt: 'Anladım',
+  },
 
   auth: {
     login: 'Giriş Yap',

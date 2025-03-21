@@ -26,6 +26,22 @@ export interface Translations {
     selectDate: string;
     preview: string;
   };
+  
+  // Tooltips for contextual guidance
+  tooltips: {
+    languageSwitcher: string;
+    calendarNavigation: string;
+    eventJoin: string;
+    profileEdit: string;
+    adminApproveUser: string;
+    adminUserRole: string;
+    siteSettingsColor: string;
+    participationsList: string;
+    eventStatusPending: string;
+    eventStatusApproved: string;
+    roomTypeSelect: string;
+    gotIt: string;
+  };
 
   // Authentication
   auth: {
