@@ -144,7 +144,7 @@ export default function SiteSettingsPage() {
                   name="secondaryColor"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t.siteSettings.secondaryColor || "İkincil Renk"} (RGB: {secondaryRgb?.r}, {secondaryRgb?.g}, {secondaryRgb?.b})</FormLabel>
+                      <FormLabel>{t.siteSettings.secondaryColor} (RGB: {secondaryRgb?.r}, {secondaryRgb?.g}, {secondaryRgb?.b})</FormLabel>
                       <FormControl>
                         <div className="flex gap-2">
                           <Input type="color" {...field} />
@@ -158,12 +158,12 @@ export default function SiteSettingsPage() {
               </div>
 
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold">{t.common.preview || "Önizleme"}</h3>
+                <h3 className="text-lg font-semibold">{t.common.preview}</h3>
                 <div className="p-6 border rounded-lg space-y-4">
                   <div className="flex items-center justify-center">
                     <img 
                       src={form.watch("logoUrl") || "/logo.jpeg"}
-                      alt="Logo Preview"
+                      alt={`${t.siteSettings.logoUrl} ${t.common.preview}`}
                       className="h-20 w-auto"
                     />
                   </div>

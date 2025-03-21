@@ -175,10 +175,12 @@ export const en: Translations = {
     generalSettings: 'General Settings',
     logoUrl: 'Logo URL',
     primaryColor: 'Primary Color',
+    secondaryColor: 'Secondary Color',
     settingsSaved: 'Settings saved',
     dragAndDrop: 'Drag and drop or click',
     chooseFile: 'Choose File',
     uploadLogo: 'Upload Logo',
+    preview: 'Preview',
   },
 
   validation: {
