@@ -7,6 +7,7 @@ import { useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
+import { useLanguage } from "@/hooks/use-language";
 
 type EventCardProps = {
   event: Event;
@@ -15,6 +16,7 @@ type EventCardProps = {
 
 export default function EventCard({ event, variant = "default" }: EventCardProps) {
   const [, setLocation] = useLocation();
+  const { t } = useLanguage();
 
   const { data: myParticipation } = useQuery({
     queryKey: [`/api/events/${event.id}/my-participation`],
@@ -22,8 +24,8 @@ export default function EventCard({ event, variant = "default" }: EventCardProps
 
   const getParticipationStatus = () => {
     if (!myParticipation) return null;
-    if (myParticipation.isApproved) return "Onaylandı";
-    return "Admin Onayı Bekliyor";
+    if (myParticipation.isApproved) return t.participation.approved;
+    return t.participation.pending;
   };
 
   const participationStatus = getParticipationStatus();
@@ -72,7 +74,7 @@ export default function EventCard({ event, variant = "default" }: EventCardProps
           onClick={() => setLocation(`/events/${event.id}`)}
         >
           <Info className="w-4 h-4 mr-2" />
-          Detaylar
+          {t.events.eventDetails}
         </Button>
       </CardFooter>
     </>

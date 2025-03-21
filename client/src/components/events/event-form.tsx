@@ -26,6 +26,7 @@ import { cn } from "@/lib/utils";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/hooks/use-language";
 import { useEffect } from "react";
 
 interface EventFormProps {
@@ -35,6 +36,7 @@ interface EventFormProps {
 
 export default function EventForm({ event, onSuccess }: EventFormProps) {
   const { toast } = useToast();
+  const { t } = useLanguage();
   const defaultValues = event ? {
     ...event,
     date: event.date.toString(),
@@ -73,16 +75,16 @@ export default function EventForm({ event, onSuccess }: EventFormProps) {
     onSuccess: (data) => {
       console.log("Event saved successfully:", data);
       toast({
-        title: `Etkinlik ${event ? "güncellendi" : "oluşturuldu"}`,
-        description: `Etkinlik başarıyla ${event ? "güncellendi" : "oluşturuldu"}`,
+        title: event ? t.events.eventUpdated : t.events.eventCreated,
+        description: event ? t.events.eventUpdated : t.events.eventCreated,
       });
       onSuccess?.();
     },
     onError: (error) => {
       console.error("Mutation error:", error);
       toast({
-        title: "Hata",
-        description: `Etkinlik ${event ? "güncellenirken" : "oluşturulurken"} bir hata oluştu: ${error.message}`,
+        title: t.errors.genericError,
+        description: error.message,
         variant: "destructive",
       });
     }
@@ -99,7 +101,7 @@ export default function EventForm({ event, onSuccess }: EventFormProps) {
           name="title"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Başlık</FormLabel>
+              <FormLabel>{t.events.eventTitle}</FormLabel>
               <FormControl>
                 <Input {...field} />
               </FormControl>
@@ -113,7 +115,7 @@ export default function EventForm({ event, onSuccess }: EventFormProps) {
           name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Kısa Açıklama</FormLabel>
+              <FormLabel>{t.events.description}</FormLabel>
               <FormControl>
                 <Textarea {...field} />
               </FormControl>
