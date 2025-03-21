@@ -68,21 +68,24 @@ export function Navbar() {
           <div className="flex items-center gap-2">
             {user?.role === "admin" && (
               <>
-                <Link href="/admin/site-settings">
-                  <Button variant="outline" size="sm">{t.nav.siteSettings}</Button>
-                </Link>
                 <Link href="/admin/users">
                   <Button variant="outline" size="sm">{t.nav.users}</Button>
                 </Link>
                 <Link href="/admin/events">
                   <Button variant="outline" size="sm">{t.nav.events}</Button>
                 </Link>
+                <Link href="/admin/site-settings">
+                  <Button variant="outline" size="sm">{t.nav.siteSettings}</Button>
+                </Link>
               </>
             )}
-
-            <Link href="/participations">
-              <Button variant="outline" size="sm">{t.nav.participations}</Button>
-            </Link>
+            
+            {/* Yalnızca admin olmayanlar için katılımlarım */}
+            {(!user || user.role !== "admin") && (
+              <Link href="/participations">
+                <Button variant="outline" size="sm">{t.nav.participations}</Button>
+              </Link>
+            )}
             
             {/* Language toggle button */}
             <ContextualTooltip 
@@ -142,20 +145,23 @@ export function Navbar() {
           <div className="flex space-x-2 items-center">
             {user?.role === "admin" && (
               <>
-                <Link href="/admin/site-settings">
-                  <Button variant="outline" size="sm">{t.nav.siteSettings}</Button>
-                </Link>
                 <Link href="/admin/users">
                   <Button variant="outline" size="sm">{t.nav.users}</Button>
                 </Link>
                 <Link href="/admin/events">
                   <Button variant="outline" size="sm">{t.nav.events}</Button>
                 </Link>
+                <Link href="/admin/site-settings">
+                  <Button variant="outline" size="sm">{t.nav.siteSettings}</Button>
+                </Link>
               </>
             )}
-            <Link href="/participations">
-              <Button variant="outline" size="sm">{t.nav.participations}</Button>
-            </Link>
+            {/* Yalnızca admin olmayanlar için katılımlarım */}
+            {(!user || user.role !== "admin") && (
+              <Link href="/participations">
+                <Button variant="outline" size="sm">{t.nav.participations}</Button>
+              </Link>
+            )}
             <Link href="/profile">
               <Button variant="outline" size="sm">{t.nav.myProfile}</Button>
             </Link>
