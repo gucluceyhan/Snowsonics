@@ -129,7 +129,7 @@ export default function EventForm({ event, onSuccess }: EventFormProps) {
           name="content"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>İçerik</FormLabel>
+              <FormLabel>{t.events.content}</FormLabel>
               <FormControl>
                 <RichTextEditor
                   value={field.value}
@@ -148,7 +148,7 @@ export default function EventForm({ event, onSuccess }: EventFormProps) {
             name="date"
             render={({ field }) => (
               <FormItem className="flex flex-col">
-                <FormLabel>Başlangıç Tarihi</FormLabel>
+                <FormLabel>{t.events.eventDate}</FormLabel>
                 <Popover>
                   <PopoverTrigger asChild>
                     <FormControl>
@@ -189,7 +189,7 @@ export default function EventForm({ event, onSuccess }: EventFormProps) {
             name="endDate"
             render={({ field }) => (
               <FormItem className="flex flex-col">
-                <FormLabel>Bitiş Tarihi</FormLabel>
+                <FormLabel>{t.events.eventEndDate}</FormLabel>
                 <Popover>
                   <PopoverTrigger asChild>
                     <FormControl>
@@ -231,7 +231,7 @@ export default function EventForm({ event, onSuccess }: EventFormProps) {
           name="location"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Konum</FormLabel>
+              <FormLabel>{t.events.location}</FormLabel>
               <FormControl>
                 <Input {...field} />
               </FormControl>

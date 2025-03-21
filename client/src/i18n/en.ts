@@ -90,6 +90,7 @@ export const en: Translations = {
     eventEndDate: 'End Date',
     location: 'Location',
     content: 'Content',
+    description: 'Short Description',
     listView: 'List View',
     calendarView: 'Calendar View',
     eventsOn: 'events on',

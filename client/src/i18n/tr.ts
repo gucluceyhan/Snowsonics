@@ -90,6 +90,7 @@ export const tr: Translations = {
     eventEndDate: 'Bitiş Tarihi',
     location: 'Konum',
     content: 'İçerik',
+    description: 'Kısa Açıklama',
     listView: 'Liste Görünümü',
     calendarView: 'Takvim Görünümü',
     eventsOn: 'etkinlikler',

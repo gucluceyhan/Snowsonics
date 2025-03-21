@@ -95,6 +95,7 @@ export interface Translations {
     eventEndDate: string;
     location: string;
     content: string;
+    description: string;
     listView: string;
     calendarView: string;
     eventsOn: string;
