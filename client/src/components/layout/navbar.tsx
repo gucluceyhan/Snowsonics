@@ -16,15 +16,28 @@ import { useState } from "react";
 import { Language } from "@/i18n";
 import { ContextualTooltip } from "@/components/ui/contextual-tooltip";
 import { TooltipResetButton } from "@/components/ui/tooltip-reset-button";
+import { useTooltips } from "@/hooks/use-tooltips";
+import { useToast } from "@/hooks/use-toast";
 
 export function Navbar() {
   const { user, logoutMutation } = useAuth();
   const { language, setLanguage, t } = useLanguage();
   const isMobile = useIsMobile();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { resetTooltips } = useTooltips();
+  const { toast } = useToast();
 
   const toggleLanguage = () => {
     setLanguage(language === 'tr' ? 'en' : 'tr');
+  };
+  
+  const handleResetTooltips = () => {
+    resetTooltips();
+    toast({
+      title: t.common.success,
+      description: t.tooltips.gotIt,
+      duration: 3000,
+    });
   };
   
   return (
@@ -108,16 +121,7 @@ export function Navbar() {
                   {language === 'tr' ? 'English' : 'Türkçe'}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => {
-                  const { resetTooltips } = require('@/hooks/use-tooltips').useTooltips();
-                  const { toast } = require('@/hooks/use-toast').useToast();
-                  resetTooltips();
-                  toast({
-                    title: t.common.success,
-                    description: t.tooltips.gotIt,
-                    duration: 3000,
-                  });
-                }}>
+                <DropdownMenuItem onClick={handleResetTooltips}>
                   <HelpCircle className="mr-2 h-4 w-4" />
                   {t.tooltips.showHelpTips}
                 </DropdownMenuItem>
@@ -166,16 +170,7 @@ export function Navbar() {
             <Button 
               variant="outline" 
               size="sm"
-              onClick={() => {
-                const { resetTooltips } = require('@/hooks/use-tooltips').useTooltips();
-                const { toast } = require('@/hooks/use-toast').useToast();
-                resetTooltips();
-                toast({
-                  title: t.common.success,
-                  description: t.tooltips.gotIt,
-                  duration: 3000,
-                });
-              }}
+              onClick={handleResetTooltips}
               className="whitespace-nowrap"
             >
               {t.tooltips.showHelpTips}
