@@ -23,6 +23,7 @@ export default function EventDetailPage() {
   const { id } = useParams();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [roomType, setRoomType] = useState<string | null>(null);
   const [roomOccupancy, setRoomOccupancy] = useState<number | null>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -44,14 +45,14 @@ export default function EventDetailPage() {
       queryClient.invalidateQueries({ queryKey: [`/api/events/${id}/participants`] });
       queryClient.invalidateQueries({ queryKey: [`/api/events/${id}/my-participation`] });
       toast({
-        title: "Katılım talebi gönderildi",
-        description: "Admin onayından sonra katılımınız onaylanacaktır.",
+        title: t.participation.participationSubmitted,
+        description: t.participation.pending,
       });
       setIsEditing(false);
     },
     onError: (error: Error) => {
       toast({
-        title: "Hata",
+        title: t.errors.genericError,
         description: error.message,
         variant: "destructive",
       });
@@ -66,14 +67,14 @@ export default function EventDetailPage() {
       queryClient.invalidateQueries({ queryKey: [`/api/events/${id}/participants`] });
       queryClient.invalidateQueries({ queryKey: [`/api/events/${id}/my-participation`] });
       toast({
-        title: "Güncelleme talebi gönderildi",
-        description: "Admin onayından sonra değişiklikler yansıyacaktır.",
+        title: t.participation.participationUpdated,
+        description: t.participation.pending,
       });
       setIsEditing(false);
     },
     onError: (error: Error) => {
       toast({
-        title: "Hata",
+        title: t.errors.genericError,
         description: error.message,
         variant: "destructive",
       });
@@ -117,16 +118,16 @@ export default function EventDetailPage() {
 
               <GridItem className="flex items-center gap-2">
                 <MapPin className="h-5 w-5 flex-shrink-0" />
-                <span>{event.location || "Konum belirtilmemiş"}</span>
+                <span>{event.location || t.participation.locationNotSpecified}</span>
               </GridItem>
 
               {myParticipation && (
                 <GridItem className="flex items-center gap-2">
                   <AlertCircle className="h-5 w-5 flex-shrink-0" />
                   <span>
-                    Durum:{" "}
+                    {t.participation.participationStatus}:{" "}
                     <Badge variant={myParticipation.isApproved ? "default" : "secondary"}>
-                      {myParticipation.isApproved ? "Onaylandı" : "Admin Onayı Bekliyor"}
+                      {myParticipation.isApproved ? t.participation.approved : t.participation.pending}
                     </Badge>
                   </span>
                 </GridItem>
@@ -146,28 +147,28 @@ export default function EventDetailPage() {
               {myParticipation?.isApproved && !isEditing ? (
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
-                    <Badge variant="default">Katılımınız Onaylandı</Badge>
+                    <Badge variant="default">{t.participation.participationApproved}</Badge>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => setIsEditing(true)}
                     >
                       <Edit2 className="w-4 h-4 mr-2" />
-                      Düzenle
+                      {t.participation.edit}
                     </Button>
                   </div>
                   
                   <Grid cols={1} colsMd={2} gap={4}>
                     <GridItem>
-                      <span className="text-sm text-muted-foreground block">Oda Tipi</span>
-                      <p>{myParticipation.roomType === 'single' ? 'Tek Kişilik' : 
-                        myParticipation.roomType === 'double' ? 'İki Kişilik' : 
-                        myParticipation.roomType === 'triple' ? 'Üç Kişilik' : 
-                        'Dört Kişilik'} Oda</p>
+                      <span className="text-sm text-muted-foreground block">{t.participation.roomType}</span>
+                      <p>{myParticipation.roomType === 'single' ? t.participation.singleRoom : 
+                        myParticipation.roomType === 'double' ? t.participation.doubleRoom : 
+                        myParticipation.roomType === 'triple' ? t.participation.tripleRoom : 
+                        t.participation.quadRoom}</p>
                     </GridItem>
                     <GridItem>
-                      <span className="text-sm text-muted-foreground block">Kişi Sayısı</span>
-                      <p>{myParticipation.roomOccupancy} Kişi</p>
+                      <span className="text-sm text-muted-foreground block">{t.participation.roomOccupancy}</span>
+                      <p>{myParticipation.roomOccupancy} {t.participation.person}</p>
                     </GridItem>
                   </Grid>
                 </div>
@@ -181,13 +182,13 @@ export default function EventDetailPage() {
                         disabled={myParticipation?.isApproved && !isEditing}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Oda tipi seçin" />
+                          <SelectValue placeholder={t.participation.selectRoomType} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="single">Tek Kişilik Oda</SelectItem>
-                          <SelectItem value="double">İki Kişilik Oda</SelectItem>
-                          <SelectItem value="triple">Üç Kişilik Oda</SelectItem>
-                          <SelectItem value="quad">Dört Kişilik Oda</SelectItem>
+                          <SelectItem value="single">{t.participation.singleRoom}</SelectItem>
+                          <SelectItem value="double">{t.participation.doubleRoom}</SelectItem>
+                          <SelectItem value="triple">{t.participation.tripleRoom}</SelectItem>
+                          <SelectItem value="quad">{t.participation.quadRoom}</SelectItem>
                         </SelectContent>
                       </Select>
                     </GridItem>
@@ -199,13 +200,13 @@ export default function EventDetailPage() {
                         disabled={myParticipation?.isApproved && !isEditing}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Kişi sayısı seçin" />
+                          <SelectValue placeholder={t.participation.selectOccupancy} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="1">1 Kişi</SelectItem>
-                          <SelectItem value="2">2 Kişi</SelectItem>
-                          <SelectItem value="3">3 Kişi</SelectItem>
-                          <SelectItem value="4">4 Kişi</SelectItem>
+                          <SelectItem value="1">1 {t.participation.person}</SelectItem>
+                          <SelectItem value="2">2 {t.participation.person}</SelectItem>
+                          <SelectItem value="3">3 {t.participation.person}</SelectItem>
+                          <SelectItem value="4">4 {t.participation.person}</SelectItem>
                         </SelectContent>
                       </Select>
                     </GridItem>
@@ -230,7 +231,7 @@ export default function EventDetailPage() {
                     disabled={(!roomType || !roomOccupancy) || 
                             (participateMutation.isPending || updateParticipationMutation.isPending)}
                   >
-                    {isEditing ? "Değişiklikleri Kaydet" : "Katılıyorum"}
+                    {isEditing ? t.participation.saveChanges : t.participation.join}
                   </Button>
                 </div>
               )}
