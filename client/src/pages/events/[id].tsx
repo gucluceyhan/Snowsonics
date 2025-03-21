@@ -18,6 +18,7 @@ import { Section } from "@/components/ui/section";
 import { Grid, GridItem } from "@/components/ui/grid";
 import { Spacer } from "@/components/ui/spacer";
 import { useLanguage } from "@/hooks/use-language";
+import { ContextualTooltip } from "@/components/ui/contextual-tooltip";
 
 export default function EventDetailPage() {
   const { id } = useParams();
@@ -176,21 +177,28 @@ export default function EventDetailPage() {
                 <div className="space-y-6">
                   <Grid cols={1} colsMd={2} gap={4}>
                     <GridItem>
-                      <Select 
-                        value={roomType || ''} 
-                        onValueChange={(value) => setRoomType(value)}
-                        disabled={myParticipation?.isApproved && !isEditing}
+                      <ContextualTooltip
+                        id="room-type-select"
+                        content={t.tooltips.roomTypeSelect}
+                        position="top"
+                        showOnce={true}
                       >
-                        <SelectTrigger>
-                          <SelectValue placeholder={t.participation.selectRoomType} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="single">{t.participation.singleRoom}</SelectItem>
-                          <SelectItem value="double">{t.participation.doubleRoom}</SelectItem>
-                          <SelectItem value="triple">{t.participation.tripleRoom}</SelectItem>
-                          <SelectItem value="quad">{t.participation.quadRoom}</SelectItem>
-                        </SelectContent>
-                      </Select>
+                        <Select 
+                          value={roomType || ''} 
+                          onValueChange={(value) => setRoomType(value)}
+                          disabled={myParticipation?.isApproved && !isEditing}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder={t.participation.selectRoomType} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="single">{t.participation.singleRoom}</SelectItem>
+                            <SelectItem value="double">{t.participation.doubleRoom}</SelectItem>
+                            <SelectItem value="triple">{t.participation.tripleRoom}</SelectItem>
+                            <SelectItem value="quad">{t.participation.quadRoom}</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </ContextualTooltip>
                     </GridItem>
 
                     <GridItem>

@@ -12,6 +12,7 @@ import { Container } from "@/components/ui/container";
 import { Section } from "@/components/ui/section";
 import { Grid, GridItem } from "@/components/ui/grid";
 import { Spacer } from "@/components/ui/spacer";
+import { ContextualTooltip } from "@/components/ui/contextual-tooltip";
 
 export default function HomePage() {
   const { user } = useAuth();
@@ -96,14 +97,21 @@ export default function HomePage() {
             <TabsContent value="calendar">
               <Grid cols={1} colsLg={2} gap={8}>
                 <GridItem>
-                  <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={setSelectedDate}
-                    className="rounded-md border mx-auto max-w-full"
-                    modifiers={modifiers}
-                    modifiersStyles={modifiersStyles}
-                  />
+                  <ContextualTooltip
+                    id="calendar-navigation"
+                    content={t.tooltips.calendarNavigation}
+                    position="top"
+                    showOnce={true}
+                  >
+                    <Calendar
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={setSelectedDate}
+                      className="rounded-md border mx-auto max-w-full"
+                      modifiers={modifiers}
+                      modifiersStyles={modifiersStyles}
+                    />
+                  </ContextualTooltip>
                 </GridItem>
                 <GridItem>
                   <h2 className="text-xl font-semibold mb-4">
