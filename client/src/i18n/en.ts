@@ -39,6 +39,8 @@ export const en: Translations = {
     eventStatusApproved: 'Your participation has been approved',
     roomTypeSelect: 'Select your preferred room type and occupancy for this event',
     gotIt: 'Got it',
+    resetTooltips: 'Reset all tooltips',
+    tooltipName: 'Tooltip',
   },
 
   auth: {

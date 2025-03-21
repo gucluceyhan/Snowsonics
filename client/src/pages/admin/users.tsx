@@ -217,60 +217,67 @@ export default function UsersPage() {
               </p>
             </div>
             
-            <Button
-              variant="default"
-              className="bg-primary hover:bg-primary/90 w-full md:w-auto"
-              onClick={() => {
-                // Excel verileri için uygun formatta bir dizi oluştur
-                const excelData = [
-                  // Başlık satırı
-                  ['Ad', 'Soyad', 'Telefon Numarası', 'E-posta Adresi', 'Meslek', 'Yaşadığı İl', 'Durum']
-                ];
-                
-                // Kullanıcı verilerini ekle
-                users.forEach(user => {
-                  excelData.push([
-                    user.firstName || '',
-                    user.lastName || '',
-                    user.phone || '',
-                    user.email || '',
-                    user.occupation || '',
-                    user.city || '',
-                    user.isActive ? 'Aktif' : 'Pasif'
-                  ]);
-                });
-                
-                // XLSX Workbook oluştur
-                const wb = XLSX.utils.book_new();
-                const ws = XLSX.utils.aoa_to_sheet(excelData);
-                
-                // Sütun genişliklerini ayarla
-                const colWidths = [
-                  { wch: 15 }, // Ad
-                  { wch: 15 }, // Soyad
-                  { wch: 20 }, // Telefon
-                  { wch: 30 }, // E-posta
-                  { wch: 20 }, // Meslek
-                  { wch: 15 }, // Şehir
-                  { wch: 10 }  // Durum
-                ];
-                ws['!cols'] = colWidths;
-                
-                // Çalışma sayfasını workbook'a ekle
-                XLSX.utils.book_append_sheet(wb, ws, "Kullanıcılar");
-                
-                // Excel dosyasını indir
-                XLSX.writeFile(wb, "kullanicilar.xlsx");
-                
-                toast({
-                  title: t.users.exportComplete,
-                  description: t.users.exportMessage,
-                });
-              }}
+            <ContextualTooltip
+              id="export-excel-button"
+              content="Kullanıcı listesini bilgisayarınıza Excel dosyası olarak kaydedin"
+              position="left"
+              showOnce={true}
             >
-              <Download className="w-4 h-4 mr-2" />
-              {t.users.exportToExcel}
-            </Button>
+              <Button
+                variant="default"
+                className="bg-primary hover:bg-primary/90 w-full md:w-auto"
+                onClick={() => {
+                  // Excel verileri için uygun formatta bir dizi oluştur
+                  const excelData = [
+                    // Başlık satırı
+                    ['Ad', 'Soyad', 'Telefon Numarası', 'E-posta Adresi', 'Meslek', 'Yaşadığı İl', 'Durum']
+                  ];
+                  
+                  // Kullanıcı verilerini ekle
+                  users.forEach(user => {
+                    excelData.push([
+                      user.firstName || '',
+                      user.lastName || '',
+                      user.phone || '',
+                      user.email || '',
+                      user.occupation || '',
+                      user.city || '',
+                      user.isActive ? 'Aktif' : 'Pasif'
+                    ]);
+                  });
+                  
+                  // XLSX Workbook oluştur
+                  const wb = XLSX.utils.book_new();
+                  const ws = XLSX.utils.aoa_to_sheet(excelData);
+                  
+                  // Sütun genişliklerini ayarla
+                  const colWidths = [
+                    { wch: 15 }, // Ad
+                    { wch: 15 }, // Soyad
+                    { wch: 20 }, // Telefon
+                    { wch: 30 }, // E-posta
+                    { wch: 20 }, // Meslek
+                    { wch: 15 }, // Şehir
+                    { wch: 10 }  // Durum
+                  ];
+                  ws['!cols'] = colWidths;
+                  
+                  // Çalışma sayfasını workbook'a ekle
+                  XLSX.utils.book_append_sheet(wb, ws, "Kullanıcılar");
+                  
+                  // Excel dosyasını indir
+                  XLSX.writeFile(wb, "kullanicilar.xlsx");
+                  
+                  toast({
+                    title: t.users.exportComplete,
+                    description: t.users.exportMessage,
+                  });
+                }}
+              >
+                <Download className="w-4 h-4 mr-2" />
+                {t.users.exportToExcel}
+              </Button>
+            </ContextualTooltip>
           </div>
 
           {pendingUsers.length > 0 && (

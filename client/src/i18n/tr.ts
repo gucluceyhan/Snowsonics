@@ -39,6 +39,8 @@ export const tr: Translations = {
     eventStatusApproved: 'Katılımınız onaylandı',
     roomTypeSelect: 'Bu etkinlik için tercih ettiğiniz oda tipini ve doluluk oranını seçin',
     gotIt: 'Anladım',
+    resetTooltips: 'Tüm ipuçlarını sıfırla',
+    tooltipName: 'İpucu',
   },
 
   auth: {

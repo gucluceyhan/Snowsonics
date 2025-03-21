@@ -29,6 +29,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { ParticipantList } from "@/components/admin/participant-list";
+import { ContextualTooltip } from "@/components/ui/contextual-tooltip";
+import { useLanguage } from "@/hooks/use-language";
 
 export default function EventsPage() {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);

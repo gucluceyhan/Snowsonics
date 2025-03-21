@@ -41,6 +41,8 @@ export interface Translations {
     eventStatusApproved: string;
     roomTypeSelect: string;
     gotIt: string;
+    resetTooltips: string;
+    tooltipName: string;
   };
 
   // Authentication
