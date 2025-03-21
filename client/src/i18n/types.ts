@@ -20,6 +20,9 @@ export interface Translations {
     back: string;
     next: string;
     home: string;
+    welcome: string;
+    selectedDate: string;
+    noEventsOnDate: string;
   };
 
   // Authentication
@@ -37,6 +40,8 @@ export interface Translations {
     registerSuccess: string;
     logoutSuccess: string;
     approvalPending: string;
+    approvalPendingMessage: string;
+    approvedMessage: string;
     inactive: string;
   };
 

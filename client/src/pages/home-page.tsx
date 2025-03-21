@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Event } from "@shared/schema";
 import EventCard from "@/components/events/event-card";
 import { useAuth } from "@/hooks/use-auth";
+import { useLanguage } from "@/hooks/use-language";
 import { Navbar } from "@/components/layout/navbar";
 import { Calendar } from "@/components/ui/calendar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -50,6 +51,8 @@ export default function HomePage() {
     }
   };
 
+  const { t } = useLanguage();
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -58,12 +61,12 @@ export default function HomePage() {
         <Section size="md">
           <div className="text-center">
             <h1 className="text-4xl font-bold text-[#914199]">
-              Hoş geldin, {user?.firstName}!
+              {t.common.welcome}, {user?.firstName}!
             </h1>
             <p className="text-muted-foreground mt-2">
               {!user?.isApproved 
-                ? "Hesabın onay bekliyor. Onaylandıktan sonra etkinliklere katılabilirsin."
-                : "Yaklaşan etkinlikleri incele ve ilgilendiğin etkinliklere katıl!"}
+                ? t.auth.approvalPendingMessage
+                : t.auth.approvedMessage}
             </p>
           </div>
 
@@ -71,8 +74,8 @@ export default function HomePage() {
 
           <Tabs defaultValue="list" className="space-y-4">
             <TabsList className="mx-auto">
-              <TabsTrigger value="list">Liste Görünümü</TabsTrigger>
-              <TabsTrigger value="calendar">Takvim Görünümü</TabsTrigger>
+              <TabsTrigger value="list">{t.events.listView}</TabsTrigger>
+              <TabsTrigger value="calendar">{t.events.calendarView}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="list">
@@ -84,7 +87,7 @@ export default function HomePage() {
                 ))}
                 {futureEvents.length === 0 && (
                   <GridItem className="col-span-full text-center p-8">
-                    <p className="text-muted-foreground">Yaklaşan etkinlik bulunmamaktadır.</p>
+                    <p className="text-muted-foreground">{t.events.noEvents}</p>
                   </GridItem>
                 )}
               </Grid>
@@ -104,7 +107,7 @@ export default function HomePage() {
                 </GridItem>
                 <GridItem>
                   <h2 className="text-xl font-semibold mb-4">
-                    {selectedDate ? format(selectedDate, "PPP") : "Seçili tarihte"} etkinlikler
+                    {selectedDate ? format(selectedDate, "PPP") : t.common.selectedDate} {t.events.eventsOn}
                   </h2>
                   <div className="space-y-4">
                     {futureEvents
@@ -125,7 +128,7 @@ export default function HomePage() {
                         start: new Date(event.date),
                         end: new Date(event.endDate)
                       })).length === 0) && (
-                      <p className="text-muted-foreground">Bu tarihte etkinlik bulunmamaktadır.</p>
+                      <p className="text-muted-foreground">{t.common.noEventsOnDate}</p>
                     )}
                   </div>
                 </GridItem>

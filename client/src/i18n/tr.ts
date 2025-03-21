@@ -19,6 +19,9 @@ export const tr: Translations = {
     back: 'Geri',
     next: 'İleri',
     home: 'Ana Sayfa',
+    welcome: 'Hoş geldin',
+    selectedDate: 'Seçili tarihte',
+    noEventsOnDate: 'Bu tarihte etkinlik bulunmamaktadır.',
   },
 
   auth: {
@@ -34,7 +37,9 @@ export const tr: Translations = {
     loginSuccess: 'Başarıyla giriş yapıldı',
     registerSuccess: 'Kayıt başarılı, admin onayı bekleniyor',
     logoutSuccess: 'Başarıyla çıkış yapıldı',
-    approvalPending: 'Hesabınız onay bekliyor. Onaylandıktan sonra etkinliklere katılabilirsiniz.',
+    approvalPending: 'Hesabınız onay bekliyor',
+    approvalPendingMessage: 'Hesabınız onay bekliyor. Onaylandıktan sonra etkinliklere katılabilirsiniz.',
+    approvedMessage: 'Yaklaşan etkinlikleri incele ve ilgilendiğin etkinliklere katıl!',
     inactive: 'Hesabınız pasif durumda. Lütfen yönetici ile iletişime geçin.',
   },
 

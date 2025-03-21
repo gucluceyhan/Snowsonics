@@ -19,6 +19,9 @@ export const en: Translations = {
     back: 'Back',
     next: 'Next',
     home: 'Home',
+    welcome: 'Welcome',
+    selectedDate: 'Selected date',
+    noEventsOnDate: 'No events on this date.',
   },
 
   auth: {
@@ -34,7 +37,9 @@ export const en: Translations = {
     loginSuccess: 'Successfully logged in',
     registerSuccess: 'Registration successful, waiting for admin approval',
     logoutSuccess: 'Successfully logged out',
-    approvalPending: 'Your account is pending approval. You can participate in events after being approved.',
+    approvalPending: 'Your account is pending approval',
+    approvalPendingMessage: 'Your account is pending approval. You can participate in events after being approved.',
+    approvedMessage: 'Check out upcoming events and join the ones you are interested in!',
     inactive: 'Your account is inactive. Please contact the administrator.',
   },
 
@@ -42,10 +47,10 @@ export const en: Translations = {
     home: 'Home',
     events: 'Events',
     myProfile: 'My Profile',
-    participations: 'My Participations',
+    participations: 'My Events',
     adminPanel: 'Admin Panel',
     users: 'Users',
-    siteSettings: 'Site Settings',
+    siteSettings: 'Settings',
   },
 
   users: {
@@ -149,7 +154,7 @@ export const en: Translations = {
   },
 
   siteSettings: {
-    title: 'Site Settings',
+    title: 'Settings',
     subtitle: 'Configure system settings',
     logoSettings: 'Logo Settings',
     colorSettings: 'Color Settings',
