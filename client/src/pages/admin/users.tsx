@@ -145,7 +145,7 @@ export default function UsersPage() {
                 disabled={approveMutation.isPending}
               >
                 <CheckCircle className="mr-2 h-4 w-4" />
-                Kullanıcıyı Onayla
+                {t.users.approveUser}
               </DropdownMenuItem>
             )}
             
@@ -157,7 +157,7 @@ export default function UsersPage() {
               disabled={roleUpdateMutation.isPending}
             >
               <Shield className="mr-2 h-4 w-4" />
-              {user.role === "admin" ? "Kullanıcı Yap" : "Yönetici Yap"}
+              {user.role === "admin" ? t.users.makeUser : t.users.makeAdmin}
             </DropdownMenuItem>
             
             {user.isApproved && (
@@ -171,12 +171,12 @@ export default function UsersPage() {
                   {user.isActive ? (
                     <>
                       <UserX className="mr-2 h-4 w-4" />
-                      Kullanıcıyı Pasif Yap
+                      {t.users.deactivateUser}
                     </>
                   ) : (
                     <>
                       <UserPlus className="mr-2 h-4 w-4" />
-                      Kullanıcıyı Aktif Yap
+                      {t.users.activateUser}
                     </>
                   )}
                 </DropdownMenuItem>
@@ -196,9 +196,9 @@ export default function UsersPage() {
         <div className="space-y-8">
           <div className="md:flex md:items-center md:justify-between block">
             <div className="mb-4 md:mb-0">
-              <h1 className="text-4xl font-bold">Kullanıcı Yönetimi</h1>
+              <h1 className="text-4xl font-bold">{t.users.title}</h1>
               <p className="text-muted-foreground mt-2">
-                Yeni kullanıcıları onaylayın ve kullanıcı rollerini yönetin
+                {t.users.subtitle}
               </p>
             </div>
             
@@ -248,13 +248,13 @@ export default function UsersPage() {
                 XLSX.writeFile(wb, "kullanicilar.xlsx");
                 
                 toast({
-                  title: "Excel dosyası oluşturuldu",
-                  description: "Kullanıcı listesi Excel dosyası olarak indirildi.",
+                  title: t.users.exportComplete,
+                  description: t.users.exportMessage,
                 });
               }}
             >
               <Download className="w-4 h-4 mr-2" />
-              Excel'e Aktar
+              {t.users.exportToExcel}
             </Button>
           </div>
 
